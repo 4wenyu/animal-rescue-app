@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Buddy",
+    "breed": "Golden Retriever",
+    "age": 3,
+    "medicalStatus": "Healthy"
+  },
+  {
+    "id": 2,
+    "name": "Max",
+    "breed": "German Shepherd",
+    "age": 5,
+    "medicalStatus": "Needs Review"
+  },
+  {
+    "id": 3,
+    "name": "Bella",
+    "breed": "French Bulldog",
+    "age": 2,
+    "medicalStatus": "Healthy"
+  },
+  {
+    "id": 4,
+    "name": "Luna",
+    "breed": "Siberian Husky",
+    "age": 1,
+    "medicalStatus": "Needs Review"
+  },
+  {
+    "id": 5,
+    "name": "Charlie",
+    "breed": "Beagle",
+    "age": 4,
+    "medicalStatus": "Healthy"
+  }
+]
