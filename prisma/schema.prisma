@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMERATIONS
+// ============================================================
+
+enum OrgType {
+  MUNICIPAL_SHELTER
+  FIVEC_3_RESCUE      // 501(c)(3) Rescue
+  CORPORATE_SPONSOR
+}
+
+enum MedState {
+  HEALTHY_HOLD
+  ISOLATION
+  QUARANTINE
+}
+
+enum InType {
+  PUBLIC_STRAY
+  OWNER_SURRENDER
+  MUNICIPAL_TRANSFER
+}
+
+enum FundType {
+  MEDICAL
+  GENERAL_CARE
+  TRANSPORT
+}
+
+enum Trigger {
+  ADOPTION_FINALIZED
+  DONATION_MADE
+  REFERRAL_SUCCESS
+}
+
+enum Render {
+  NEUTRAL_ACKNOWLEDGMENT
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+// Organizations act as regulatory gatekeepers
+model Organization {
+  orgId                String   @id @default(uuid())
+  orgType              OrgType
+  einNumber            String   @unique                     // Verified via IRS API
+  stateAgLicenseNumber String?                               // Mandatory for states like IL (PACFA)
+  charlestonCompliance Json?                                 // Array of state IDs for solicitation legality
+  animals              Animal[]
+
+  @@map("organizations")
+}
+
+// Central asset ledger tracking the legal custody and health of the animal
+model Animal {
+  animalId             String    @id @default(uuid())
+  custodianOrgId       String
+  organization         Organization @relation(fields: [custodianOrgId], references: [orgId])
+  breedDesignation     String    @default("Mixed Breed")     // Prevents BSL insurance liability
+  intakeTimestamp      DateTime  @default(now())
+  strayHoldExpiresAt   DateTime?
+  statutoryHoldCleared Boolean   @default(false)             // Strictly controlled by Rules Engine
+  medicalStatus        MedState
+
+  // Relations
+  intakeRecord         IntakeRecord?
+  medicalLogs          MedicalLog[]
+  fundraisingWallet    FundraisingWallet?
+
+  @@map("animals")
+}
+
+// Intake split between authenticated officials and public citizens
+model IntakeRecord {
+  intakeId               String   @id @default(uuid())
+  animalId               String   @unique
+  animal                 Animal   @relation(fields: [animalId], references: [animalId])
+  intakeType             InType
+
+  // Public Flow
+  esignIntentHash        String?
+  electronicConsentFlag  Boolean  @default(false)
+  documentSnapshotUrl    String?  // AWS S3 Immutable Link
+
+  // County Flow
+  officerBadgeNumber     String?
+  departmentId           String?
+
+  @@map("intake_records")
+}
+
+// ASPCA/CART aligned medical check parameters
+model MedicalLog {
+  logId                  String   @id @default(uuid())
+  animalId               String
+  animal                 Animal   @relation(fields: [animalId], references: [animalId])
+  weightLbs              Float?
+  tempPulseResp          Json?    // TPR tracking
+  microchipScanned       Boolean  @default(false)
+  vaccinesAdministered   Json?
+  dewormerAdministered   Json?
+  emergencySignsNoted    Json?    // Array of symptoms (e.g. coughing, patchy hair loss)
+
+  @@map("medical_logs")
+}
+
+// Tracks donor intent and automatically restricts fund mixing
+model FundraisingWallet {
+  walletId           String   @id @default(uuid())
+  animalId           String   @unique
+  animal             Animal   @relation(fields: [animalId], references: [animalId])
+  targetAmount       Decimal
+  currentBalance     Decimal  @default(0.00)
+  restrictionType    FundType
+
+  @@map("fundraising_wallets")
+}
+
+// UBIT compliant vendor perk distribution
+model SponsorshipPerk {
+  perkId           String   @id @default(uuid())
+  sponsorOrgId     String
+  triggerEvent     Trigger
+  uiRenderMode     Render   @default(NEUTRAL_ACKNOWLEDGMENT)  // Prevents UBIT triggers
+  rewardCode       String
+
+  @@map("sponsorship_perks")
+}
