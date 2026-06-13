@@ -1,0 +1,96 @@
+{
+  "$schema": "./schema.json",
+  "site": {
+    "title": "RescueHub",
+    "tagline": "Conectando Refugios, Patrocinadores y Hogares Definitivos",
+    "description": "Un motor de cumplimiento normativo multiinquilino para refugios de animales 501(c)(3), refugios municipales, patrocinadores corporativos y el público."
+  },
+  "nav": {
+    "public_portal": "Portal Público",
+    "dashboard": "Panel",
+    "intake": "Admisión",
+    "medical": "Médico",
+    "fundraising": "Recaudación",
+    "surrender": "Entrega",
+    "staff_login": "Acceso del Personal",
+    "locale_switch": "Idioma"
+  },
+  "hero": {
+    "badge": "Plataforma Legalmente Conforme",
+    "headline": "Conectando Refugios, Patrocinadores y Hogares Definitivos",
+    "cta_crowdfunding": "Emergencia: Recaudación de Fondos",
+    "cta_surrender": "Portal de Entrega Pública"
+  },
+  "adoption_feed": {
+    "title": "Transmisión de Adopciones",
+    "available": "{count} animales disponibles para adopción",
+    "excluded": "{count} animal bajo evaluación conductual excluido de este feed",
+    "compliance_note": "según cumplimiento de la Excepción por Eutanasia Conductual",
+    "at_risk_badge": "Este animal está en riesgo — se necesita patrocinio corporativo urgente",
+    "view_details": "Ver detalles",
+    "empty_state": "No hay animales disponibles actualmente para transmisión de adopción.",
+    "status": {
+      "available": "Disponible para Adopción",
+      "urgent_sponsor": "Necesita Patrocinio Urgente",
+      "under_evaluation": "Bajo Evaluación"
+    }
+  },
+  "clock": {
+    "hold_cleared": "Retiro Liberado",
+    "hold_overdue": "⚠ RETRASO EN RETIRO",
+    "stray_hold_active": "Retiro de Callejero Activo",
+    "remaining": "restante",
+    "legal_action_required": "retrasado — se requiere acción legal"
+  },
+  "sponsors": {
+    "title": "Patrocinadores Corporativos",
+    "description": "Estas organizaciones apoyan el bienestar animal mediante patrocinios corporativos calificados bajo IRC § 513(i).",
+    "compliance_title": "Patrocinio Corporativo Calificado — IRC § 513(i)",
+    "compliance_body": "Los reconocimientos de patrocinadores se muestran como referencias de valor neutral en cumplimiento con el puerto seguro de Pago de Patrocinio Calificado. No se presentan anuncios, respaldos, precios ni llamados a la acción. Esta clasificación garantiza que los ingresos permanezcan exentos del Impuesto sobre la Renta Comercial No Relacionada (UBIT) para los inquilinos 501(c)(3)."
+  },
+  "breeds": {
+    "Golden Retriever": "Golden Retriever",
+    "French Bulldog": "Bulldog Francés",
+    "Siberian Husky": "Husky Siberiano",
+    "Beagle": "Beagle",
+    "Labrador Retriever": "Labrador Retriever",
+    "Boxer": "Boxer",
+    "Cocker Spaniel": "Cocker Spaniel",
+    "Poodle": "Caniche",
+    "Dachshund": "Dachshund",
+    "German Shepherd": "Pastor Alemán",
+    "Rottweiler": "Rottweiler",
+    "Shih Tzu": "Shih Tzu"
+  },
+  "medical": {
+    "Healthy": "Saludable",
+    "Needs Review": "Necesita Revisión"
+  },
+  "quick_links": {
+    "surrender_title": "Portal de Entrega Pública",
+    "surrender_body": "¿Encontró un animal callejero o necesita entregar una mascota? Nuestro formulario electrónico compatible con ESIGN/UETA crea una cadena de custodia legalmente defendible.",
+    "surrender_cta": "Iniciar proceso de entrega",
+    "fundraising_title": "Emergencia: Recaudación de Fondos",
+    "fundraising_body": "Apoye costos urgentes de atención médica, cirugía y recuperación para animales del refugio. Cada donación se rastrea con indicadores de restricción legal para evitar la mezcla de fondos.",
+    "fundraising_cta": "Ver campañas activas"
+  },
+  "footer": {
+    "tagline": "Un motor de cumplimiento normativo SaaS multiinquilino para refugios de animales 501(c)(3), refugios municipales, patrocinadores corporativos y el público.",
+    "public_section": "Público",
+    "surrender_portal": "Portal de Entrega",
+    "fundraising_campaigns": "Campañas de Recaudación",
+    "adoption_feed": "Feed de Adopciones",
+    "platform_section": "Plataforma",
+    "privacy_policy": "Política de Privacidad",
+    "terms_of_service": "Términos del Servicio",
+    "compliance_report": "Informe de Cumplimiento",
+    "copyright": "© {year} RescueHub. Todos los derechos reservados."
+  },
+  "common": {
+    "year": "año",
+    "years": "años",
+    "and": "y",
+    "of": "de",
+    "total": "total"
+  }
+}

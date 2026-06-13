@@ -3,23 +3,67 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   PawPrint,
+  House,
   LayoutDashboard,
   Heart,
   Activity,
   DollarSign,
 } from "lucide-react";
+import enDict from "../../locales/en.json";
+import esDict from "../../locales/es.json";
+import zhDict from "../../locales/zh.json";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/intake/public", label: "Intake", icon: Heart },
-  { href: "/medical", label: "Medical", icon: Activity },
-  { href: "/fundraising", label: "Fundraising", icon: DollarSign },
-] as const;
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  zh: zhDict as unknown as Record<string, unknown>,
+};
+
+const STORAGE_KEY = "rescuehub_locale";
+
+function t(key: string): string {
+  if (typeof window === "undefined") return key;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const locale = stored === "es" || stored === "zh" ? stored : "en";
+    const parts = key.split(".");
+    let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+    for (const part of parts) {
+      if (typeof value !== "object" || value === null) return key;
+      value = (value as Record<string, unknown>)[part];
+    }
+    return typeof value === "string" ? value : key;
+  } catch {
+    return key;
+  }
+}
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [, forceUpdate] = useState(0);
+
+  // Re-render when locale changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => forceUpdate((n) => n + 1);
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
+
+  const NAV_ITEMS = [
+    { href: "/", label: t("nav.public_portal"), icon: House },
+    { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { href: "/intake/public", label: t("nav.intake"), icon: Heart },
+    { href: "/medical", label: t("nav.medical"), icon: Activity },
+    { href: "/fundraising", label: t("nav.fundraising"), icon: DollarSign },
+  ] as const;
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -34,9 +78,9 @@ export function Sidebar() {
       className="flex w-64 shrink-0 flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-slate-300 shadow-2xl shadow-slate-900/30"
     >
       <div>
-        {/* Logo / Brand */}
+        {/* Logo / Brand — wrapped in <Link> so clicking routes to / */}
         <div className="p-6 pb-0">
-          <div className="mb-8 flex items-center gap-3 px-2">
+          <Link href="/" className="mb-8 flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30">
               <PawPrint className="h-5 w-5 text-white" />
             </div>
@@ -48,7 +92,7 @@ export function Sidebar() {
                 Animal Rescue
               </p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Navigation */}

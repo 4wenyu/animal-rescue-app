@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { FundraisingWallet } from "@/src/components/fundraising/FundraisingWallet";
 
 /**
@@ -33,6 +34,18 @@ export default function FundraisingPage(): ReactNode {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
+      {/* ── Back button ──────────────────────────────────────── */}
+      <div className="mb-4">
+        <Link
+          href="/fundraising"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back to Fundraising List
+        </Link>
+      </div>
       <FundraisingWallet
         animalId={animalId}
         targetGoal={targetGoal}

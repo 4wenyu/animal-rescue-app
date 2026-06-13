@@ -4,34 +4,131 @@
     "name": "Buddy",
     "breed": "Golden Retriever",
     "age": 3,
-    "medicalStatus": "Healthy"
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-09T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=1"
   },
   {
     "id": 2,
     "name": "Max",
     "breed": "German Shepherd",
     "age": 5,
-    "medicalStatus": "Needs Review"
+    "medicalStatus": "Needs Review",
+    "euthanasia_risk_status": "IMMEDIATE_BEHAVIORAL",
+    "statutoryHoldCleared": false,
+    "intakeTimestamp": "2026-06-11T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=2"
   },
   {
     "id": 3,
     "name": "Bella",
     "breed": "French Bulldog",
     "age": 2,
-    "medicalStatus": "Healthy"
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-10T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=3"
   },
   {
     "id": 4,
     "name": "Luna",
     "breed": "Siberian Husky",
     "age": 1,
-    "medicalStatus": "Needs Review"
+    "medicalStatus": "Needs Review",
+    "euthanasia_risk_status": "AT_RISK",
+    "statutoryHoldCleared": false,
+    "intakeTimestamp": "2026-06-09T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=4"
   },
   {
     "id": 5,
     "name": "Charlie",
     "breed": "Beagle",
     "age": 4,
-    "medicalStatus": "Healthy"
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-08T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=5"
+  },
+  {
+    "id": 6,
+    "name": "Daisy",
+    "breed": "Labrador Retriever",
+    "age": 2,
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-10T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=6"
+  },
+  {
+    "id": 7,
+    "name": "Rocky",
+    "breed": "Boxer",
+    "age": 6,
+    "medicalStatus": "Needs Review",
+    "euthanasia_risk_status": "AT_RISK",
+    "statutoryHoldCleared": false,
+    "intakeTimestamp": "2026-06-09T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=7"
+  },
+  {
+    "id": 8,
+    "name": "Milo",
+    "breed": "Cocker Spaniel",
+    "age": 4,
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-11T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=8"
+  },
+  {
+    "id": 9,
+    "name": "Coco",
+    "breed": "Poodle",
+    "age": 3,
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-12T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=9"
+  },
+  {
+    "id": 10,
+    "name": "Rex",
+    "breed": "Rottweiler",
+    "age": 7,
+    "medicalStatus": "Needs Review",
+    "euthanasia_risk_status": "IMMEDIATE_BEHAVIORAL",
+    "statutoryHoldCleared": false,
+    "intakeTimestamp": "2026-06-06T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=10"
+  },
+  {
+    "id": 11,
+    "name": "Oscar",
+    "breed": "Dachshund",
+    "age": 5,
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-13T10:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=11"
+  },
+  {
+    "id": 12,
+    "name": "Lola",
+    "breed": "Shih Tzu",
+    "age": 8,
+    "medicalStatus": "Healthy",
+    "euthanasia_risk_status": "SAFE",
+    "statutoryHoldCleared": true,
+    "intakeTimestamp": "2026-06-13T14:00:00Z",
+    "imageUrl": "https://placedog.net/400/400?id=12"
   }
 ]

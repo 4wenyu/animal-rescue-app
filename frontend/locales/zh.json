@@ -1,0 +1,96 @@
+{
+  "$schema": "./schema.json",
+  "site": {
+    "title": "RescueHub",
+    "tagline": "连接救助站、赞助商与领养家庭",
+    "description": "一个面向 501(c)(3) 动物救助站、市政收容所、企业赞助商和公众的多租户法规合规引擎。"
+  },
+  "nav": {
+    "public_portal": "公共门户",
+    "dashboard": "仪表盘",
+    "intake": "接收",
+    "medical": "医疗",
+    "fundraising": "筹款",
+    "surrender": "送养",
+    "staff_login": "员工登录",
+    "locale_switch": "语言"
+  },
+  "hero": {
+    "badge": "法律合规平台",
+    "headline": "连接救助站、赞助商与领养家庭",
+    "cta_crowdfunding": "紧急众筹",
+    "cta_surrender": "公共送养门户"
+  },
+  "adoption_feed": {
+    "title": "领养公告",
+    "available": "{count} 只动物可供领养",
+    "excluded": "{count} 只处于行为评估中的动物已从此列表中排除",
+    "compliance_note": "根据行为安乐死例外合规要求",
+    "at_risk_badge": "此动物处于风险中 — 需要紧急企业赞助",
+    "view_details": "查看详情",
+    "empty_state": "目前没有可供领养公告的动物。",
+    "status": {
+      "available": "可供领养",
+      "urgent_sponsor": "需要紧急赞助",
+      "under_evaluation": "评估中"
+    }
+  },
+  "clock": {
+    "hold_cleared": "扣留已解除",
+    "hold_overdue": "⚠ 扣留逾期",
+    "stray_hold_active": "流浪动物扣留中",
+    "remaining": "剩余",
+    "legal_action_required": "逾期 — 需要法律行动"
+  },
+  "sponsors": {
+    "title": "企业赞助商",
+    "description": "这些组织通过 IRC § 513(i) 规定的合格企业赞助支持动物福利事业。",
+    "compliance_title": "合格企业赞助 — IRC § 513(i)",
+    "compliance_body": "赞助商鸣谢按照合格赞助付款安全港合规要求，以价值中立的参考信息形式展示。不展示任何广告、代言、定价或行动呼吁。此分类确保 501(c)(3) 租户的收入免于缴纳无关商业所得税 (UBIT)。"
+  },
+  "breeds": {
+    "Golden Retriever": "金毛寻回犬",
+    "French Bulldog": "法国斗牛犬",
+    "Siberian Husky": "西伯利亚哈士奇",
+    "Beagle": "比格犬",
+    "Labrador Retriever": "拉布拉多寻回犬",
+    "Boxer": "拳师犬",
+    "Cocker Spaniel": "可卡犬",
+    "Poodle": "贵宾犬",
+    "Dachshund": "腊肠犬",
+    "German Shepherd": "德国牧羊犬",
+    "Rottweiler": "罗威纳犬",
+    "Shih Tzu": "西施犬"
+  },
+  "medical": {
+    "Healthy": "健康",
+    "Needs Review": "需要复查"
+  },
+  "quick_links": {
+    "surrender_title": "公共送养门户",
+    "surrender_body": "发现流浪动物或需要送养宠物？我们的 ESIGN/UETA 合规电子弃养声明创建法律上可辩护的监管链。",
+    "surrender_cta": "开始送养流程",
+    "fundraising_title": "紧急众筹",
+    "fundraising_body": "支持收容所动物的紧急医疗、手术和康复费用。每笔捐款都带有法律限制标记，防止资金混用。",
+    "fundraising_cta": "查看进行中的活动"
+  },
+  "footer": {
+    "tagline": "面向 501(c)(3) 动物救助站、市政收容所、企业赞助商和公众的多租户 SaaS 法规合规引擎。",
+    "public_section": "公共",
+    "surrender_portal": "送养门户",
+    "fundraising_campaigns": "筹款活动",
+    "adoption_feed": "领养公告",
+    "platform_section": "平台",
+    "privacy_policy": "隐私政策",
+    "terms_of_service": "服务条款",
+    "compliance_report": "合规报告",
+    "copyright": "© {year} RescueHub。保留所有权利。"
+  },
+  "common": {
+    "year": "岁",
+    "years": "岁",
+    "and": "和",
+    "of": "的",
+    "total": "总计"
+  }
+}

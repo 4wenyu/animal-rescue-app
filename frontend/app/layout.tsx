@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RescueHub — Animal Rescue Dashboard",
-  description: "Modern SaaS dashboard for managing animal rescue operations",
+  title: "RescueHub — Animal Welfare Platform",
+  description:
+    "A legally compliant multi-tenant SaaS platform for animal rescues, municipal shelters, corporate sponsors, and the general public.",
 };
 
 export default function RootLayout({
