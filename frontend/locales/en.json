@@ -1,0 +1,96 @@
+{
+  "$schema": "./schema.json",
+  "site": {
+    "title": "RescueHub",
+    "tagline": "Connecting Rescues, Sponsors, and Forever Homes",
+    "description": "A multi-tenant regulatory compliance engine for 501(c)(3) animal rescues, municipal shelters, corporate sponsors, and the public."
+  },
+  "nav": {
+    "public_portal": "Public Portal",
+    "dashboard": "Dashboard",
+    "intake": "Intake",
+    "medical": "Medical",
+    "fundraising": "Fundraising",
+    "surrender": "Surrender",
+    "staff_login": "Staff Login",
+    "locale_switch": "Language"
+  },
+  "hero": {
+    "badge": "Legally Compliant Platform",
+    "headline": "Connecting Rescues, Sponsors, and Forever Homes",
+    "cta_crowdfunding": "Emergency Crowdfunding",
+    "cta_surrender": "Public Surrender Portal"
+  },
+  "adoption_feed": {
+    "title": "Adoption Broadcast",
+    "available": "{count} animals available for adoption",
+    "excluded": "{count} animal under behavioral evaluation excluded from this feed",
+    "compliance_note": "per Behavioral Euthanasia Exception compliance",
+    "at_risk_badge": "This animal is at risk — urgent corporate sponsorship needed",
+    "view_details": "View details",
+    "empty_state": "No animals are currently available for adoption broadcast.",
+    "status": {
+      "available": "Available for Adoption",
+      "urgent_sponsor": "Needs Urgent Sponsor",
+      "under_evaluation": "Under Evaluation"
+    }
+  },
+  "clock": {
+    "hold_cleared": "Hold Cleared",
+    "hold_overdue": "⚠ HOLD OVERDUE",
+    "stray_hold_active": "Stray Hold Active",
+    "remaining": "remaining",
+    "legal_action_required": "overdue — legal action required"
+  },
+  "sponsors": {
+    "title": "Corporate Sponsors",
+    "description": "These organizations support animal welfare through qualified corporate sponsorships under IRC § 513(i).",
+    "compliance_title": "Qualified Corporate Sponsorship — IRC § 513(i)",
+    "compliance_body": "Sponsor acknowledgments are displayed as value-neutral references in compliance with the Qualified Sponsorship Payment safe harbor. No advertising, endorsement, pricing, or calls to action are rendered. This classification ensures income remains exempt from Unrelated Business Income Tax (UBIT) for 501(c)(3) tenants."
+  },
+  "breeds": {
+    "Golden Retriever": "Golden Retriever",
+    "French Bulldog": "French Bulldog",
+    "Siberian Husky": "Siberian Husky",
+    "Beagle": "Beagle",
+    "Labrador Retriever": "Labrador Retriever",
+    "Boxer": "Boxer",
+    "Cocker Spaniel": "Cocker Spaniel",
+    "Poodle": "Poodle",
+    "Dachshund": "Dachshund",
+    "German Shepherd": "German Shepherd",
+    "Rottweiler": "Rottweiler",
+    "Shih Tzu": "Shih Tzu"
+  },
+  "medical": {
+    "Healthy": "Healthy",
+    "Needs Review": "Needs Review"
+  },
+  "quick_links": {
+    "surrender_title": "Public Surrender Portal",
+    "surrender_body": "Found a stray or need to surrender a pet? Our ESIGN/UETA-compliant electronic waiver creates a legally defensible chain of custody.",
+    "surrender_cta": "Begin surrender process",
+    "fundraising_title": "Emergency Crowdfunding",
+    "fundraising_body": "Support urgent medical care, surgery, and recovery costs for shelter animals. Every donation is tracked with legal restriction flags to prevent fund mixing.",
+    "fundraising_cta": "View active campaigns"
+  },
+  "footer": {
+    "tagline": "A multi-tenant SaaS compliance engine for 501(c)(3) animal rescues, municipal shelters, corporate sponsors, and the public.",
+    "public_section": "Public",
+    "surrender_portal": "Surrender Portal",
+    "fundraising_campaigns": "Fundraising Campaigns",
+    "adoption_feed": "Adoption Feed",
+    "platform_section": "Platform",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "compliance_report": "Compliance Report",
+    "copyright": "© {year} RescueHub. All rights reserved."
+  },
+  "common": {
+    "year": "year",
+    "years": "years",
+    "and": "and",
+    "of": "of",
+    "total": "total"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "RescueHub i18n dictionary schema. All locale JSON files should conform to this structure.",
+  "type": "object",
+  "properties": {
+    "site": {
+      "type": "object",
+      "description": "Site-level metadata",
+      "properties": {
+        "title": { "type": "string" },
+        "tagline": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["title", "tagline", "description"]
+    },
+    "nav": {
+      "type": "object",
+      "description": "Navigation bar strings",
+      "properties": {
+        "surrender": { "type": "string" },
+        "fundraising": { "type": "string" },
+        "staff_login": { "type": "string" },
+        "locale_switch": { "type": "string" }
+      },
+      "required": ["surrender", "fundraising", "staff_login", "locale_switch"]
+    },
+    "hero": {
+      "type": "object", "required": ["badge", "headline", "cta_crowdfunding", "cta_surrender"]
+    },
+    "adoption_feed": {
+      "type": "object", "required": ["title", "available", "excluded", "compliance_note", "at_risk_badge", "view_details", "empty_state", "status"]
+    },
+    "sponsors": {
+      "type": "object", "required": ["title", "description", "compliance_title", "compliance_body"]
+    },
+    "quick_links": {
+      "type": "object", "required": ["surrender_title", "surrender_body", "surrender_cta", "fundraising_title", "fundraising_body", "fundraising_cta"]
+    },
+    "footer": {
+      "type": "object", "required": ["tagline", "public_section", "surrender_portal", "fundraising_campaigns", "adoption_feed", "platform_section", "privacy_policy", "terms_of_service", "compliance_report", "copyright"]
+    },
+    "common": {
+      "type": "object", "required": ["year", "years", "and", "of", "total"]
+    }
+  },
+  "required": ["site", "nav", "hero", "adoption_feed", "sponsors", "quick_links", "footer", "common"]
+}

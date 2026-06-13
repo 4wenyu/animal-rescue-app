@@ -25,18 +25,27 @@ function formatCurrency(cents: number): string {
 export default function FundraisingPage(): ReactNode {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-neutral-900">
-          Fundraising Campaigns
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Select an animal to view or contribute to its funding campaign.
-          All donations are tracked with legal restriction flags to prevent
-          fund mixing.
-        </p>
+      {/* ── Header with back button ─────────────────────────── */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Fundraising Campaigns
+          </h1>
+          <p className="mt-1 text-sm leading-relaxed text-slate-500">
+            Support the animals in our care. Every donation is tracked with
+            legal restriction flags to prevent fund mixing.
+          </p>
+        </div>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]"
+        >
+          ← Back to Dashboard
+        </Link>
       </div>
 
-      <div className="space-y-2">
+      {/* ── Campaign cards ──────────────────────────────────── */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {RECENT_CAMPAIGNS.map((campaign) => {
           const progressPct = Math.min(
             (campaign.raised / campaign.goal) * 100,
@@ -48,18 +57,19 @@ export default function FundraisingPage(): ReactNode {
             <Link
               key={campaign.id}
               href={`/fundraising/${campaign.id}`}
-              className="block rounded-xl border border-neutral-200 bg-white px-4 py-4 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+              className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
             >
+              {/* Header */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold text-neutral-800">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
                     {campaign.id}
-                  </span>
-                  <span className="text-neutral-400">{campaign.species}</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">{campaign.species}</p>
                 </div>
                 <span
                   className={`text-xs font-semibold ${
-                    isComplete ? "text-green-600" : "text-blue-600"
+                    isComplete ? "text-emerald-600" : "text-slate-600"
                   }`}
                 >
                   {formatCurrency(campaign.raised)} /{" "}
@@ -67,21 +77,28 @@ export default function FundraisingPage(): ReactNode {
                 </span>
               </div>
 
-              {/* Mini progress bar */}
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+              {/* Progress bar */}
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    isComplete ? "bg-green-400" : "bg-blue-400"
+                    isComplete ? "bg-emerald-400" : "bg-emerald-500"
                   }`}
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
 
-              <div className="mt-1 flex items-center justify-between text-xs text-neutral-400">
-                <span>{Math.round(progressPct)}% funded</span>
-                {isComplete && (
-                  <span className="font-semibold text-green-600">
-                    &#x2713; Goal reached
+              {/* Footer */}
+              <div className="mt-2 flex items-center justify-between text-xs">
+                <span className="text-slate-400">
+                  {Math.round(progressPct)}% funded
+                </span>
+                {isComplete ? (
+                  <span className="font-semibold text-emerald-600">
+                    ✓ Goal reached
+                  </span>
+                ) : (
+                  <span className="font-medium text-emerald-600 opacity-0 transition group-hover:opacity-100">
+                    Donate →
                   </span>
                 )}
               </div>
@@ -90,10 +107,15 @@ export default function FundraisingPage(): ReactNode {
         })}
       </div>
 
-      <p className="text-xs text-neutral-400">
-        Showing {RECENT_CAMPAIGNS.length} active campaigns. A full list will
-        be available once the database is connected.
-      </p>
+      {/* ── Footer note ─────────────────────────────────────── */}
+      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+        <p className="text-xs leading-relaxed text-slate-400">
+          Showing {RECENT_CAMPAIGNS.length} active campaigns. A full list will
+          be available once the database is connected. All transactions comply
+          with the Charleston Principles for internet-based charitable
+          fundraising.
+        </p>
+      </div>
     </div>
   );
 }
