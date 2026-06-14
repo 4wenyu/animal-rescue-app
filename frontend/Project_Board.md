@@ -1,3 +1,6 @@
+---
+kanban-plugin: basic
+---
 # RescueHub — Project Board
 
 ## ✅ Done
@@ -58,6 +61,8 @@
 - [ ] Stray hold expiration forecast
 
 ## 🚀 In Progress
+
+- [ ] **Build Premium 2D CSS Animal Mesh Gradient for Hero Section** — Replace archived 3D WebGL with a pure CSS animated gradient mesh
 
 ### Phase 6: Medical Intake Module
 - [ ] `<MedicalIntakeChecksheet />` component scaffolding
