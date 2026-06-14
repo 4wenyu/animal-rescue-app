@@ -8,6 +8,36 @@ import {
 } from "@/src/components/intake/ESIGNLiabilityWaiver";
 import { ArrowLeft, PawPrint, Shield, Heart } from "lucide-react";
 
+// ── Synchronous i18n ─────────────────────────────────────────────────────
+import enDict from "../../../../locales/en.json";
+import esDict from "../../../../locales/es.json";
+import zhDict from "../../../../locales/zh.json";
+
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  zh: zhDict as unknown as Record<string, unknown>,
+};
+
+const STORAGE_KEY = "rescuehub_locale";
+
+function t(key: string): string {
+  if (typeof window === "undefined") return key;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const locale = stored === "es" || stored === "zh" ? stored : "en";
+    const parts = key.split(".");
+    let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+    for (const part of parts) {
+      if (typeof value !== "object" || value === null) return key;
+      value = (value as Record<string, unknown>)[part];
+    }
+    return typeof value === "string" ? value : key;
+  } catch {
+    return key;
+  }
+}
+
 const SURRENDER_TYPES: { value: SurrenderType; label: string }[] = [
   { value: "FOUND_STRAY", label: "🐾  I found a stray animal" },
   { value: "OWNER_SURRENDER", label: "📝  I need to surrender my pet" },
@@ -71,11 +101,11 @@ export default function PublicIntakePage(): ReactNode {
       <div className="border-b border-slate-200/60 bg-white">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
           <Link
-            href="/dashboard"
+            href="/intake"
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            {t("nav.back_to_options")}
           </Link>
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition">
             <PawPrint className="h-4 w-4" />
@@ -160,11 +190,11 @@ export default function PublicIntakePage(): ReactNode {
             {/* Back button */}
             <div className="pt-4">
               <Link
-                href="/dashboard"
+                href="/intake"
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Return to Dashboard
+                {t("nav.back_to_options")}
               </Link>
             </div>
           </div>
@@ -188,16 +218,19 @@ export default function PublicIntakePage(): ReactNode {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <ESIGNLiabilityWaiver onComplete={handleEsignComplete} />
+              <ESIGNLiabilityWaiver
+                surrenderType={surrenderType!}
+                onSigned={handleEsignComplete}
+              />
             </div>
 
             <div className="mt-6">
               <Link
-                href="/dashboard"
+                href="/intake"
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Cancel — Return to Dashboard
+                Cancel — {t("nav.back_to_options")}
               </Link>
             </div>
           </div>
@@ -233,13 +266,13 @@ export default function PublicIntakePage(): ReactNode {
               </p>
             </div>
 
-            {/* Back to dashboard */}
+            {/* Back to intake options */}
             <Link
-              href="/dashboard"
+              href="/intake"
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-700 active:scale-[0.97]"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              {t("nav.back_to_options")}
             </Link>
           </div>
         )}

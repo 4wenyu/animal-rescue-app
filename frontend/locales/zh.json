@@ -13,7 +13,8 @@
     "fundraising": "筹款",
     "surrender": "送养",
     "staff_login": "员工登录",
-    "locale_switch": "语言"
+    "locale_switch": "语言",
+    "back_to_options": "返回接收选项"
   },
   "hero": {
     "badge": "法律合规平台",
@@ -41,6 +42,55 @@
     "stray_hold_active": "流浪动物扣留中",
     "remaining": "剩余",
     "legal_action_required": "逾期 — 需要法律行动"
+  },
+  "dashboard": {
+    "title": "分诊仪表盘",
+    "active_roster": "活跃名册 · {count} 只动物",
+    "clear_filter": "清除筛选: {filter}",
+    "add_animal": "添加动物",
+    "v3": "RescueHub · 分诊系统 · v3.5",
+    "stats": {
+      "total_dogs": "狗总数",
+      "healthy": "健康",
+      "needs_review": "需要复查",
+      "avg_age": "平均年龄",
+      "yrs": "岁",
+      "filter_healthy": "筛选: 健康",
+      "filter_needs_review": "筛选: 需要复查"
+    },
+    "table": {
+      "title": "动物记录",
+      "subtitle": "流浪动物扣留监护人",
+      "active_holds": "{count} 个扣留{plural}活动",
+      "cleared": "{count} 已解除",
+      "hayden_act": "{count} 海登法案",
+      "view_all": "查看全部",
+      "columns": {
+        "animal": "动物",
+        "breed": "品种",
+        "age": "年龄",
+        "euth_risk": "安乐死风险",
+        "legal_status": "法律状态",
+        "actions": "操作",
+        "medical": "医疗"
+      },
+      "bsl_suffix": "(混种 ⚖️)",
+      "locked": "锁定",
+      "hayden_note": "海登法案 — 不允许操作",
+      "adopt": "领养",
+      "transfer": "转移",
+      "on_hold": "扣留中",
+      "locked_btn": "已锁定",
+      "compliance_footer": "所有流浪动物扣留均根据海登法案计算。",
+      "age_yr": "岁",
+      "age_yrs": "岁"
+    },
+    "badges": {
+      "safe": "安全",
+      "at_risk": "有风险",
+      "hayden_act": "海登法案 ⚠️",
+      "hayden_tag": "海登"
+    }
   },
   "sponsors": {
     "title": "企业赞助商",

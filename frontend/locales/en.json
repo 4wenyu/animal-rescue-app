@@ -13,7 +13,8 @@
     "fundraising": "Fundraising",
     "surrender": "Surrender",
     "staff_login": "Staff Login",
-    "locale_switch": "Language"
+    "locale_switch": "Language",
+    "back_to_options": "Back to Intake Options"
   },
   "hero": {
     "badge": "Legally Compliant Platform",
@@ -41,6 +42,55 @@
     "stray_hold_active": "Stray Hold Active",
     "remaining": "remaining",
     "legal_action_required": "overdue — legal action required"
+  },
+  "dashboard": {
+    "title": "Triage Dashboard",
+    "active_roster": "Active Roster · {count} animals",
+    "clear_filter": "Clear filter: {filter}",
+    "add_animal": "Add Animal",
+    "v3": "RescueHub · Triage System · v3.5",
+    "stats": {
+      "total_dogs": "Total Dogs",
+      "healthy": "Healthy",
+      "needs_review": "Needs Review",
+      "avg_age": "Avg. Age",
+      "yrs": "yrs",
+      "filter_healthy": "Filter: Healthy",
+      "filter_needs_review": "Filter: Needs Review"
+    },
+    "table": {
+      "title": "Animal Records",
+      "subtitle": "Stray Hold Guardian",
+      "active_holds": "{count} hold{plural} active",
+      "cleared": "{count} cleared",
+      "hayden_act": "{count} Hayden Act",
+      "view_all": "View All",
+      "columns": {
+        "animal": "Animal",
+        "breed": "Breed",
+        "age": "Age",
+        "euth_risk": "Euth. Risk",
+        "legal_status": "Legal Status",
+        "actions": "Actions",
+        "medical": "Medical"
+      },
+      "bsl_suffix": "(Mixed Breed ⚖️)",
+      "locked": "LOCKED",
+      "hayden_note": "Hayden Act — no actions permitted",
+      "adopt": "Adopt",
+      "transfer": "Transfer",
+      "on_hold": "On Hold",
+      "locked_btn": "Locked",
+      "compliance_footer": "All stray holds are calculated in accordance with the Hayden Act.",
+      "age_yr": "yr",
+      "age_yrs": "yrs"
+    },
+    "badges": {
+      "safe": "SAFE",
+      "at_risk": "AT RISK",
+      "hayden_act": "HAYDEN ACT ⚠️",
+      "hayden_tag": "HAYDEN"
+    }
   },
   "sponsors": {
     "title": "Corporate Sponsors",

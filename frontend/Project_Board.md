@@ -36,32 +36,40 @@
 - [x] **Global Hamburger Menu** — Added to public nav header with links: Mission, Legal, Process, Story, About Us, Contact. Full responsive split: desktop (inline) / mobile (dropdown).
 - [x] **Global 'Back to Dashboard' Buttons** — Added to every sub-page
 
-### Frontend UI Polish (Today)
+### Frontend UI Polish (Sprint)
 - [x] **Desktop Override Sprint** — Adoption Broadcast `<p>` rewired to use i18n keys with `{count}` variable interpolation. SPONSORS array refactored with real corporate logos via Clearbit API.
 - [x] **True Ticking Clock** — `LiveTimer.tsx` rewritten from scratch with `setInterval(..., 1000)` precision. Massive attention-grabbing amber/red UI (`text-xl font-black font-mono`, pulsing overdue alerts). Injected into the dashboard's Legal Status column in `AnimalTable.tsx`.
 - [x] **Option A: i18n Localization & Real Logos** — Full breed dictionary (12 breeds × 3 languages), medical status translations, clock label translations. Sponsors switched to Clearbit Logo API `<img>` tags, removing lucide icons.
 - [x] **Clean Sweep Sprint — Hydration Fix** — Added `isMounted` state guard in `LiveTimer.tsx` to prevent SSR/CSR hydration mismatch. Added nav dictionary keys (`public_portal`, `dashboard`, `intake`, `medical`) to all 3 locale files. Wired `Sidebar.tsx` to use i18n `t()` function with locale-change event listener.
 - [x] **Quick Fix — Resilient Logos** — Swapped sponsor logo API from Clearbit to Google Favicon API (`s2/favicons?domain=...&sz=128`) to bypass ad-blocker/CORS blocks on localhost.
 
-## 🚀 In Progress
-
 ### Phase 4: NextAuth/RBAC Implementation
-- [ ] NextAuth.js setup with credentials + OAuth providers
-- [ ] Role-based access control (admin, staff, public)
-- [ ] Protected dashboard routes middleware
-- [ ] Session management & API route protection
-- [ ] Staff invitation flow
-
-## 📋 To Do
+- [x] NextAuth.js setup with credentials + ADMIN/STAFF mock users
+- [x] Role-based access — role exposed in session callback
+- [x] Protected dashboard/middleware via `proxy.ts`
+- [x] Premium login page at `/login`
+- [x] Sidebar auth integration — email, role badge, sign out button
 
 ### Phase 5: Compliance Dashboard Widgets
-- [ ] UBIT sponsor revenue widget
+- [x] UBIT sponsor revenue widget (IRC § 513(i) — $42.5K vs $18.2K)
+- [x] ESIGN waiver completion stats (100% compliance, 342 hashes)
+- [x] Dashboard i18n translation sweep (stat cards, table, badges)
 - [ ] Charleston compliance geo-map
-- [ ] ESIGN waiver completion stats
 - [ ] Stray hold expiration forecast
+
+## 🚀 In Progress
 
 ### Phase 6: Medical Intake Module
 - [ ] `<MedicalIntakeChecksheet />` component scaffolding
 - [ ] ASPCA TPR (Temp/Pulse/Respiration) form wireframe
 - [ ] Emergency signs conditional flags (UI only)
 - [ ] Medical file linking to animal record
+
+## 🔶 Archived / Blocked
+
+### 3D WebGL Hero
+- [x] Rescue Network constellation built with Three.js/R3F
+- [x] Central liquid-silver globe + orbiting glass animal nodes
+- [x] Constellation lines, orbital rings, starfield, mouse-follow tilt
+- [ ] **Blocked**: Next.js CSS/SSR height collapse conflicts with R3F Canvas prevented reliable rendering
+- [ ] **Archived**: Code on `archive/3d-webgl` branch — replace with premium 2D CSS solution

@@ -13,7 +13,8 @@
     "fundraising": "Recaudación",
     "surrender": "Entrega",
     "staff_login": "Acceso del Personal",
-    "locale_switch": "Idioma"
+    "locale_switch": "Idioma",
+    "back_to_options": "Volver a Opciones de Admisión"
   },
   "hero": {
     "badge": "Plataforma Legalmente Conforme",
@@ -41,6 +42,55 @@
     "stray_hold_active": "Retiro de Callejero Activo",
     "remaining": "restante",
     "legal_action_required": "retrasado — se requiere acción legal"
+  },
+  "dashboard": {
+    "title": "Panel de Triaje",
+    "active_roster": "Lista Activa · {count} animales",
+    "clear_filter": "Limpiar filtro: {filter}",
+    "add_animal": "Añadir Animal",
+    "v3": "RescueHub · Sistema de Triaje · v3.5",
+    "stats": {
+      "total_dogs": "Total Perros",
+      "healthy": "Saludables",
+      "needs_review": "Necesita Revisión",
+      "avg_age": "Edad Prom.",
+      "yrs": "años",
+      "filter_healthy": "Filtrar: Saludables",
+      "filter_needs_review": "Filtrar: Necesita Revisión"
+    },
+    "table": {
+      "title": "Registros de Animales",
+      "subtitle": "Guardián de Retiros de Callejeros",
+      "active_holds": "{count} retiro{plural} activo",
+      "cleared": "{count} liberado",
+      "hayden_act": "{count} Ley Hayden",
+      "view_all": "Ver Todo",
+      "columns": {
+        "animal": "Animal",
+        "breed": "Raza",
+        "age": "Edad",
+        "euth_risk": "Riesgo Eut.",
+        "legal_status": "Estado Legal",
+        "actions": "Acciones",
+        "medical": "Médico"
+      },
+      "bsl_suffix": "(Raza Mixta ⚖️)",
+      "locked": "BLOQUEADO",
+      "hayden_note": "Ley Hayden — no se permiten acciones",
+      "adopt": "Adoptar",
+      "transfer": "Transferir",
+      "on_hold": "En Retiro",
+      "locked_btn": "Bloqueado",
+      "compliance_footer": "Todos los retiros de callejeros se calculan según la Ley Hayden.",
+      "age_yr": "año",
+      "age_yrs": "años"
+    },
+    "badges": {
+      "safe": "SEGURO",
+      "at_risk": "EN RIESGO",
+      "hayden_act": "LEY HAYDEN ⚠️",
+      "hayden_tag": "HAYDEN"
+    }
   },
   "sponsors": {
     "title": "Patrocinadores Corporativos",

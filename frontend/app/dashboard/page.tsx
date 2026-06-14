@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   PawPrint,
   HeartPulse,
@@ -20,6 +20,77 @@ import {
 import dogs from "../../data/dogs.json";
 import { PremiumStatCard } from "@/src/components/dashboard/PremiumStatCard";
 import { AnimalTable } from "@/src/components/dashboard/AnimalTable";
+import { UbitSponsorWidget, EsignStatsWidget } from "@/src/components/dashboard/widgets";
+
+// ── Synchronous i18n ─────────────────────────────────────────────────────
+import enDict from "../../locales/en.json";
+import esDict from "../../locales/es.json";
+import zhDict from "../../locales/zh.json";
+
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  zh: zhDict as unknown as Record<string, unknown>,
+};
+
+const STORAGE_KEY = "rescuehub_locale";
+
+type LocaleCode = "en" | "es" | "zh";
+
+function t(locale: string, key: string, vars?: Record<string, string | number>): string {
+  const parts = key.split(".");
+  let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+  for (const part of parts) {
+    if (typeof value !== "object" || value === null) return key;
+    value = (value as Record<string, unknown>)[part];
+  }
+  if (typeof value !== "string") return key;
+  if (!vars) return value;
+  return Object.entries(vars).reduce((str, [k, v]) => {
+    return str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+  }, value);
+}
+
+function useI18n() {
+  const [locale, setLocaleState] = useState<LocaleCode>("en");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === "es" || stored === "zh") setLocaleState(stored);
+        else setLocaleState("en");
+      } catch {
+        setLocaleState("en");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: CustomEvent) => {
+      const l = e.detail as LocaleCode;
+      if (l === "es" || l === "zh" || l === "en") setLocaleState(l);
+    };
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    return () => window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+  }, []);
+
+  const setLocale = useCallback((l: string) => {
+    const code = (l === "es" || l === "zh" ? l : "en") as LocaleCode;
+    setLocaleState(code);
+    if (typeof window !== "undefined") {
+      try { localStorage.setItem(STORAGE_KEY, code); } catch {}
+    }
+  }, []);
+
+  const tr = useCallback(
+    (key: string, vars?: Record<string, string | number>) => t(locale, key, vars),
+    [locale]
+  );
+
+  return { locale, tr, setLocale };
+}
 
 type Dog = {
   id: number;
@@ -36,6 +107,7 @@ type Dog = {
 
 export default function Dashboard() {
   const [filter, setFilter] = useState<string | null>(null);
+  const { tr, locale } = useI18n();
   const dogsTyped = dogs as Dog[];
   const totalDogs = dogsTyped.length;
   const healthyCount = dogsTyped.filter((d) => d.medicalStatus === "Healthy").length;
@@ -54,14 +126,14 @@ export default function Dashboard() {
       return dogsTyped.filter((d) => d.medicalStatus === "Healthy");
     }
     if (filter === "Total Dogs") {
-      return dogsTyped; // total — just show all
+      return dogsTyped;
     }
     return dogsTyped;
   }, [filter, dogsTyped]);
 
   const stats = [
     {
-      label: "Total Dogs",
+      label: tr("dashboard.stats.total_dogs"),
       value: totalDogs,
       icon: PawPrint,
       accentColor: "#533afd",
@@ -69,7 +141,7 @@ export default function Dashboard() {
       filterKey: "Total Dogs",
     },
     {
-      label: "Healthy",
+      label: tr("dashboard.stats.healthy"),
       value: healthyCount,
       icon: HeartPulse,
       accentColor: "#15be53",
@@ -77,7 +149,7 @@ export default function Dashboard() {
       filterKey: "Healthy",
     },
     {
-      label: "Needs Review",
+      label: tr("dashboard.stats.needs_review"),
       value: needsReviewCount,
       icon: AlertTriangle,
       accentColor: "#ea2261",
@@ -85,8 +157,8 @@ export default function Dashboard() {
       filterKey: "Needs Review",
     },
     {
-      label: "Avg. Age",
-      value: `${avgAge} yrs`,
+      label: tr("dashboard.stats.avg_age"),
+      value: `${avgAge} ${tr("dashboard.stats.yrs")}`,
       icon: Users,
       accentColor: "#533afd",
       filterKey: null,
@@ -109,13 +181,13 @@ export default function Dashboard() {
                 <Activity className="h-4 w-4" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                Triage Dashboard
+                {tr("dashboard.title")}
               </h2>
             </div>
             <p className="mt-1.5 text-sm text-slate-500">
               <span className="inline-flex items-center gap-1">
                 <PawPrint className="h-3.5 w-3.5 text-slate-400" />
-                Active Roster · {totalDogs} animals
+                {tr("dashboard.active_roster", { count: totalDogs })}
               </span>
               {filter && (
                 <button
@@ -123,7 +195,7 @@ export default function Dashboard() {
                   className="ml-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-500 transition-colors"
                 >
                   <ShieldCheck className="h-3 w-3" />
-                  Clear filter: {filter}
+                  {tr("dashboard.clear_filter", { filter })}
                 </button>
               )}
             </p>
@@ -133,7 +205,7 @@ export default function Dashboard() {
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/30 active:scale-[0.97]"
           >
             <PawPrint className="h-4 w-4" />
-            Add Animal
+            {tr("dashboard.add_animal")}
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -145,8 +217,6 @@ export default function Dashboard() {
           <div
             key={stat.label}
             onClick={() => {
-              // "Total Dogs" and non-filterable cards just show all
-              // "Total Dogs" and non-filterable cards clear all filters
               if (stat.filterKey === "Total Dogs" || stat.filterKey === null) {
                 setFilter(null);
               } else {
@@ -154,7 +224,7 @@ export default function Dashboard() {
               }
             }}
             className={stat.filterKey ? "cursor-pointer" : ""}
-            title={stat.filterKey ? `Filter: ${stat.filterKey}` : undefined}
+            title={stat.filterKey ? tr("dashboard.stats.filter_healthy") : undefined}
           >
             <PremiumStatCard
               label={stat.label}
@@ -169,10 +239,16 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* ── Phase 5 Compliance Widgets — side by side ────────── */}
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <UbitSponsorWidget />
+        <EsignStatsWidget />
+      </div>
+
       {/* ── Triage Table ────────────────────────────────────── */}
       <AnimalTable dogs={filteredDogs} onViewAll={() => setFilter(null)} />
 
-      {/* ── Footer — no overlap, clean spacing ──────────────── */}
+      {/* ── Footer ──────────────────────────────────────────── */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -181,7 +257,7 @@ export default function Dashboard() {
       >
         <span className="inline-flex items-center gap-1.5">
           <ShieldCheck className="h-3 w-3" />
-          RescueHub · Triage System · v3.5
+          {tr("dashboard.v3")}
         </span>
       </motion.p>
     </div>
