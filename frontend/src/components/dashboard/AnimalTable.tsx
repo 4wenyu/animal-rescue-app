@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ChevronRight,
   Lock,
@@ -17,6 +17,68 @@ import {
   User,
 } from "lucide-react";
 import { LiveTimer } from "@/src/components/LiveTimer";
+
+// ── Synchronous i18n ─────────────────────────────────────────────────────
+import enDict from "../../../locales/en.json";
+import esDict from "../../../locales/es.json";
+import zhDict from "../../../locales/zh.json";
+
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  zh: zhDict as unknown as Record<string, unknown>,
+};
+
+const STORAGE_KEY = "rescuehub_locale";
+
+type LocaleCode = "en" | "es" | "zh";
+
+function t(locale: string, key: string, vars?: Record<string, string | number>): string {
+  const parts = key.split(".");
+  let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+  for (const part of parts) {
+    if (typeof value !== "object" || value === null) return key;
+    value = (value as Record<string, unknown>)[part];
+  }
+  if (typeof value !== "string") return key;
+  if (!vars) return value;
+  return Object.entries(vars).reduce((str, [k, v]) => {
+    return str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+  }, value);
+}
+
+function useI18n() {
+  const [locale, setLocaleState] = useState<LocaleCode>("en");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === "es" || stored === "zh") setLocaleState(stored);
+        else setLocaleState("en");
+      } catch {
+        setLocaleState("en");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: CustomEvent) => {
+      const l = e.detail as LocaleCode;
+      if (l === "es" || l === "zh" || l === "en") setLocaleState(l);
+    };
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    return () => window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+  }, []);
+
+  const tr = useCallback(
+    (key: string, vars?: Record<string, string | number>) => t(locale, key, vars),
+    [locale]
+  );
+
+  return { locale, tr };
+}
 
 interface Dog {
   id: number;
@@ -50,9 +112,9 @@ function isBSLRestricted(breed: string): boolean {
   return BSL_RESTRICTED_BREEDS.some((b) => breed.toLowerCase().includes(b.toLowerCase()));
 }
 
-function getDisplayBreed(dog: Dog): string {
+function getDisplayBreed(dog: Dog, tr: (k: string, v?: Record<string, string | number>) => string): string {
   if (isBSLRestricted(dog.breed)) {
-    return `${dog.breed} ("Mixed Breed" ⚖️)`;
+    return `${dog.breed} ${tr("dashboard.table.bsl_suffix")}`;
   }
   return dog.breed;
 }
@@ -82,20 +144,20 @@ function AnimalAvatar({ dog, size = 28 }: { dog: Dog; size?: number }) {
 }
 
 // ── Risk Badge ──────────────────────────────────────────────────────────
-function RiskBadge({ status }: { status: Dog["euthanasia_risk_status"] }) {
+function RiskBadge({ status, tr }: { status: Dog["euthanasia_risk_status"]; tr: (k: string) => string }) {
   const config = {
     SAFE: {
-      label: "SAFE",
+      label: tr("dashboard.badges.safe"),
       class: "bg-emerald-50 text-emerald-700 border-emerald-200",
       icon: ShieldCheck,
     },
     AT_RISK: {
-      label: "AT RISK",
+      label: tr("dashboard.badges.at_risk"),
       class: "bg-amber-50 text-amber-700 border-amber-200",
       icon: AlertTriangle,
     },
     IMMEDIATE_BEHAVIORAL: {
-      label: "HAYDEN ACT ⚠️",
+      label: tr("dashboard.badges.hayden_act"),
       class: "bg-red-50 text-red-700 border-red-300 animate-pulse",
       icon: ShieldAlert,
     },
@@ -114,26 +176,24 @@ function RiskBadge({ status }: { status: Dog["euthanasia_risk_status"] }) {
   );
 }
 
-// ── Stray Hold Badge — uses LiveTimer for true ticking clock ────────────
-function StrayHoldBadge({ dog }: { dog: Dog }) {
+// ── Stray Hold Badge ────────────────────────────────────────────────────
+function StrayHoldBadge({ dog, tr }: { dog: Dog; tr: (k: string) => string }) {
   const isHaydenAct = dog.euthanasia_risk_status === "IMMEDIATE_BEHAVIORAL";
 
-  // Hayden Act animals get a special locked badge — no ticking clock
   if (isHaydenAct) {
     return (
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-red-50 text-red-700 border border-red-300">
           <ShieldAlert className="h-3 w-3" />
-          LOCKED
+          {tr("dashboard.table.locked")}
         </span>
         <span className="text-[11px] text-slate-400">
-          Hayden Act — no actions permitted
+          {tr("dashboard.table.hayden_note")}
         </span>
       </div>
     );
   }
 
-  // All other animals get the massive ticking LiveTimer
   return (
     <div className="min-w-[180px]">
       <LiveTimer
@@ -146,7 +206,7 @@ function StrayHoldBadge({ dog }: { dog: Dog }) {
 }
 
 // ── Action Buttons ──────────────────────────────────────────────────────
-function ActionButtons({ dog }: { dog: Dog }) {
+function ActionButtons({ dog, tr }: { dog: Dog; tr: (k: string) => string }) {
   const isHaydenAct = dog.euthanasia_risk_status === "IMMEDIATE_BEHAVIORAL";
   const canAct = dog.statutoryHoldCleared && !isHaydenAct;
 
@@ -169,14 +229,14 @@ function ActionButtons({ dog }: { dog: Dog }) {
       >
         {isHaydenAct ? (
           <span className="inline-flex items-center gap-1">
-            <Ban className="h-3 w-3" /> Locked
+            <Ban className="h-3 w-3" /> {tr("dashboard.table.locked_btn")}
           </span>
         ) : !dog.statutoryHoldCleared ? (
           <span className="inline-flex items-center gap-1">
-            <Lock className="h-3 w-3" /> On Hold
+            <Lock className="h-3 w-3" /> {tr("dashboard.table.on_hold")}
           </span>
         ) : (
-          "Adopt"
+          tr("dashboard.table.adopt")
         )}
       </button>
       <button
@@ -196,14 +256,14 @@ function ActionButtons({ dog }: { dog: Dog }) {
       >
         {isHaydenAct ? (
           <span className="inline-flex items-center gap-1">
-            <Ban className="h-3 w-3" /> Locked
+            <Ban className="h-3 w-3" /> {tr("dashboard.table.locked_btn")}
           </span>
         ) : !dog.statutoryHoldCleared ? (
           <span className="inline-flex items-center gap-1">
-            <Lock className="h-3 w-3" /> On Hold
+            <Lock className="h-3 w-3" /> {tr("dashboard.table.on_hold")}
           </span>
         ) : (
-          "Transfer"
+          tr("dashboard.table.transfer")
         )}
       </button>
     </div>
@@ -252,6 +312,7 @@ const rowVariant = {
 
 // ── Component ───────────────────────────────────────────────────────────
 export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
+  const { tr } = useI18n();
   const lockedCount = dogs.filter((d) => !d.statutoryHoldCleared).length;
   const haydenCount = dogs.filter(
     (d) => d.euthanasia_risk_status === "IMMEDIATE_BEHAVIORAL",
@@ -269,28 +330,28 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-slate-500" />
             <h3 className="text-lg font-semibold text-slate-800">
-              Animal Records
+              {tr("dashboard.table.title")}
             </h3>
             <span className="text-xs text-slate-400 font-medium">
-              — Stray Hold Guardian
+              — {tr("dashboard.table.subtitle")}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             <span className="inline-flex items-center gap-1">
               <Lock className="h-3 w-3 text-amber-500" />
-              {lockedCount} hold{lockedCount !== 1 ? "s" : ""} active
+              {tr("dashboard.table.active_holds", { count: lockedCount, plural: lockedCount !== 1 ? "s" : "" })}
             </span>
             <span className="mx-1.5 text-slate-300">·</span>
             <span className="inline-flex items-center gap-1">
               <Unlock className="h-3 w-3 text-emerald-500" />
-              {clearedCount} cleared
+              {tr("dashboard.table.cleared", { count: clearedCount })}
             </span>
             {haydenCount > 0 && (
               <>
                 <span className="mx-1.5 text-slate-300">·</span>
                 <span className="inline-flex items-center gap-1">
                   <ShieldAlert className="h-3 w-3 text-red-500" />
-                  {haydenCount} Hayden Act
+                  {tr("dashboard.table.hayden_act", { count: haydenCount })}
                 </span>
               </>
             )}
@@ -300,7 +361,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
           onClick={onViewAll}
           className="group/va inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 transition-colors hover:text-emerald-600"
         >
-          <span>View All</span>
+          <span>{tr("dashboard.table.view_all")}</span>
           <ChevronRight className="h-3 w-3 transition-transform duration-200 group-hover/va:translate-x-1" />
         </button>
       </motion.div>
@@ -314,33 +375,33 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
           <thead>
             <tr className="bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-200">
               <th className="p-4 pl-6 text-xs font-semibold tracking-wider uppercase text-slate-500">
-                Animal
+                {tr("dashboard.table.columns.animal")}
               </th>
               <th className="p-4 text-xs font-semibold tracking-wider uppercase text-slate-500">
-                Breed
+                {tr("dashboard.table.columns.breed")}
               </th>
               <th className="p-4 text-xs font-semibold tracking-wider uppercase text-slate-500">
-                Age
+                {tr("dashboard.table.columns.age")}
               </th>
               <th className="p-4 text-xs font-semibold tracking-wider uppercase text-slate-500">
                 <span className="inline-flex items-center gap-1">
                   <ShieldCheck className="h-3 w-3" />
-                  Euth. Risk
+                  {tr("dashboard.table.columns.euth_risk")}
                 </span>
               </th>
               <th className="p-4 text-xs font-semibold tracking-wider uppercase text-slate-500">
                 <span className="inline-flex items-center gap-1">
                   <Lock className="h-3 w-3" />
-                  Legal Status
+                  {tr("dashboard.table.columns.legal_status")}
                 </span>
               </th>
               <th className="p-4 text-xs font-semibold tracking-wider uppercase text-slate-500">
-                Actions
+                {tr("dashboard.table.columns.actions")}
               </th>
               <th className="p-4 pr-6 text-xs font-semibold tracking-wider uppercase text-slate-500 text-right">
                 <span className="inline-flex items-center gap-1 justify-end">
                   <HeartPulse className="h-3 w-3" />
-                  Medical
+                  {tr("dashboard.table.columns.medical")}
                 </span>
               </th>
             </tr>
@@ -379,7 +440,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
                       {dog.euthanasia_risk_status === "IMMEDIATE_BEHAVIORAL" && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold tracking-wide ml-1">
                           <ShieldAlert className="h-2.5 w-2.5" />
-                          HAYDEN
+                          {tr("dashboard.badges.hayden_tag")}
                         </span>
                       )}
                     </div>
@@ -388,7 +449,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
                   {/* Breed — BSL-safe display */}
                   <td className="p-4">
                     <span className="text-slate-600">
-                      {getDisplayBreed(dog)}
+                      {getDisplayBreed(dog, tr)}
                     </span>
                   </td>
 
@@ -397,24 +458,24 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
                     <span className="text-slate-600">
                       {dog.age}{" "}
                       <span className="text-xs text-slate-400">
-                        {dog.age === 1 ? "yr" : "yrs"}
+                        {dog.age === 1 ? tr("dashboard.table.age_yr") : tr("dashboard.table.age_yrs")}
                       </span>
                     </span>
                   </td>
 
                   {/* Euthanasia Risk */}
                   <td className="p-4">
-                    <RiskBadge status={dog.euthanasia_risk_status} />
+                    <RiskBadge status={dog.euthanasia_risk_status} tr={tr} />
                   </td>
 
                   {/* Legal Status — massive ticking LiveTimer */}
                   <td className="p-4">
-                    <StrayHoldBadge dog={dog} />
+                    <StrayHoldBadge dog={dog} tr={tr} />
                   </td>
 
-                  {/* Actions — click-stopped from row click */}
+                  {/* Actions */}
                   <td className="p-4">
-                    <ActionButtons dog={dog} />
+                    <ActionButtons dog={dog} tr={tr} />
                   </td>
 
                   {/* Medical Status */}
@@ -435,7 +496,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
       >
         <span className="inline-flex items-center gap-1">
           <ShieldCheck className="h-3 w-3" />
-          All stray holds are calculated in accordance with the Hayden Act.
+          {tr("dashboard.table.compliance_footer")}
         </span>
       </motion.div>
     </motion.div>

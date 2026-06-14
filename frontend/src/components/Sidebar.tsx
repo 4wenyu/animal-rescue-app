@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession, signOut } from "next-auth/react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +12,7 @@ import {
   Heart,
   Activity,
   DollarSign,
+  LogOut,
 } from "lucide-react";
 import enDict from "../../locales/en.json";
 import esDict from "../../locales/es.json";
@@ -24,26 +26,41 @@ const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
 
 const STORAGE_KEY = "rescuehub_locale";
 
+// English defaults shown during SSR to prevent hydration mismatch
+const FALLBACK_LABELS: Record<string, string> = {
+  "nav.public_portal": "Public Portal",
+  "nav.dashboard": "Dashboard",
+  "nav.intake": "Intake",
+  "nav.medical": "Medical",
+  "nav.fundraising": "Fundraising",
+};
+
 function t(key: string): string {
-  if (typeof window === "undefined") return key;
+  if (typeof window === "undefined") return FALLBACK_LABELS[key] ?? key;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     const locale = stored === "es" || stored === "zh" ? stored : "en";
     const parts = key.split(".");
     let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
     for (const part of parts) {
-      if (typeof value !== "object" || value === null) return key;
+      if (typeof value !== "object" || value === null) return FALLBACK_LABELS[key] ?? key;
       value = (value as Record<string, unknown>)[part];
     }
-    return typeof value === "string" ? value : key;
+    return typeof value === "string" ? value : FALLBACK_LABELS[key] ?? key;
   } catch {
-    return key;
+    return FALLBACK_LABELS[key] ?? key;
   }
 }
 
 export function Sidebar() {
   const pathname = usePathname();
   const [, forceUpdate] = useState(0);
+  const { data: session } = useSession();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Re-render when locale changes
   useEffect(() => {
@@ -57,18 +74,43 @@ export function Sidebar() {
     };
   }, []);
 
+  // SSR guard: render fixed English labels until client hydrates
+  // This prevents the "string from localStorage differs from server" hydration error.
   const NAV_ITEMS = [
-    { href: "/", label: t("nav.public_portal"), icon: House },
-    { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { href: "/intake/public", label: t("nav.intake"), icon: Heart },
-    { href: "/medical", label: t("nav.medical"), icon: Activity },
-    { href: "/fundraising", label: t("nav.fundraising"), icon: DollarSign },
+    {
+      href: "/",
+      label: isMounted ? t("nav.public_portal") : "Public Portal",
+      icon: House,
+    },
+    {
+      href: "/dashboard",
+      label: isMounted ? t("nav.dashboard") : "Dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      href: "/intake",
+      label: isMounted ? t("nav.intake") : "Intake",
+      icon: Heart,
+    },
+    {
+      href: "/medical",
+      label: isMounted ? t("nav.medical") : "Medical",
+      icon: Activity,
+    },
+    {
+      href: "/fundraising",
+      label: isMounted ? t("nav.fundraising") : "Fundraising",
+      icon: DollarSign,
+    },
   ] as const;
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   };
+
+  const user = session?.user;
+  const userRole = (user as Record<string, unknown>)?.role as string | undefined;
 
   return (
     <motion.aside
@@ -78,7 +120,7 @@ export function Sidebar() {
       className="flex w-64 shrink-0 flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-slate-300 shadow-2xl shadow-slate-900/30"
     >
       <div>
-        {/* Logo / Brand — wrapped in <Link> so clicking routes to / */}
+        {/* Logo / Brand */}
         <div className="p-6 pb-0">
           <Link href="/" className="mb-8 flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30">
@@ -117,10 +159,41 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Bottom status card */}
-      <div className="m-4 rounded-xl border border-white/5 bg-gradient-to-br from-slate-800/70 to-slate-800/30 p-4">
-        <p className="text-[11px] font-medium text-slate-500">Active Users</p>
-        <p className="mt-0.5 text-lg font-bold text-white">12</p>
+      {/* User / Auth section */}
+      <div className="m-4">
+        {user ? (
+          <div className="rounded-xl border border-white/5 bg-gradient-to-br from-slate-800/70 to-slate-800/30 p-4">
+            <p className="truncate text-xs font-medium text-slate-400">
+              {user.email}
+            </p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span
+                className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                  userRole === "ADMIN"
+                    ? "bg-amber-400/20 text-amber-400"
+                    : "bg-cyan-400/20 text-cyan-400"
+                }`}
+              >
+                {userRole}
+              </span>
+            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-400 transition-all hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-400"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-400 transition-all hover:border-white/20 hover:text-white"
+          >
+            <LogOut className="h-4 w-4 rotate-90" />
+            Staff Login
+          </Link>
+        )}
       </div>
     </motion.aside>
   );

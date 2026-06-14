@@ -26,6 +26,7 @@ import {
 import dogs from "../data/dogs.json";
 import { LocaleSwitch } from "@/src/components/LocaleSwitch";
 import { LiveTimer } from "@/src/components/LiveTimer";
+import { Hero3D } from "@/src/components/Hero3D";
 
 // ── Synchronous i18n hook ────────────────────────────────────────────────
 // Import JSON directly (no dynamic import) so translations work on first render.
@@ -189,7 +190,7 @@ export default function PublicHomePage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-sans">
+    <div className="min-h-screen font-sans">
       {/* ── Navigation Bar ─────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -313,64 +314,68 @@ export default function PublicHomePage() {
       </nav>
 
       {/* ── Hero Section ───────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-slate-100">
-        <div className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-emerald-50/60 via-emerald-50/20 to-transparent" />
-        <div className="mx-auto max-w-6xl px-6 pb-24 pt-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-semibold tracking-wide text-emerald-700">
-              <Shield className="h-3.5 w-3.5" />
-              {tr("hero.badge")}
-            </span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-4 text-4xl font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
-          >
-            {tr("hero.headline")}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-500"
-          >
-            {tr("site.description")}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3"
-          >
-            <Link
-              href="/fundraising"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-700 hover:shadow-xl active:scale-[0.97]"
+      <section className="relative w-full h-[85vh] overflow-hidden flex items-center justify-center bg-transparent">
+        <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
+          <Hero3D />
+        </div>
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 pb-24 pt-20 text-center">
+          <div className="inline-block rounded-2xl bg-white/70 p-8 shadow-lg shadow-slate-900/5 backdrop-blur-md sm:p-12">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Heart className="h-4 w-4" />
-              {tr("hero.cta_crowdfunding")}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/intake/public"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]"
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-semibold tracking-wide text-emerald-700">
+                <Shield className="h-3.5 w-3.5" />
+                {tr("hero.badge")}
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 text-4xl font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
             >
-              <Heart className="h-4 w-4" />
-              {tr("hero.cta_surrender")}
+              {tr("hero.headline")}
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600"
+            >
+              {tr("site.description")}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+            >
+              <Link
+                href="/fundraising"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-700 hover:shadow-xl active:scale-[0.97]"
+              >
+                <Heart className="h-4 w-4" />
+                {tr("hero.cta_crowdfunding")}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/intake/public"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]"
+              >
+                <Heart className="h-4 w-4" />
+                {tr("hero.cta_surrender")}
             </Link>
           </motion.div>
+          </div>
         </div>
       </section>
 
       {/* ── Public Adoption Broadcast Feed ─────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-16">
+      <section className="mx-auto max-w-6xl px-6 pb-20 pt-16 bg-white">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
