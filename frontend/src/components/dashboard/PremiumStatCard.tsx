@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 
 /**
  * Stripe's precise multi-layer pillowy shadow.
@@ -24,7 +25,7 @@ function pillowyShadow(lift: number) {
 interface PremiumStatCardProps {
   label: string;
   value: string | number;
-  icon: React.ElementType;
+  icon: LucideIcon;
   /** Single accent hex color (e.g. "#533afd"). No gradient strings. */
   accentColor: string;
   /** Optional trend percentage — positive = up (green), negative = down (red) */

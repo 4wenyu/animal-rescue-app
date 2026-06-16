@@ -26,7 +26,7 @@ import {
 import dogs from "../data/dogs.json";
 import { LocaleSwitch } from "@/src/components/LocaleSwitch";
 import { LiveTimer } from "@/src/components/LiveTimer";
-import { Hero3D } from "@/src/components/Hero3D";
+import { HeroMesh } from "@/src/components/HeroMesh";
 
 // ── Synchronous i18n hook ────────────────────────────────────────────────
 // Import JSON directly (no dynamic import) so translations work on first render.
@@ -192,7 +192,7 @@ export default function PublicHomePage() {
   return (
     <div className="min-h-screen font-sans">
       {/* ── Navigation Bar ─────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-slate-200/60 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-emerald-500/30">
@@ -242,7 +242,7 @@ export default function PublicHomePage() {
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#10B981] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#059669] active:scale-[0.98]"
             >
               {tr("nav.staff_login")}
               <ChevronRight className="h-4 w-4" />
@@ -316,16 +316,15 @@ export default function PublicHomePage() {
       {/* ── Hero Section ───────────────────────────────────────────── */}
       <section className="relative w-full h-[85vh] overflow-hidden flex items-center justify-center bg-transparent">
         <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
-          <Hero3D />
+          <HeroMesh />
         </div>
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 pb-24 pt-20 text-center">
-          <div className="inline-block rounded-2xl bg-white/70 p-8 shadow-lg shadow-slate-900/5 backdrop-blur-md sm:p-12">
+        <div className="relative z-10 w-full max-w-4xl mx-auto bg-white/70 backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(203,213,225,0.3)] border border-white/60 p-12 text-center">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-semibold tracking-wide text-emerald-700">
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-cyan-100 px-3.5 py-1 text-xs font-semibold tracking-wide text-cyan-700">
                 <Shield className="h-3.5 w-3.5" />
                 {tr("hero.badge")}
               </span>
@@ -335,7 +334,7 @@ export default function PublicHomePage() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-4 text-4xl font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
+              className="mt-4 text-4xl font-bold leading-[1.15] tracking-tight text-[#334155] sm:text-5xl lg:text-6xl"
             >
               {tr("hero.headline")}
             </motion.h1>
@@ -343,7 +342,7 @@ export default function PublicHomePage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600"
+              className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-[#64748B]"
             >
               {tr("site.description")}
             </motion.p>
@@ -356,21 +355,20 @@ export default function PublicHomePage() {
             >
               <Link
                 href="/fundraising"
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-700 hover:shadow-xl active:scale-[0.97]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#10B981] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-[#059669] hover:shadow-xl active:scale-[0.97]"
               >
                 <Heart className="h-4 w-4" />
-                {tr("hero.cta_crowdfunding")}
+                Emergency Crowdfunding
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/intake/public"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]"
+                className="inline-flex items-center gap-2 rounded-xl bg-transparent border-2 border-slate-300 px-6 py-3 text-sm font-semibold text-[#334155] shadow-sm transition hover:bg-white/50 active:scale-[0.97]"
               >
                 <Heart className="h-4 w-4" />
-                {tr("hero.cta_surrender")}
+                Public Surrender Portal
             </Link>
           </motion.div>
-          </div>
         </div>
       </section>
 
