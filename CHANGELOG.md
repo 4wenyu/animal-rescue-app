@@ -1,24 +1,30 @@
 # Changelog
 
-## v2.2.0 — Native React Chat Rewrite + Gemini Integration (2026-06-15)
-
-### Bug Fixes
-- **@ai-sdk/react `useChat` hook eliminated** — The Vercel AI SDK's `useChat` was completely dead in Next.js 15, failing to initialize and silently swallowing user inputs. Ripped out all imports and replaced with pure React state management (`useState`, `useCallback`, `useRef`).
-- **Server Action hijack bypassed** — Removed dependency on Vercel SDK's internal message pipeline that was being intercepted by Next.js 15 Server Actions. Native fetch() to `/api/chat` now routes directly to the streaming endpoint without SDK middleware interference.
+## v3.0.0 — Phase 6: Conversational UI & Lost Pet Chatbot (2026-06-15)
 
 ### Added
-- **Pure React chat state** — Messages, input, and isLoading managed via `useState` with a self-generating `nextId()` counter for stable message keys.
-- **Native ReadableStream consumption** — Chatbot reads the streaming response chunk-by-chunk via `getReader()` + `TextDecoder`, appending assistant text incrementally for real-time streaming feel.
-- **Gemini 3.5 Flash backend** — API route (`app/api/chat/route.ts`) uses `@ai-sdk/google` `streamText()` targeting `google("gemini-3.5-flash")` with empathetic RescueHub system prompt. Returns a `toTextStreamResponse()` for native streaming.
-- **Emotional UI flow** — Assistant greeting initialized immediately in message state. Typing indicator (3 bouncing dots) shows during loading. Error messages inline in chat with details from the fetch error.
-- **Form-based submission** — Input wrapped in `<form onSubmit>` so both Enter key and Send button go through a single `handleSubmit` handler. Disabled state prevents double-fire during loading.
+- **Native React Chat Component (`FloatingChatbot.tsx`)** — Complete rewrite of the conversational AI interface. Replaced the broken `@ai-sdk/react` `useChat` hook with pure React state management using `useState` + `useCallback`. The component initializes with the assistant's empathetic greeting and manages messages, input, and loading state entirely through local state.
 
-### Changed
-- **`FloatingChatbot.tsx`** — Full rewrite: removed `useChat` / `handleInputChange` / `append` from `@ai-sdk/react`. Replaced with `messages`, `input`, `isLoading` local state. Stream reading via low-level `Response.body.getReader()`.
-- **`app/api/chat/route.ts`** — New API endpoint with `force-dynamic`, `maxDuration: 60`, Gemini 3.5 Flash model, and structured error handling returning 500 JSON on failure.
+- **Manual Streaming via `fetch` + `ReadableStream`** — User messages are sent with `fetch('/api/chat', { method: 'POST', body: JSON.stringify({ messages }) })`. The response is processed through `ReadableStream.getReader()` and `TextDecoder`, appending assistant responses chunk by chunk as they stream in, providing real-time character-by-character feedback.
+
+- **Gemini 3.5 Flash Backend (`app/api/chat/route.ts`)** — Server-side API route using `@ai-sdk/google` `streamText()` with `google("gemini-3.5-flash")`. Handles streaming text generation with a calming RescueHub system prompt. Returns `result.toTextStreamResponse()` for native ReadableStream consumption by the frontend.
+
+### Fixed
+- **`@ai-sdk/react` `useChat` Hook Failure** — The Vercel AI SDK's `useChat` hook was failing to initialize silently in the Next.js 15 environment. This manifested as the chat being completely dead — inputs swallowed, no responses generated, no console errors. Replaced entirely with native React state management, bypassing the SDK dependency layer entirely.
+
+- **Next.js 15 Server Action Hijack** — The rewrite avoids any Server Action interception by using a standard `fetch()` POST to the `/api/chat` route, keeping the streaming connection in the client-side rendering path.
 
 ### Architecture
-- Frontend → `/api/chat` now flows: user message → `fetch()` POST → `streamText()` on Gemini → `ReadableStream` → chunk-by-chunk render. Zero Vercel SDK client-side dependency.
+- `frontend/src/components/chat/FloatingChatbot.tsx` — Pure React component, no external AI SDK dependencies. Uses `useState<Message[]>`, `useState(input)`, `useState(isLoading)`, and `useCallback(sendMessage)`.
+- `frontend/app/api/chat/route.ts` — Node.js runtime, `force-dynamic`, 60s max duration. Accepts `{ messages }` body, streams via `google("gemini-3.5-flash")`.
+
+### Compliance & UX
+- Assistant greeting provides empathetic, calming language to distressed pet owners per EPIC 1 requirements.
+- Typing indicator (bouncing dots) during streaming, smooth-scroll to newest message.
+- Inline error messages appended to chat on fetch failure — no silent failures.
+
+### Next Sprint
+- EPIC 2 (Phase 7): Viral Growth & Token Gateway
 
 ## v2.1.0 — Phase 1: Public Home Page (2026-06-11)
 
@@ -44,5 +50,5 @@
 3. **Charleston Principles** — Footer includes jurisdictional disclosure for multi-state charitable solicitation compliance.
 4. **Chain of Custody** — Surrender portal link preserves the existing ESIGN/UETA waiver chain of custody for property rights transfer.
 
-|### Next Sprint
-|- EPIC 2: Viral Growth & Token Gateway, EPIC 3: Autonomous Outreach Engine, EPIC 4: Wide-Net Search Engine.
+### Next Sprint
+- Phase 2: Dashboard Triage Table — Kanban-style triage board on the internal dashboard with intake status, stray hold clock, behavioral risk level, and medical priority.

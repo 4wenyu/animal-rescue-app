@@ -1,21 +1,21 @@
 ---
-
-kanban-plugin: board
-
+kanban-plugin: basic
 ---
 
 ## Ready
 
+- [ ] **EPIC 1**: Conversational UI & "Lost Pet" Intake
 - [ ] **EPIC 2**: Viral Growth & Token Gateway
 - [ ] **EPIC 3**: Autonomous Outreach Engine
 - [ ] **EPIC 4**: Wide-Net Search Engine
 
-
 ## In Progress
 
 
-## RescueHub — Autonomous AI Animal Rescue Platform
 
+## Done
+
+# RescueHub — Autonomous AI Animal Rescue Platform
 
 ## Architecture Overview
 
@@ -23,7 +23,7 @@ kanban-plugin: board
 
 **Stack:** Next.js 16.2.7, TypeScript + Tailwind CSS + Shadcn, Prisma (expected), Stripe (expected), Auth.js v5 beta.
 
-**Current State:** Public-facing homepage with HeroMesh, adoption feed, corporate sponsors, navigation, and i18n (en/es/zh). Dashboard, intake, medical, and fundraising routes scaffolded. Conversational Lost Pet chatbot live with Gemini 3.5 Flash streaming.
+**Current State:** Public-facing homepage with HeroMesh, adoption feed, corporate sponsors, navigation, and i18n (en/es/zh). Dashboard, intake, medical, and fundraising routes scaffolded. Conversational AI chatbot (FloatingChatbot) with native React + Gemini 3.5 Flash streaming.
 
 ---
 
@@ -43,6 +43,8 @@ kanban-plugin: board
 
 **Functionality:**
 - ✅ AI conducts calm, empathetic Q&A to collect lost pet data (breed, location, photos, last seen)
+- ✅ FloatingChatbot with native React state — replaced broken @ai-sdk/react useChat hook
+- ✅ Gemini 3.5 Flash streaming via /api/chat route
 - ✅ Initiates search after data collection
 - *Future:* Voice-call capabilities
 
@@ -58,8 +60,8 @@ kanban-plugin: board
 - On verification of sharing → token consumption cost waived
 - AI searches for free
 
-**Backlog Additions:**
-- **Vision & Flyer Tool** — Image upload to PDF generation. Users upload photos of their lost pet; the system auto-generates a printable flyer with pet photo, description, contact info, and QR code linking to the RescueHub search page.
+**Detailed Backlog Items:**
+- **Vision & Flyer Tool (Image upload to PDF generation)** — Allow users to upload photos of their lost pet. The system auto-generates a printable, shareable PDF flyer with the pet's photo, name, last-seen location, and contact info. The flyer can be downloaded or shared directly to social platforms as part of the viral loop verification.
 
 ### 📋 EPIC 3: Autonomous Outreach Engine (Phase 8)
 **Problem:** Animals are euthanized due to lack of visibility to potential fosters/adopters.
@@ -73,8 +75,8 @@ kanban-plugin: board
 - Proactively DMs these users with local at-risk animals
 - Asks for donations, fostering, adoption, or retweets/shares
 
-**Backlog Additions:**
-- **Geolocation & Radius Alerting** — Calculate wandering radius from last-seen location and send SMS/alerts to locals within that radius via Twilio or similar. Integrates with the conversational intake data (last-seen coordinates, pet description).
+**Detailed Backlog Items:**
+- **Geolocation & Radius Alerting (Calculate wandering radius and SMS locals)** — Using the last-seen coordinates gathered during the conversational intake, compute a probable wandering radius based on species, size, and time elapsed. Automatically geolocate nearby shelters, vets, and rescue groups within that radius and trigger SMS/Telegram alerts to subscribers in the area. Integrate with the Telegram notification system already in place.
 
 ### 📋 EPIC 4: Wide-Net Search Engine (Phase 9)
 **Problem:** Lost pet information scattered across thousands of disparate sites, shelters, forums.
@@ -87,8 +89,8 @@ kanban-plugin: board
 - Finds potential matches for lost pet
 - Alerts the owner on match
 
-**Backlog Additions:**
-- **Live Shelter Database Search via API/Scraping** — Detailed implementation: integrate with Petfinder API, 24Petwatch, municipal shelter databases, and county animal control feeds. Use LLM-powered matching to cross-reference lost pet descriptions (breed, color, location, date) against live shelter intake records. Auto-alert the owner on potential match with confidence score.
+**Detailed Backlog Items:**
+- **Live Shelter Database Search via API/Scraping** — Build a modular crawler that periodically queries shelter API endpoints (Petfinder API, Shelterluv, municipal animal services) and scrapes lost-and-found boards on subreddits, Facebook groups, and Craigslist. Ingest listings into a searchable index, match against active lost-pet profiles by breed, color, location, and date-range. Send automated match alerts to the pet owner and the nearest matched shelter.
 
 ---
 
@@ -97,11 +99,3 @@ kanban-plugin: board
 - Each Epic gets its own Kanban sprint
 - Track progress in Project_Board.md and CHANGELOG.md
 - Build verification: `npm run build` after every change
-
-
-
-%% kanban:settings
-```
-{"kanban-plugin":"board","list-collapse":[null,null,null]}
-```
-%%
