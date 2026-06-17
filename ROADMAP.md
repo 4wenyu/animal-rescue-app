@@ -4,16 +4,23 @@ kanban-plugin: basic
 
 ## Ready
 
-- [ ] **EPIC 1**: Conversational UI & "Lost Pet" Intake
 - [ ] **EPIC 2**: Viral Growth & Token Gateway
 - [ ] **EPIC 3**: Autonomous Outreach Engine
 - [ ] **EPIC 4**: Wide-Net Search Engine
+- [ ] **TODO**: Apply global i18n to dynamic table data/forms (breed/medical/status chips still bypass t() in some dashboard paths)
+- [ ] **TODO**: Reset intake countdown timers (`LiveTimer` per-second timer needs to be cleared on component unmount to avoid orphaned intervals)
 
 ## In Progress
 
 
 
 ## Done
+
+- [x] **Auth Hardlock (2026-06-17) — NextAuth domain mismatch fixed, `authorized` callback contract corrected, login now accepts `admin@rescuehub.org` / `admin123`.
+- [x] **Gemini Migration (2026-06-17) — `gemini-3.5-flash` → `gemini-1.5-flash` → `gemini-2.5-flash`. AI SDK v6 `ImagePart` typing fixed (`mimeType` embedded in data URL).
+- [x] **BatchUpload Bulletproofing (2026-06-17) — Outer `finally` reset, inner per-file `try/finally` (partial failures no longer lose progress), yellow empty-state alert, staged files auto-clear on success, 2-sec delay skipped after last file.
+- [x] **Intake Document Scan route (2026-06-17) — `/(main)/intake/document-scan/page.tsx` mounts `<BatchUpload />` for staff bulk AI extraction. Hub expanded to 3-card grid.
+- [x] **`PetIntakeBatchSchema` Zod schema (2026-06-17) — `lib/schemas/intake.ts` with full per-animal extraction contract including `euthanasia_risk_status` enum compliance fields.
 
 # RescueHub — Autonomous AI Animal Rescue Platform
 

@@ -3,18 +3,21 @@ import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
 
 // ── Mock Users ───────────────────────────────────────────────────────────
+// Note: aligned with the demo credentials advertised on /login page:
+//   admin@rescuehub.org / admin123
+//   staff@rescuehub.org / staff123
 const MOCK_USERS = [
   {
     id: "1",
-    email: "admin@rescuehub.com",
-    password: "password123",
+    email: "admin@rescuehub.org",
+    password: "admin123",
     name: "Admin User",
     role: "ADMIN" as const,
   },
   {
     id: "2",
-    email: "staff@rescuehub.com",
-    password: "password123",
+    email: "staff@rescuehub.org",
+    password: "staff123",
     name: "Staff User",
     role: "STAFF" as const,
   },
@@ -24,7 +27,7 @@ export const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "admin@rescuehub.com" },
+        email: { label: "Email", type: "email", placeholder: "admin@rescuehub.org" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
@@ -70,10 +73,14 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname.startsWith(path),
       );
 
+      // NextAuth v5 `authorized` callbacks must return a boolean (or a
+      // NextResponse). Returning a bare `Response.redirect()` here is
+      // incorrect — it would throw at the edge. Actual gating is performed
+      // by proxy.ts, which calls `auth()` directly and returns a proper
+      // NextResponse.redirect on failure. This callback is therefore just a
+      // permission fence.
       if (isProtected && !isLoggedIn) {
-        const redirectUrl = new URL("/login", nextUrl.origin);
-        redirectUrl.searchParams.set("callbackUrl", nextUrl.pathname);
-        return Response.redirect(redirectUrl);
+        return false;
       }
 
       return true;

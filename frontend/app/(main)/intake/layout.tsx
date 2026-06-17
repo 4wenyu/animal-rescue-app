@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { IntakeLegalBanner } from "@/src/components/intake/IntakeLegalBanner";
 
 export const metadata: Metadata = {
   title: "Animal Intake — RescueHub",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 /**
  * Public Intake layout shell.
  * Wraps the citizen-facing surrender / found-stray workflow with the
- * UETA/ESIGN compliance header and a minimal branded footer.
+ * UETA/ESIGN compliance header (IntakeLegalBanner) and a minimal branded footer.
+ * Staff-only subroutes (e.g. /intake/document-scan) opt out of the banner
+ * via pathname check inside IntakeLegalBanner.
  */
 export default function IntakeLayout({
   children,
@@ -17,14 +20,8 @@ export default function IntakeLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      {/* Compliance banner — always visible during the intake flow */}
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 shadow-sm">
-        <strong>&#x26A0;&#xFE0F; Legal Notice:</strong> By proceeding, you
-        consent to conduct electronic business in accordance with ESIGN /
-        UETA. All signature records are cryptographically hashed and stored
-        immutably.
-      </div>
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+      <IntakeLegalBanner />
 
       {children}
 

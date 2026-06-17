@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, Shield, ArrowRight } from "lucide-react";
+import { ScanLine, Heart, Shield, ArrowRight } from "lucide-react";
 
 export default function IntakeHubPage() {
   return (
@@ -13,7 +13,7 @@ export default function IntakeHubPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* Card 1: Public Surrender Portal */}
         <Link
           href="/intake/public"
@@ -53,6 +53,28 @@ export default function IntakeHubPage() {
           </p>
           <div className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-blue-600 group-hover:text-blue-500">
             Open Medical Intake
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </div>
+        </Link>
+
+        {/* Card 3: Staff AI Document Scan */}
+        <Link
+          href="/intake/document-scan"
+          className="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-rose-200 hover:shadow-xl hover:shadow-rose-500/5"
+        >
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition group-hover:bg-rose-100">
+            <ScanLine className="h-6 w-6" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-rose-700">
+            AI Document Scan
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-500">
+            Staff-only: bulk-upload cage cards and intake sheets. Gemini
+            vision extracts structured records (name, breed, age, medical,
+            risk flags) directly into the intake pipeline.
+          </p>
+          <div className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-rose-600 group-hover:text-rose-500">
+            Launch Document Scan
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </div>
         </Link>
