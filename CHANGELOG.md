@@ -1,5 +1,74 @@
 # Changelog
+## v3.1.0 — EPIC 1 Pass 2: UI Polish & Global Localization (2026-06-17)
 
+### Added
+- **`scripts/auto_sync_locales.py`** — Lightweight (~95 lines) parity translator. Reads `locales/en.json`, diffs each other 6 locales, translates missing keys via `deep-translator` (Google) on the fly. Guards `{interpolation}` tokens against translation rejection. Idempotent.
+- **283 i18n keys** spanning 7 locales (`en`, `es`, `zh`, `zh-TW`, `zh-CN`, `ja`, `ko`) at **100% parity**. Every `{count}`, `{id}`, `{name}`, `{pct}`, `{kb}`, `{error}`, etc. token preserved across all languages.
+- **Per-surface translations** (all 6 locales + SSR-safe English fallbacks):
+  - `/intake`, `/intake/public`, `/intake/document-scan` (Public Surrender Portal + Electronic Waiver + AI Document Scan)
+  - `/medical` (Records hub) + `/medical/[animalId]` (ASPCA/CART-aligned Intake Checksheet, including 10 emergency-sign medical terms)
+  - `/fundraising` (Campaign list) + `/fundraising/[animalId]` (animal ledger w/ donation form, allocation toggle, transaction history, restriction warning)
+  - `ESIGNLiabilityWaiver` (Owner Surrender + Found Stray variants, consent label, signature flow, both error messages)
+  - `BatchUpload` (AI Document Scan drag-drop, file staging, submit, results, empty-state banner, full AnimalCard subcomponent)
+  - `FloatingChatbot` (Lost Pet Intake — title, labels, greeting, error message with `{error}` token)
+  - `LiveTimer` upgraded from 3-locale to 6-locale
+  - `AnimalTable` `MedicalBadge` now resolves localized status
+
+### Changed
+- **`dogs.json` Mock Timer band refreshed** — 12 `intakeTimestamp` values rewritten relative to today (UTC). Distribution: 2 overdue (Max 0.5h, Rex 1.5h past 72h limit), 2 actively ticking (Luna 60h, Rocky 70h remaining), 8 cleared (1–14d ago). Compliance async-band rendering verified.
+- **`app/page.tsx`** — fixed About dropdown ghosting (was rendering English even with Chinese selected) by converting the hardcoded `HAMBURGER_LINKS` array to `labelKey`-driven `tr()` lookups. Hamburger menu + hero CTAs also localized.
+
+### Removed
+- **Stale locale files** — Deleted orphan `frontend/ja.json` and `frontend/ko.json` (leftover from earlier i18n architecture). Authoritative files at `frontend/locales/{ja,ko}.json`.
+
+### Verification
+- `npx tsc --noEmit --skipLibCheck` filtered to `^(app|src|lib|test-)/`: **0 errors** in any touched file.
+- Locale parity check: all 7 locales at 283/283 keys matching. Token drift: 0 mismatches.
+- Compliance sentences (IRC § 513(i), ESIGN/UETA, Hayden Act, GDPR/CCPA, SOC 2, Charleston Principles, ASPCA/CART) preserved verbatim across all 7 languages.
+
+### Carry-over
+- Sidebar Sign-In / Sign-Out labels still hardcoded English (deferred UI polish).
+- `requirements.txt` for `deep-translator` dep — follow-up.
+
+### Next Sprint
+- **EPIC 2 — The Viral Token & Brand Sponsorship Gateway** (Phase 7): Stripe integration, social-share viral loop verification, token consumption logic.
+
+---
+## v3.0.0 — Phase 6: Conversational UI & Lost Pet Chatbot (2026-06-15)
+
+### Added
+- **`scripts/auto_sync_locales.py`** — Lightweight (~95 lines) parity translator. Reads `locales/en.json`, diffs each other 6 locales, translates missing keys via `deep-translator` (Google) on the fly. Guards `{interpolation}` tokens against translation rejection. Idempotent.
+- **283 i18n keys** spanning 7 locales (`en`, `es`, `zh`, `zh-TW`, `zh-CN`, `ja`, `ko`) at **100% parity**. Every `{count}`, `{id}`, `{name}`, `{pct}`, `{kb}`, `{error}`, etc. token preserved across all languages.
+- **Per-surface translations** (all 6 locales + SSR-safe English fallbacks):
+  - `/intake`, `/intake/public`, `/intake/document-scan` (Public Surrender Portal + Electronic Waiver + AI Document Scan)
+  - `/medical` (Records hub) + `/medical/[animalId]` (ASPCA/CART-aligned Intake Checksheet, including 10 emergency-sign medical terms)
+  - `/fundraising` (Campaign list) + `/fundraising/[animalId]` (animal ledger w/ donation form, allocation toggle, transaction history, restriction warning)
+  - `ESIGNLiabilityWaiver` (Owner Surrender + Found Stray variants, consent label, signature flow, both error messages)
+  - `BatchUpload` (AI Document Scan drag-drop, file staging, submit, results, empty-state banner, full AnimalCard subcomponent)
+  - `FloatingChatbot` (Lost Pet Intake — title, labels, greeting, error message with `{error}` token)
+  - `LiveTimer` upgraded from 3-locale to 6-locale
+  - `AnimalTable` `MedicalBadge` now resolves localized status
+
+### Changed
+- **`dogs.json` Mock Timer band refreshed** — 12 `intakeTimestamp` values rewritten relative to today (UTC). Distribution: 2 overdue (Max 0.5h, Rex 1.5h past 72h limit), 2 actively ticking (Luna 60h, Rocky 70h remaining), 8 cleared (1–14d ago). Compliance async-band rendering verified.
+- **`app/page.tsx`** — fixed About dropdown ghosting (was rendering English even with Chinese selected) by converting the hardcoded `HAMBURGER_LINKS` array to `labelKey`-driven `tr()` lookups. Hamburger menu + hero CTAs also localized.
+
+### Removed
+- **Stale locale files** — Deleted orphan `frontend/ja.json` and `frontend/ko.json` (leftover from earlier i18n architecture). Authoritative files at `frontend/locales/{ja,ko}.json`.
+
+### Verification
+- `npx tsc --noEmit --skipLibCheck` filtered to `^(app|src|lib|test-)/`: **0 errors** in any touched file.
+- Locale parity check: all 7 locales at 283/283 keys matching. Token drift: 0 mismatches.
+- Compliance sentences (IRC § 513(i), ESIGN/UETA, Hayden Act, GDPR/CCPA, SOC 2, Charleston Principles, ASPCA/CART) preserved verbatim across all 7 languages.
+
+### Carry-over
+- Sidebar Sign-In / Sign-Out labels still hardcoded English (deferred UI polish).
+- `requirements.txt` for `deep-translator` dep — follow-up.
+
+### Next Sprint
+- **EPIC 2 — The Viral Token & Brand Sponsorship Gateway** (Phase 7): Stripe integration, social-share viral loop verification, token consumption logic.
+
+---
 ## v3.0.0 — Phase 6: Conversational UI & Lost Pet Chatbot (2026-06-15)
 
 ### Added

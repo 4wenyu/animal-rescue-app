@@ -1,0 +1,355 @@
+{
+  "$schema": "./schema.json",
+  "site": {
+    "title": "RescueHub",
+    "tagline": "구조 단체, 후원사, 영원한 가족을 연결합니다",
+    "description": "501(c)(3) 동물 구조 단체, 지방자치단체 보호소, 기업 후원사 및 일반인을 위한 멀티테넌트 규제 준수 엔진입니다."
+  },
+  "nav": {
+    "public_portal": "공용 포털",
+    "dashboard": "대시보드",
+    "intake": "입소",
+    "medical": "의료",
+    "fundraising": "모금",
+    "surrender": "인도",
+    "staff_login": "직원 로그인",
+    "locale_switch": "언어",
+    "back_to_options": "입소 옵션으로 돌아가기",
+    "about": {
+      "label": "소개",
+      "mission": "사명",
+      "legal": "법적 고지",
+      "process": "프로세스",
+      "story": "스토리",
+      "about_us": "회사 소개",
+      "contact": "문의"
+    }
+  },
+  "hero": {
+    "badge": "법적 준수 플랫폼",
+    "headline": "매 순간이 중요합니다. 준수를 간소화하고 더 많은 생명을 구하세요.",
+    "cta_crowdfunding": "응급 크라우드펀딩",
+    "cta_surrender": "공용 인도 포털"
+  },
+  "adoption_feed": {
+    "title": "입양 안내 방송",
+    "available": "입양 가능한 동물 {count} 마리",
+    "excluded": "행동 평가 중이므로 본 피드에서 제외된 동물 {count} 마리",
+    "compliance_note": "행동 안락사 예외 규정에 의거",
+    "at_risk_badge": "이 동물은 위험 상태 — 긴급한 기업 후원이 필요합니다",
+    "view_details": "자세히 보기",
+    "empty_state": "현재 입양 안내 방송 중인 동물은 없습니다.",
+    "status": {
+      "available": "입양 가능",
+      "urgent_sponsor": "긴급 후원 필요",
+      "under_evaluation": "평가 중"
+    }
+  },
+  "clock": {
+    "hold_cleared": "보류 해제됨",
+    "hold_overdue": "⚠ 보류 기간 초과",
+    "stray_hold_active": "유기동물 보류 중",
+    "remaining": "남음",
+    "legal_action_required": "초과 — 법적 조치가 필요합니다"
+  },
+  "dashboard": {
+    "title": "트리아지 대시보드",
+    "active_roster": "현재 명단 · {count} 마리",
+    "clear_filter": "필터 해제: {filter}",
+    "add_animal": "동물 추가",
+    "v3": "RescueHub · 트리아지 시스템 · v3.5",
+    "stats": {
+      "total_dogs": "전체 강아지",
+      "healthy": "건강",
+      "needs_review": "확인 필요",
+      "avg_age": "평균 연령",
+      "yrs": "세",
+      "filter_healthy": "필터: 건강",
+      "filter_needs_review": "필터: 확인 필요"
+    },
+    "table": {
+      "title": "동물 기록",
+      "subtitle": "유기동물 보류 가디언",
+      "active_holds": "보류 {count}건 진행 중{plural}",
+      "cleared": "{count}건 해제됨",
+      "hayden_act": "헤이든법 {count}건",
+      "view_all": "전체 보기",
+      "columns": {
+        "animal": "동물",
+        "breed": "품종",
+        "age": "연령",
+        "euth_risk": "안락사 위험",
+        "legal_status": "법적 상태",
+        "actions": "작업",
+        "medical": "의료"
+      },
+      "bsl_suffix": "(믹스 견 ⚖️)",
+      "locked": "잠김",
+      "hayden_note": "헤이든법 — 작업 불가",
+      "adopt": "입양",
+      "transfer": "이전",
+      "on_hold": "보류 중",
+      "locked_btn": "잠김",
+      "compliance_footer": "모든 유기동물 보류 기간은 헤이든법에 따라 산정됩니다.",
+      "age_yr": "세",
+      "age_yrs": "세"
+    },
+    "badges": {
+      "safe": "안전",
+      "at_risk": "위험",
+      "hayden_act": "헤이든법 ⚠️",
+      "hayden_tag": "헤이든"
+    }
+  },
+  "sponsors": {
+    "title": "기업 후원사",
+    "description": "다음 단체들은 IRC § 513(i) 규정에 따른 적격 기업 후원을 통해 동물 복지를 지원합니다.",
+    "compliance_title": "적격 기업 후원 — IRC § 513(i)",
+    "compliance_body": "후원사에 대한 감사 표기는 적격 후원금 안전항(safe harbor)에 따라 가치 중립적인 형태로 표시됩니다. 광고·보증·가격 표시·행동 유도 문구는 일체 표시되지 않습니다. 이러한 분류를 통해 501(c)(3) 입주사의 수입이 비관련 사업소득세(UBIT) 면세 상태로 유지됩니다."
+  },
+  "breeds": {
+    "Golden Retriever": "골든 리트리버",
+    "French Bulldog": "프렌치 불도그",
+    "Siberian Husky": "시베리안 허스키",
+    "Beagle": "비글",
+    "Labrador Retriever": "래브라도 리트리버",
+    "Boxer": "복서",
+    "Cocker Spaniel": "코커 스패니얼",
+    "Poodle": "푸들",
+    "Dachshund": "닥스훈트",
+    "German Shepherd": "저먼 셰퍼드",
+    "Rottweiler": "로트바일러",
+    "Shih Tzu": "시츄"
+  },
+  "medical": {
+    "Healthy": "건강",
+    "Needs Review": "확인 필요",
+    "title": "의료 기록",
+    "subtitle": "ASPCA/CART에 따른 의료 섭취 검사를 보거나 업데이트하려면 동물을 선택하세요.",
+    "back_to_dashboard": "대시보드로 돌아가기",
+    "species_intaken": "{species} · 섭취 {date}",
+    "view_examination": "시험 보기",
+    "compliance_esign": "ESIGN/UETA 준수",
+    "compliance_aspca": "ASPCA/CART 시험 조정",
+    "compliance_irs": "IRS § 501(c)(3)",
+    "back_to_list": "의료 기록으로 돌아가기",
+    "checksheet": {
+      "title": "의료 섭취 체크시트",
+      "subtitle": "ASPCA/CART에 따른 간략한 입학 시험 — 동물 ID: {id} · 종: {species}",
+      "weight": "무게",
+      "weight_unit": "파운드",
+      "tpr_header": "TPR(온도, 맥박, 호흡)",
+      "tpr_temp": "온도",
+      "tpr_pulse": "맥박",
+      "tpr_resp": "호흡",
+      "unit_f": "°F",
+      "unit_bpm": "bpm",
+      "unit_brpm": "brrpm",
+      "procedures_header": "섭취 절차",
+      "procedure_microchip": "마이크로칩 스캔",
+      "procedure_vaccines": "투여되는 백신",
+      "procedure_dewormer": "구충제 투여",
+      "procedure_topspot": "Topspot 벼룩/진드기 적용됨",
+      "emergency_signs_header": "비상 징후",
+      "vet_flagged": "수의사 신고됨",
+      "detected_warning": "⚠️ 비상 징후가 감지되었습니다. 저장 시 수의사에게 알림이 전송됩니다.",
+      "save_button": "의료 섭취 기록 저장",
+      "confirm_title": "기록된 의료 섭취량",
+      "confirm_complete": "동물 {id}({species}) 건강검진 완료.",
+      "new_exam": "새로운 시험",
+      "vet_required": "⚠️ 수의사 신고 필수",
+      "vet_required_body": "비상 징후 감지됨: {signs}. 즉시 검토를 위해 수의사가 신고되었습니다.",
+      "emergency_sign": {
+        "ulcers_in_mouth_or_nose": "입이나 코의 궤양",
+        "vomiting": "구토",
+        "diarrhea_bloody": "설사(혈변)",
+        "coughing": "기침",
+        "patchy_hair_loss": "고르지 못한 탈모",
+        "open_wounds_lacerations": "열린 상처 / 열상",
+        "seizures": "발작",
+        "difficulty_breathing": "호흡 곤란",
+        "limping_unable_to_bear_weight": "절뚝거리거나 체중을 지탱할 수 없음",
+        "conjunctivitis_eye_discharge": "결막염(눈 분비물)"
+      }
+    }
+  },
+  "quick_links": {
+    "surrender_title": "공용 인도 포털",
+    "surrender_body": "유기동물을 발견했거나 반려동물을 인도해야 합니까? ESIGN/UETA를 준수하는 전자 면책 동의서가 법적 방어력이 있는 인계 체인을 생성합니다.",
+    "surrender_cta": "인도 절차 시작",
+    "fundraising_title": "응급 크라우드펀딩",
+    "fundraising_body": "보호소 동물들의 응급 진료·수술·회복 비용을 지원해 주세요. 모든 기부는 자금 혼용을 방지하기 위해 법적 제한 플래그와 함께 추적됩니다.",
+    "fundraising_cta": "진행 중인 캠페인 보기"
+  },
+  "footer": {
+    "tagline": "501(c)(3) 동물 구조 단체, 지방자치단체 보호소, 기업 후원사 및 일반인을 위한 멀티테넌트 SaaS 준수 엔진입니다.",
+    "public_section": "공용",
+    "surrender_portal": "인도 포털",
+    "fundraising_campaigns": "모금 캠페인",
+    "adoption_feed": "입양 피드",
+    "platform_section": "플랫폼",
+    "privacy_policy": "개인정보 처리방침",
+    "terms_of_service": "이용약관",
+    "compliance_report": "준수 보고서",
+    "copyright": "© {year} RescueHub. All rights reserved."
+  },
+  "common": {
+    "year": "년",
+    "years": "년",
+    "and": "및",
+    "of": "의",
+    "total": "합계"
+  },
+  "about": {
+    "mission": {
+      "title": "우리의 사명",
+      "subtitle": "RescueHub가 존재하는 이유",
+      "body": "RescueHub는 위험에 처한 보호소 동물과 그들을 구할 수 있는 사람들 사이의 간극을 메우기 위해 존재합니다. 501(c)(3) 구조 단체, 지방자치단체 보호소, 기업 후원사, 일반인이 준수 리스크, 자금 혼용 위반, 유기동물 보류 기간 관리 실수 없이 함께 협력할 수 있도록 법적 준수 소프트웨어를 구축합니다. ESIGN/UETA 전자 면책 동의서부터 IRC § 513(i) 후원사 표기까지, 모든 기능은 더 많은 동물이 기간 내에 깨끗한 문서 흔적과 함께 보호소를 떠나도록 하기 위한 것입니다."
+    },
+    "legal": {
+      "title": "법적 고지 및 준수",
+      "subtitle": "보장하는 사항",
+      "body": "당사는 ESIGN/UETA를 준수하는 전자 서명, 헤이든법에 따른 유기동물 보류 기간 관리, IRC § 513(i) 적격 후원금 안전항 준수, GDPR/CCPA 데이터 처리, SOC 2에 부합하는 운영 통제를 약속합니다. 후원사 페이지에는 행동 유도 문구가 포함되지 않으며, 입양 피드는 행동 평가 대상 동물을 구조적으로 제외하고, 기부에는 자금 혼용을 방지하기 위한 법적 제한 플래그가 부여됩니다. 준수는 제품을 나중에 덧붙이는 것이 아니라 처음부터 내장되어 있습니다."
+    },
+    "process": {
+      "title": "우리의 프로세스",
+      "subtitle": "구조 과정은 다섯 단계로 진행됩니다",
+      "body": "1단계: 동물은 공용 인도 포털 또는 직원 입소를 통해 시스템에 등록됩니다. 2단계: 헤이든법에 따라 법정 유기동물 보류 카운트다운이 자동으로 시작됩니다. 3단계: 의료 트리아지로 긴급도와 입양 적격성을 판단합니다. 4단계: 위험 상태 동물은 기업 후원 방송과 응급 크라우드펀딩에 노출됩니다. 5단계: 입양 희망자는 ESIGN/UETA 면책 동의서를 완료하고, 동물은 감사 가능한 완전한 인계 체인을 갖춘 채 보호소를 떠납니다."
+    },
+    "story": {
+      "title": "우리의 이야기",
+      "subtitle": "구조를 하는 사람이, 구조를 위해 만들었습니다",
+      "body": "RescueHub는 유기동물 보류 기간 관리 실수로 계속해서 동물을 잃었던 작은 지방자치단체 보호소의 사이드 프로젝트로 시작되었습니다. 두 곳의 추가 보호소에서도 동일한 준수 격차를 확인한 뒤, 팀은 워크플로를 처음부터 재구성하여 모든 릴리스에 법무 검토를 통합했습니다. 현재 여러 주의 구조 단체를 지원하며, 변함 없는 약속은 단 하나입니다. 보호소가 서류 작업에 쓰는 매 1분은 동물의 생명을 구하는 1분이 아니라는 점입니다."
+    },
+    "about-us": {
+      "title": "RescueHub 소개",
+      "subtitle": "우리는 누구인가",
+      "body": "저희는 전 보호소 운영자, 준수 변호사, 엔지니어들로 구성된 소규모 팀으로 동물 복지 전용 소프트웨어를 구축합니다. RescueHub는 독립적으로 운영되는 멀티테넌트 시스템이며, 단일 준수 프레임워크 아래에서 501(c)(3) 비영리단체, 지방자치단체 기관, 기업 후원사에 서비스를 제공합니다. 북극성은 주법을 준수하면서 안락사되는 동물의 수를 가능한 한 줄이는 것입니다."
+    },
+    "contact": {
+      "title": "문의",
+      "subtitle": "지속적인 소통 채널",
+      "body": "이메일: hello@rescuehub.org  ·  Press: press@rescuehub.org  ·  Compliance: compliance@rescuehub.org  ·  응급 연락(24시간 보호소 핫라인): +1 (555) 010-2024. 보호소 응급 상황은 30분 이내, 일반 문의는 영업일 1일 이내, 보안 취약점 신고는 24시간 이내에 답변드립니다."
+    }
+  },
+  "intake_hub": {
+    "ai_body": "직원 전용: 케이지 카드와 입소 기록을 일괄 업로드. Gemini 비전이 구조화된 기록(이름·품종·연령·의료·위험 플래그)을 추출하여 입소 파이프라인에 직접 저장합니다.",
+    "ai_cta": "문서 스캔 실행",
+    "ai_title": "AI 문서 스캔",
+    "medical_body": "ASPCA TPR(체온·맥박·호흡) 점검표, 응급 징후 플래그, 병력, 파일 연동을 보호소 직원용으로 제공합니다.",
+    "medical_cta": "의료 입소 열기",
+    "medical_title": "직원 의료 입소",
+    "public_body": "반려동물을 인도하거나 발견한 유기동물을 신고하는 시민을 위한 ESIGN/UETA 준수 전자 면책 동의서입니다. 법적 방어력이 있는 인계 체인을 생성합니다.",
+    "public_cta": "포털 열기",
+    "public_title": "공용 인도 포털",
+    "subtitle": "동물 기록 처리를 시작하려면 입소 경로를 선택하세요.",
+    "title": "입소 운영",
+    "staff_only_badge": "직원 전용"
+  },
+  "public_intake": {
+    "title": "공공 항복 포털",
+    "intro": "이 ESIGN/UETA 준수 전자 면제는 법적으로 방어 가능한 관리 연속성을 생성합니다. 귀하의 상황에 맞는 옵션을 선택해주세요.",
+    "found_stray_label": "🐾 길 잃은 동물을 찾았어요",
+    "found_stray_desc": "길을 잃거나 버려졌거나 다친 것으로 보이는 동물을 발견했습니다.",
+    "owner_surrender_label": "📝 애완동물을 항복해야 해요",
+    "owner_surrender_desc": "귀하는 법적 소유자이며 양육권을 RescueHub로 이전하고 싶습니다.",
+    "waiver_title": "전자 면제",
+    "waiver_intro": "ESIGN/UETA 준수 책임 면제를 검토하고 서명하십시오. 귀하가 입력한 법적 이름은 연방법에 따라 전자 서명을 구성합니다.",
+    "cancel_prefix": "취소 -",
+    "confirm_title": "제출 완료",
+    "confirm_body": "귀하의 항복 요청이 기록되었습니다. 아래 ESIGN 면제 해시는 확인 가능한 전자 영수증 역할을 합니다.",
+    "hash_label": "ESIGN 면제 기록",
+    "hash_description": "입력된 이름 서명 및 동의 거래의 SHA-256 해시입니다. 기록용으로 보관하세요."
+  },
+  "esign": {
+    "owner_surrender_title": "소유자 항복 - 소유권 포기 이전",
+    "found_stray_title": "길을 찾았습니다 — 섭취 선언",
+    "legal_intro": "ESIGN(전자 서명) 및 UETA(통합 전자 거래법)에 따라 귀하의 전자 동의 및 서명은 법적으로 종이의 실제 서명과 동일합니다.",
+    "consent_label": "나는 RescueHub 및 수용 동물 구조 단체와 전자 사업을 수행하는 데 동의합니다. 나는 모든 기록, 공개 및 서명이 전자적으로 제공되고 보관될 수 있다는 데 동의합니다.",
+    "full_legal_name": "실명(전자 서명)",
+    "signature_placeholder": "전자 서명으로 실명을 입력하세요.",
+    "affirmation_hint": "위에 귀하의 이름을 입력함으로써 귀하는 ESIGN / UETA에 따라 이 문서에 전자적으로 서명할 의사가 있음을 확인합니다.",
+    "error_consent_required": "본 포기를 이행하려면 전자 비즈니스에 동의하고 법적 성명을 제공해야 합니다.",
+    "error_unexpected": "예상치 못한 오류가 발생했습니다. 다시 시도해 주세요.",
+    "processing_button": "처리 중...",
+    "execute_button": "포기 실행 및 제출"
+  },
+  "fundraising": {
+    "title": "모금 캠페인",
+    "subtitle": "우리가 돌보는 동물들을 지원하세요. 모든 기부는 법적 제한 플래그로 추적되어 자금 혼합을 방지합니다.",
+    "back_to_dashboard": "← 대시보드로 돌아가기",
+    "percent_funded": "{pct}% 자금 지원",
+    "goal_reached": "✓ 목표 달성",
+    "donate_cta": "기부 →",
+    "showing_count": "{count} 활성 캠페인을 표시합니다. 데이터베이스가 연결되면 전체 목록을 사용할 수 있습니다. 모든 거래는 인터넷 기반 자선 기금 모금에 대한 찰스턴 원칙을 준수합니다.",
+    "back_to_list": "모금 목록으로 돌아가기",
+    "wallet": {
+      "title": "모금 캠페인",
+      "animal_id": "동물 ID: {id}",
+      "raised": "{amount} 모금됨",
+      "goal_label": "{goal} 목표",
+      "percent_funded": "{pct}% 자금 지원",
+      "goal_reached_msg": "✓ 목표 달성 — 자금 혼합을 방지하기 위해 제한이 자동으로 전환됩니다.",
+      "medical_allocated": "의료: {amount}",
+      "general_allocated": "일반: {amount}",
+      "donate_title": "기부 제출",
+      "amount_label": "금액($)",
+      "amount_placeholder": "예를 들어 25.00",
+      "allocation_label": "자금배분",
+      "allocation_general": "일반 진료(대피소 작전)",
+      "allocation_medical": "의료(직접치료)",
+      "mixing_warning": "⚠️ 목표달성. 새로운 기부는 기부자의 의도 추적에 따라 법적으로 제한된 자금 혼합을 방지하기 위해 제한 플래그를 전환합니다.",
+      "donate_processing": "처리 중...",
+      "donate_submit": "기부 제출",
+      "ledger_title": "거래 원장",
+      "entries_count": "({count} 항목)",
+      "empty_ledger": "아직 기부가 없습니다. 원장을 시드하려면 위의 기부금을 제출하세요."
+    }
+  },
+  "chatbot": {
+    "title": "RescueHub 도우미",
+    "open_label": "오픈채팅",
+    "close_label": "채팅 닫기",
+    "greeting": "안녕하세요. 저는 RescueHub 도우미입니다. 당신이 애완동물을 찾고 있다는 것을 이해합니다. 제가 도와드리려고 왔습니다. 심호흡을 해보세요. 먼저, 애완동물의 이름은 무엇입니까?",
+    "input_placeholder": "응답을 입력하세요...",
+    "attach_label": "파일첨부",
+    "send_label": "메시지 보내기",
+    "error": "죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요. ({error})"
+  },
+  "document_scan": {
+    "title": "AI 섭취 — 일괄 문서 업로드",
+    "description": "케이지 카드나 섭취 시트(이미지/PDF)를 아래에 놓으십시오. Gemini 모델은 구조화된 섭취 기록을 추출합니다.",
+    "dropzone_headline": "여기에 파일을 드래그 앤 드롭하거나 클릭하여 찾아보세요.",
+    "dropzone_caption": "JPEG, PNG, WEBP, HEIC 또는 PDF — 여러 파일 허용",
+    "aria_dropzone": "AI 섭취 일괄 업로드",
+    "error_invalid_type": "이미지(JPEG, PNG, WEBP, HEIC)와 PDF만 허용됩니다.",
+    "error_unknown": "알 수 없는 업로드 오류입니다.",
+    "staged_files": "준비된 파일({count})",
+    "clear_all": "모두 지우기",
+    "remove_file": "{name} 제거",
+    "size_kb": "{kb}KB",
+    "run_extraction": "AI 섭취 추출 실행",
+    "analyzing": "AI로 문서 분석…",
+    "rate_limit_note": "순차적 처리를 통해 API 속도 제한(파일당 최대 2초)을 유지합니다.",
+    "results_heading": "추출된 기록({count})",
+    "results_aria": "추출 결과",
+    "empty_results_title": "이 문서에서는 섭취 기록이 발견되지 않았습니다.",
+    "empty_results_body": "AI가 파일을 성공적으로 스캔했지만 읽을 수 있는 섭취 기록을 찾을 수 없습니다. 더 선명한 이미지를 업로드하거나 케이지 카드 텍스트를 읽을 수 있는지 확인하거나 다른 문서를 선택하세요.",
+    "empty_results_dismiss": "해고하다",
+    "pre_submission_hint": "아직 추출이 없습니다. 시작하려면 위의 일부 파일을 준비하세요.",
+    "unnamed_animal": "이름 없는 동물 #{n}",
+    "unknown_species": "알려지지 않은 종",
+    "age_unknown": "나이 알 수 없음",
+    "age_yr": "{n}년",
+    "field_species": "종",
+    "field_breed": "새끼를 낳다",
+    "field_age": "나이",
+    "field_sex": "섹스",
+    "field_medical": "의료",
+    "field_hold_cleared": "보류 해제됨",
+    "yes": "예",
+    "no": "아니요",
+    "intake_notes": "섭취 참고 사항",
+    "intake_number": "섭취량 #{n}"
+  }
+}

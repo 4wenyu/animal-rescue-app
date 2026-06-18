@@ -271,7 +271,13 @@ function ActionButtons({ dog, tr }: { dog: Dog; tr: (k: string) => string }) {
 }
 
 // ── Thematic medical icon ──────────────────────────────────────────────
-function MedicalBadge({ status }: { status: string }) {
+function MedicalBadge({ status, tr }: { status: string; tr: (k: string) => string }) {
+  // Map the dog.medicalStatus string ("Healthy" / "Needs Review" / ...) onto the
+  // localized dictionary key `dashboard.medical.<status>`. Falls back to the
+  // raw status string if no entry exists (forward compat for new statuses).
+  const normalizedStatus = status.replace(/ /g, "_");
+  const label = tr(`dashboard.medical.${normalizedStatus}`);
+  const wasTranslated = label !== `dashboard.medical.${normalizedStatus}`;
   const Icon = status === "Healthy" ? HeartPulse : User;
   return (
     <span
@@ -286,7 +292,7 @@ function MedicalBadge({ status }: { status: string }) {
           status === "Healthy" ? "bg-emerald-500" : "bg-amber-500"
         }`}
       />
-      {status}
+      {wasTranslated ? label : status}
       <Icon className="h-3 w-3 ml-0.5" />
     </span>
   );
@@ -480,7 +486,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
 
                   {/* Medical Status */}
                   <td className="p-4 pr-6 text-right">
-                    <MedicalBadge status={dog.medicalStatus} />
+                    <MedicalBadge status={dog.medicalStatus} tr={tr} />
                   </td>
                 </motion.tr>
               );

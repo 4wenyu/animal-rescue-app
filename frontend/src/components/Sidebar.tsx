@@ -16,30 +16,57 @@ import {
 } from "lucide-react";
 import enDict from "../../locales/en.json";
 import esDict from "../../locales/es.json";
-import zhDict from "../../locales/zh.json";
+import zhCNDict from "../../locales/zh-CN.json";
+import zhTWDict from "../../locales/zh-TW.json";
+import jaDict from "../../locales/ja.json";
+import koDict from "../../locales/ko.json";
+import { AboutNav } from "./AboutNav";
 
+/**
+ * Bump to 6 locales (Phase 6 i18n expansion).
+ * Legacy "zh.json" (Simplified Mandarin) is kept on disk as an exact byte-copy
+ * of zh-CN.json so any old lookup path resolves without errors.
+ */
 const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
   en: enDict as unknown as Record<string, unknown>,
   es: esDict as unknown as Record<string, unknown>,
-  zh: zhDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
 };
 
 const STORAGE_KEY = "rescuehub_locale";
 
-// English defaults shown during SSR to prevent hydration mismatch
+// English defaults shown during SSR to prevent hydration mismatch.
 const FALLBACK_LABELS: Record<string, string> = {
   "nav.public_portal": "Public Portal",
   "nav.dashboard": "Dashboard",
   "nav.intake": "Intake",
   "nav.medical": "Medical",
   "nav.fundraising": "Fundraising",
+  "nav.about.label": "About",
+  "nav.about.mission": "Mission",
+  "nav.about.legal": "Legal",
+  "nav.about.process": "Process",
+  "nav.about.story": "Story",
+  "nav.about.about_us": "About Us",
+  "nav.about.contact": "Contact",
 };
+
+function resolveLocale(stored: string | null): string {
+  if (stored === "zh") return "zh-CN"; // legacy alias → Simplified Mandarin
+  if (
+    stored === "en" || stored === "es" || stored === "zh-CN" ||
+    stored === "zh-TW" || stored === "ja" || stored === "ko"
+  ) return stored;
+  return "en";
+}
 
 function t(key: string): string {
   if (typeof window === "undefined") return FALLBACK_LABELS[key] ?? key;
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const locale = stored === "es" || stored === "zh" ? stored : "en";
+    const locale = resolveLocale(localStorage.getItem(STORAGE_KEY));
     const parts = key.split(".");
     let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
     for (const part of parts) {
@@ -74,8 +101,7 @@ export function Sidebar() {
     };
   }, []);
 
-  // SSR guard: render fixed English labels until client hydrates
-  // This prevents the "string from localStorage differs from server" hydration error.
+  // SSR guard: render fixed English labels until client hydrates.
   const NAV_ITEMS = [
     {
       href: "/",
@@ -156,6 +182,9 @@ export function Sidebar() {
               </Link>
             );
           })}
+
+          {/* About dropdown (dark variant) */}
+          <AboutNav variant="sidebar" />
         </nav>
       </div>
 

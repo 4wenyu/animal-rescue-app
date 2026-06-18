@@ -3,34 +3,57 @@
 import { useState, useEffect } from "react";
 import enDict from "../../locales/en.json";
 import esDict from "../../locales/es.json";
-import zhDict from "../../locales/zh.json";
+import zhCNDict from "../../locales/zh-CN.json";
+import zhTWDict from "../../locales/zh-TW.json";
+import jaDict from "../../locales/ja.json";
+import koDict from "../../locales/ko.json";
+import zhLegacyDict from "../../locales/zh.json";
 
 const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
   en: enDict as unknown as Record<string, unknown>,
   es: esDict as unknown as Record<string, unknown>,
-  zh: zhDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
+  zh: zhLegacyDict as unknown as Record<string, unknown>,
 };
 
 const STORAGE_KEY = "rescuehub_locale";
 
-function getLocale(): string {
-  if (typeof window === "undefined") return "en";
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "es" || stored === "zh") return stored;
-  } catch {}
+function resolveLocale(stored: string | null): string {
+  if (stored === "zh") return "zh-CN"; // legacy alias
+  if (
+    stored === "en" || stored === "es" || stored === "zh-CN" ||
+    stored === "zh-TW" || stored === "ja" || stored === "ko"
+  ) return stored;
   return "en";
 }
 
+// Hardcoded English fallbacks used during SSR so the timer renders sentence
+// before hydration (matches the Sidebar / AboutNav pattern).
+const EN_FALLBACK: Record<string, string> = {
+  "clock.hold_cleared": "Hold Cleared",
+  "clock.hold_overdue": "⚠ HOLD OVERDUE",
+  "clock.stray_hold_active": "Stray Hold Active",
+  "clock.remaining": "remaining",
+  "clock.legal_action_required": "overdue — legal action required",
+};
+
 function t(key: string): string {
-  const locale = getLocale();
-  const parts = key.split(".");
-  let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  for (const part of parts) {
-    if (typeof value !== "object" || value === null) return key;
-    value = (value as Record<string, unknown>)[part];
+  if (typeof window === "undefined") return EN_FALLBACK[key] ?? key;
+  try {
+    const locale = resolveLocale(localStorage.getItem(STORAGE_KEY));
+    const parts = key.split(".");
+    let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+    for (const part of parts) {
+      if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
+      value = (value as Record<string, unknown>)[part];
+    }
+    return typeof value === "string" ? value : (EN_FALLBACK[key] ?? key);
+  } catch {
+    return EN_FALLBACK[key] ?? key;
   }
-  return typeof value === "string" ? value : key;
 }
 
 interface LiveTimerProps {

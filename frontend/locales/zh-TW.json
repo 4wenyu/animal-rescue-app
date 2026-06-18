@@ -1,0 +1,355 @@
+{
+  "$schema": "./schema.json",
+  "site": {
+    "title": "RescueHub",
+    "tagline": "連結救助站、贊助商與領養家庭",
+    "description": "一個面向 501(c)(3) 動物救助站、市政收容所、企業贊助商和公眾的多租戶法規合規引擎。"
+  },
+  "nav": {
+    "public_portal": "公共入口",
+    "dashboard": "儀表板",
+    "intake": "接收",
+    "medical": "醫療",
+    "fundraising": "募款",
+    "surrender": "送養",
+    "staff_login": "員工登入",
+    "locale_switch": "語言",
+    "back_to_options": "返回接收選項",
+    "about": {
+      "label": "關於",
+      "mission": "使命",
+      "legal": "法律",
+      "process": "流程",
+      "story": "故事",
+      "about_us": "關於我們",
+      "contact": "聯絡我們"
+    }
+  },
+  "hero": {
+    "badge": "法律合規平台",
+    "headline": "分秒必爭。簡化合規流程，拯救更多生命。",
+    "cta_crowdfunding": "緊急募款",
+    "cta_surrender": "公共送養入口"
+  },
+  "adoption_feed": {
+    "title": "領養公告",
+    "available": "{count} 隻動物可供領養",
+    "excluded": "{count} 隻處於行為評估中的動物已從此列表中排除",
+    "compliance_note": "根據行為安樂死例外合規要求",
+    "at_risk_badge": "此動物處於風險中 — 需要緊急企業贊助",
+    "view_details": "查看詳情",
+    "empty_state": "目前沒有可供領養公告的動物。",
+    "status": {
+      "available": "可供領養",
+      "urgent_sponsor": "需要緊急贊助",
+      "under_evaluation": "評估中"
+    }
+  },
+  "clock": {
+    "hold_cleared": "扣留已解除",
+    "hold_overdue": "⚠ 扣留逾期",
+    "stray_hold_active": "流浪動物扣留中",
+    "remaining": "剩餘",
+    "legal_action_required": "逾期 — 需要法律行動"
+  },
+  "dashboard": {
+    "title": "分診儀表板",
+    "active_roster": "活躍名冊 · {count} 隻動物",
+    "clear_filter": "清除篩選: {filter}",
+    "add_animal": "新增動物",
+    "v3": "RescueHub · 分診系統 · v3.5",
+    "stats": {
+      "total_dogs": "狗總數",
+      "healthy": "健康",
+      "needs_review": "需要複查",
+      "avg_age": "平均年齡",
+      "yrs": "歲",
+      "filter_healthy": "篩選: 健康",
+      "filter_needs_review": "篩選: 需要複查"
+    },
+    "table": {
+      "title": "動物紀錄",
+      "subtitle": "流浪動物扣留守護者",
+      "active_holds": "{count} 個扣留{plural}活動中",
+      "cleared": "{count} 已解除",
+      "hayden_act": "{count} 海登法案",
+      "view_all": "查看全部",
+      "columns": {
+        "animal": "動物",
+        "breed": "品種",
+        "age": "年齡",
+        "euth_risk": "安樂死風險",
+        "legal_status": "法律狀態",
+        "actions": "操作",
+        "medical": "醫療"
+      },
+      "bsl_suffix": "(混種 ⚖️)",
+      "locked": "鎖定",
+      "hayden_note": "海登法案 — 不允許操作",
+      "adopt": "領養",
+      "transfer": "轉移",
+      "on_hold": "扣留中",
+      "locked_btn": "已鎖定",
+      "compliance_footer": "所有流浪動物扣留均依據海登法案計算。",
+      "age_yr": "歲",
+      "age_yrs": "歲"
+    },
+    "badges": {
+      "safe": "安全",
+      "at_risk": "有風險",
+      "hayden_act": "海登法案 ⚠️",
+      "hayden_tag": "海登"
+    }
+  },
+  "sponsors": {
+    "title": "企業贊助商",
+    "description": "這些組織透過 IRC § 513(i) 規定的合格企業贊助支持動物福利事業。",
+    "compliance_title": "合格企業贊助 — IRC § 513(i)",
+    "compliance_body": "贊助商致謝依據合格贊助付款安全港合規要求，以價值中立的參考資訊形式展示。不展示任何廣告、代言、定價或行動呼籲。此分類確保 501(c)(3) 租戶的收入免於繳納無關商業所得稅 (UBIT)。"
+  },
+  "breeds": {
+    "Golden Retriever": "黃金獵犬",
+    "French Bulldog": "法國鬥牛犬",
+    "Siberian Husky": "西伯利亞哈士奇",
+    "Beagle": "米格魯",
+    "Labrador Retriever": "拉布拉多獵犬",
+    "Boxer": "拳師犬",
+    "Cocker Spaniel": "可卡犬",
+    "Poodle": "貴賓犬",
+    "Dachshund": "臘腸犬",
+    "German Shepherd": "德國牧羊犬",
+    "Rottweiler": "羅威納犬",
+    "Shih Tzu": "西施犬"
+  },
+  "medical": {
+    "Healthy": "健康",
+    "Needs Review": "需要複查",
+    "title": "醫療記錄",
+    "subtitle": "選擇動物以查看或更新其符合 ASPCA/CART 的醫療攝取檢查。",
+    "back_to_dashboard": "返回儀表板",
+    "species_intaken": "{species}·攝取{date}",
+    "view_examination": "查看考試",
+    "compliance_esign": "符合 ESIGN/UETA 標準",
+    "compliance_aspca": "ASPCA/CART 考試一致",
+    "compliance_irs": "美國國稅局§ 501(c)(3)",
+    "back_to_list": "回傳醫療記錄",
+    "checksheet": {
+      "title": "醫療攝取檢查表",
+      "subtitle": "ASPCA / CART 一致的簡短入學考試 — 動物 ID：{id} · 物種：{species}",
+      "weight": "重量",
+      "weight_unit": "磅",
+      "tpr_header": "TPR（溫度、脈搏、呼吸）",
+      "tpr_temp": "溫度",
+      "tpr_pulse": "脈衝",
+      "tpr_resp": "呼吸",
+      "unit_f": "°F",
+      "unit_bpm": "節拍數",
+      "unit_brpm": "轉速",
+      "procedures_header": "入學程序",
+      "procedure_microchip": "微晶片掃描",
+      "procedure_vaccines": "接種疫苗",
+      "procedure_dewormer": "已註射驅蟲藥",
+      "procedure_topspot": "Topspot 跳蚤/蜱蟲應用",
+      "emergency_signs_header": "緊急標誌",
+      "vet_flagged": "獸醫標記",
+      "detected_warning": "⚠️ 偵測到緊急跡象 - 儲存後將通知獸醫。",
+      "save_button": "保存就診紀錄",
+      "confirm_title": "記錄醫療攝取量",
+      "confirm_complete": "動物{id} ({species}) 體檢完成。",
+      "new_exam": "新考試",
+      "vet_required": "⚠️ 需要獸醫通知",
+      "vet_required_body": "偵測到緊急跡象：{signs}。一名獸醫已被標記為立即審查。",
+      "emergency_sign": {
+        "ulcers_in_mouth_or_nose": "口腔或鼻子潰瘍",
+        "vomiting": "嘔吐",
+        "diarrhea_bloody": "腹瀉（血性）",
+        "coughing": "咳嗽",
+        "patchy_hair_loss": "斑狀脫髮",
+        "open_wounds_lacerations": "開放性傷口/撕裂傷",
+        "seizures": "癲癇發作",
+        "difficulty_breathing": "呼吸困難",
+        "limping_unable_to_bear_weight": "跛行/無法承受重量",
+        "conjunctivitis_eye_discharge": "結膜炎（眼睛分泌物）"
+      }
+    }
+  },
+  "quick_links": {
+    "surrender_title": "公共送養入口",
+    "surrender_body": "發現流浪動物或需要送養寵物？我們的 ESIGN/UETA 合規電子棄養聲明會建立法律上可辯護的監管鏈。",
+    "surrender_cta": "開始送養流程",
+    "fundraising_title": "緊急募款",
+    "fundraising_body": "支持收容所動物的緊急醫療、手術和康復費用。每筆捐款皆帶有法律限制標記，防止資金混用。",
+    "fundraising_cta": "查看進行中的活動"
+  },
+  "footer": {
+    "tagline": "面向 501(c)(3) 動物救助站、市政收容所、企業贊助商和公眾的多租戶 SaaS 法規合規引擎。",
+    "public_section": "公共",
+    "surrender_portal": "送養入口",
+    "fundraising_campaigns": "募款活動",
+    "adoption_feed": "領養公告",
+    "platform_section": "平台",
+    "privacy_policy": "隱私權政策",
+    "terms_of_service": "服務條款",
+    "compliance_report": "合規報告",
+    "copyright": "© {year} RescueHub。保留所有權利。"
+  },
+  "common": {
+    "year": "歲",
+    "years": "歲",
+    "and": "和",
+    "of": "的",
+    "total": "總計"
+  },
+  "about": {
+    "mission": {
+      "title": "我們的使命",
+      "subtitle": "RescueHub 存在的原因",
+      "body": "RescueHub 致力於彌合處於風險中的收容所動物與能夠拯救牠們的人們之間的鴻溝。我們建構合法合規的軟體,讓 501(c)(3) 救助站、市政收容所、企業贊助商和公眾能夠在不承擔合規風險、避免資金混用違規、避免流浪動物扣留失效的情況下協同運作。從 ESIGN/UETA 電子棄養聲明到 IRC § 513(i) 贊助商致謝,每一項功能都是為了確保更多動物按時、帶著完整紙本紀錄離開收容所。"
+    },
+    "legal": {
+      "title": "法律與合規",
+      "subtitle": "我們的承諾",
+      "body": "我們承諾提供 ESIGN/UETA 合規的電子簽名、海登法案流浪動物扣留追蹤、IRC § 513(i) 合格贊助安全港合規、GDPR/CCPA 資料處理以及 SOC 2 對齊的營運控制。贊助商頁面絕無行動呼籲;領養公告結構性排除被標記為行為評估的動物;捐款帶有法律限制標記以防止資金混用。合規內建於產品之中,而非外部附加。"
+    },
+    "process": {
+      "title": "我們的流程",
+      "subtitle": "救助如何透過五個步驟實現",
+      "body": "步驟一:動物透過公共送養入口或員工接收進入系統。步驟二:依據海登法案自動啟動法定流浪動物扣留倒數計時。步驟三:醫療分診確定緊迫性與領養資格。步驟四:處於風險中的動物進入企業贊助公告與緊急募款。步驟五:領養者完成 ESIGN/UETA 棄養聲明;動物以完整、可稽核的監管鏈離開收容所。"
+    },
+    "story": {
+      "title": "我們的故事",
+      "subtitle": "由救助者建構,為救助者服務",
+      "body": "RescueHub 最初來自一家小型市政收容所的副業專案 —— 他們不斷因流浪扣留計時錯誤而失去動物。在另外兩家收容所中看到同樣的合規漏洞後,團隊從零開始重建工作流程,並將法律審查內嵌到每一次發佈中。如今,我們跨多個州支援救助工作,並堅守一個承諾:收容所在文書工作上花費的每一分鐘,都是沒有花在拯救動物上的分鐘。"
+    },
+    "about-us": {
+      "title": "關於 RescueHub",
+      "subtitle": "我們是誰",
+      "body": "我們是一支由前收容所營運者、合規律師與工程師組成的小型團隊,專門為動物福利建構適配目的的軟體。RescueHub 獨立營運、多租戶營運,在單一合規框架下服務於 501(c)(3) 非營利組織、市政機構和企業贊助商。我們的北極星:在遵守州法律的前提下,減少被安樂死的動物。"
+    },
+    "contact": {
+      "title": "聯絡我們",
+      "subtitle": "保持聯繫",
+      "body": "電子郵件:hello@rescuehub.org  ·  媒體:press@rescuehub.org  ·  合規:compliance@rescuehub.org  ·  緊急情況(全年無休收容所專線):+1 (555) 010-2024。我們承諾在 30 分鐘內回應收容所緊急事件,在 1 個工作日內回覆一般洽詢,並在 24 小時內回覆資安揭露。"
+    }
+  },
+  "intake_hub": {
+    "ai_body": "僅供員工使用：批次上傳籠卡與登記表。Gemini 視覺辨識直接抽取結構化紀錄（姓名、品種、年齡、醫療狀況、風險標記）並送入登記流程。",
+    "ai_cta": "啟動文件掃描",
+    "ai_title": "AI 文件掃描",
+    "medical_body": "ASPCA TPR（體溫/脈搏/呼吸）檢查表、急症徵象標記、病史及附件關聯，供收容所員工使用。",
+    "medical_cta": "開啟醫療登記",
+    "medical_title": "員工醫療登記",
+    "public_body": "面向市民的 ESIGN/UETA 合規電子免責書，適用於送交寵物或通報拾獲的流浪動物，建立具法律效力的保管鏈。",
+    "public_cta": "開啟入口",
+    "public_title": "公眾送交入口",
+    "subtitle": "請選擇一條登記路徑以開始處理動物紀錄。",
+    "title": "收容登記作業",
+    "staff_only_badge": "只供職員使用"
+  },
+  "public_intake": {
+    "title": "公眾自首入口網站",
+    "intro": "此符合 ESIGN/UETA 標準的電子棄權書創建了一個具有法律保護的監管鏈。請選擇適合您情況的選項。",
+    "found_stray_label": "🐾我發現了一隻流浪動物",
+    "found_stray_desc": "您發現一隻動物似乎遺失、被遺棄或受傷。",
+    "owner_surrender_label": "📝 我需要交出我的寵物",
+    "owner_surrender_desc": "您是合法所有者並希望將監護權轉移給 RescueHub。",
+    "waiver_title": "電子棄權",
+    "waiver_intro": "查看並簽署符合 ESIGN/UETA 標準的責任豁免。根據聯邦法律，您輸入的法定姓名構成電子簽名。",
+    "cancel_prefix": "取消 -",
+    "confirm_title": "提交完成",
+    "confirm_body": "您的投降請求已被記錄。下面的 ESIGN 豁免雜湊值可作為您可驗證的電子收據。",
+    "hash_label": "ESIGN 免稅記錄",
+    "hash_description": "您輸入的姓名簽章和同意交易的 SHA-256 雜湊值。保留此記錄。"
+  },
+  "esign": {
+    "owner_surrender_title": "業主放棄－所有權放棄轉讓",
+    "found_stray_title": "發現流浪者 — 攝入聲明",
+    "legal_intro": "根據《全球和國家商務電子簽名法》(ESIGN) 和《統一電子交易法》(UETA)，您的電子同意和簽名在法律上等同於紙本簽名。",
+    "consent_label": "我同意與 RescueHub 和接收動物救援組織開展電子商務。我同意所有記錄、披露和簽名都可以以電子方式提供和保留。",
+    "full_legal_name": "法定全名（電子簽名）",
+    "signature_placeholder": "輸入您的法定全名作為您的電子簽名",
+    "affirmation_hint": "透過在上面輸入您的姓名，您肯定打算在 ESIGN / UETA 下以電子方式簽署本文檔。",
+    "error_consent_required": "您必須同意電子商務並提供您的法定全名才能執行此棄權。",
+    "error_unexpected": "發生意外錯誤。請再試一次。",
+    "processing_button": "加工...",
+    "execute_button": "執行豁免並提交"
+  },
+  "fundraising": {
+    "title": "籌款活動",
+    "subtitle": "支持我們照顧的動物。每筆捐款都透過法律限制標誌進行跟踪，以防止資金混合。",
+    "back_to_dashboard": "← 返回儀表板",
+    "percent_funded": "{pct}% 資助",
+    "goal_reached": "✓ 目標達成",
+    "donate_cta": "捐贈 →",
+    "showing_count": "顯示 {count} 活躍活動。連接資料庫後將提供完整清單。所有交易均符合網路慈善籌款的查爾斯頓原則。",
+    "back_to_list": "返回籌款列表",
+    "wallet": {
+      "title": "籌款活動",
+      "animal_id": "動物ID：{id}",
+      "raised": "已籌集 {amount}",
+      "goal_label": "{goal} 目標",
+      "percent_funded": "{pct}% 資助",
+      "goal_reached_msg": "✓ 目標達成－限制將自動切換以防止資金混合",
+      "medical_allocated": "醫療：{amount}",
+      "general_allocated": "一般：{amount}",
+      "donate_title": "提交捐款",
+      "amount_label": "金額 ($)",
+      "amount_placeholder": "例如25:00",
+      "allocation_label": "資金分配",
+      "allocation_general": "一般護理（庇護所行動）",
+      "allocation_medical": "醫療（直接治療）",
+      "mixing_warning": "⚠️目標達成。根據捐贈者意圖跟踪，新的捐贈將切換限制標誌，以防止受到法律限制的資金混合。",
+      "donate_processing": "加工...",
+      "donate_submit": "提交捐款",
+      "ledger_title": "交易帳本",
+      "entries_count": "（{count}條目）",
+      "empty_ledger": "還沒有捐款。在上面提交捐款來為帳本播種。"
+    }
+  },
+  "chatbot": {
+    "title": "救援中心助理",
+    "open_label": "打開聊天",
+    "close_label": "關閉聊天",
+    "greeting": "你好。我是 RescueHub 助理。我知道您正在尋找您的寵物，我可以為您提供協助。深吸一口氣。首先，你的寵物叫什麼名字？",
+    "input_placeholder": "輸入您的回覆...",
+    "attach_label": "附加文件",
+    "send_label": "發送訊息",
+    "error": "抱歉，我遇到了錯誤。請再試一次。 ({error})"
+  },
+  "document_scan": {
+    "title": "AI攝取－批次文件上傳",
+    "description": "將籠卡或攝入表（圖像/PDF）放在下面。 Gemini 模型將擷取結構化的攝取記錄。",
+    "dropzone_headline": "將文件拖放到此處，或按一下瀏覽",
+    "dropzone_caption": "JPEG、PNG、WEBP、HEIC 或 PDF — 允許多個文件",
+    "aria_dropzone": "AI攝取批次上傳",
+    "error_invalid_type": "僅接受影像（JPEG、PNG、WEBP、HEIC）和 PDF。",
+    "error_unknown": "未知的上傳錯誤。",
+    "staged_files": "暫存檔案 ({count})",
+    "clear_all": "全部清除",
+    "remove_file": "刪除{name}",
+    "size_kb": "{kb} KB",
+    "run_extraction": "運行 AI 攝取量萃取",
+    "analyzing": "使用人工智慧分析文件...",
+    "rate_limit_note": "順序處理使我們低於 API 速率限制（每個檔案約 2 秒）。",
+    "results_heading": "擷取的記錄 ({count})",
+    "results_aria": "擷取結果",
+    "empty_results_title": "這些文件中沒有發現攝取記錄。",
+    "empty_results_body": "AI 成功掃描了您的文件，但找不到任何可讀的攝入記錄。嘗試上傳更清晰的圖像，確保籠卡文字清晰，或選擇其他文件。",
+    "empty_results_dismiss": "解僱",
+    "pre_submission_hint": "還沒有提取。暫存上面的一些文件以開始。",
+    "unnamed_animal": "無名動物#{n}",
+    "unknown_species": "未知物種",
+    "age_unknown": "年齡未知",
+    "age_yr": "{n} 年",
+    "field_species": "種",
+    "field_breed": "品種",
+    "field_age": "年齡",
+    "field_sex": "性別",
+    "field_medical": "醫療的",
+    "field_hold_cleared": "保持清除",
+    "yes": "是的",
+    "no": "不",
+    "intake_notes": "入學筆記",
+    "intake_number": "攝取量#{n}"
+  }
+}

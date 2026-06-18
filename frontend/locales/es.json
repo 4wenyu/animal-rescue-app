@@ -14,7 +14,16 @@
     "surrender": "Entrega",
     "staff_login": "Acceso del Personal",
     "locale_switch": "Idioma",
-    "back_to_options": "Volver a Opciones de Admisión"
+    "back_to_options": "Volver a Opciones de Admisión",
+    "about": {
+      "about_us": "Sobre Nosotros",
+      "contact": "Contacto",
+      "label": "Acerca",
+      "legal": "Legal",
+      "mission": "Misión",
+      "process": "Proceso",
+      "story": "Historia"
+    }
   },
   "hero": {
     "badge": "Plataforma Legalmente Conforme",
@@ -114,7 +123,55 @@
   },
   "medical": {
     "Healthy": "Saludable",
-    "Needs Review": "Necesita Revisión"
+    "Needs Review": "Necesita Revisión",
+    "title": "Registros médicos",
+    "subtitle": "Seleccione un animal para ver o actualizar su examen médico de admisión alineado con ASPCA/CART.",
+    "back_to_dashboard": "Volver al panel",
+    "species_intaken": "{species} · tomado {date}",
+    "view_examination": "Ver examen",
+    "compliance_esign": "Cumple con ESIGN/UETA",
+    "compliance_aspca": "Examen ASPCA/CART alineado",
+    "compliance_irs": "IRS § 501(c)(3)",
+    "back_to_list": "Volver a Registros Médicos",
+    "checksheet": {
+      "title": "Hoja de control de admisión médica",
+      "subtitle": "Examen de admisión breve alineado con ASPCA/CART — ID de animal: {id} · Especie: {species}",
+      "weight": "Peso",
+      "weight_unit": "libras",
+      "tpr_header": "TPR (Temperatura, Pulso, Respiración)",
+      "tpr_temp": "Temperatura",
+      "tpr_pulse": "Legumbres",
+      "tpr_resp": "Respiración",
+      "unit_f": "°F",
+      "unit_bpm": "bpm",
+      "unit_brpm": "brpm",
+      "procedures_header": "Procedimientos de admisión",
+      "procedure_microchip": "Microchip escaneado",
+      "procedure_vaccines": "Vacunas administradas",
+      "procedure_dewormer": "Desparasitante administrado",
+      "procedure_topspot": "Se aplicó Topspot contra pulgas/garrapatas",
+      "emergency_signs_header": "Señales de emergencia",
+      "vet_flagged": "VETERINARIO BANDERA",
+      "detected_warning": "⚠️ Se detectaron señales de emergencia: se notificará a un veterinario al guardarlo.",
+      "save_button": "Guardar registro de admisión médica",
+      "confirm_title": "Ingesta médica registrada",
+      "confirm_complete": "Animal {id} ({species}) chequeo médico completo.",
+      "new_exam": "Nuevo examen",
+      "vet_required": "⚠️ Se requiere notificación veterinaria",
+      "vet_required_body": "Señales de emergencia detectadas: {signs}. Se ha marcado a un veterinario para revisión inmediata.",
+      "emergency_sign": {
+        "ulcers_in_mouth_or_nose": "Úlceras en boca o nariz.",
+        "vomiting": "Vómitos",
+        "diarrhea_bloody": "Diarrea (con sangre)",
+        "coughing": "Toser",
+        "patchy_hair_loss": "Pérdida de cabello irregular",
+        "open_wounds_lacerations": "Heridas abiertas / laceraciones",
+        "seizures": "Convulsiones",
+        "difficulty_breathing": "dificultad para respirar",
+        "limping_unable_to_bear_weight": "Cojeando/incapaz de soportar peso",
+        "conjunctivitis_eye_discharge": "Conjuntivitis (secreción ocular)"
+      }
+    }
   },
   "quick_links": {
     "surrender_title": "Portal de Entrega Pública",
@@ -142,5 +199,157 @@
     "and": "y",
     "of": "de",
     "total": "total"
+  },
+  "about": {
+    "about-us": {
+      "body": "Somos un pequeño equipo de antiguos operadores de refugios, abogados de cumplimiento e ingenieros que construyen software especializado para bienestar animal. RescueHub se opera de forma independiente, multiinquilino y sirve a organizaciones sin fines de lucro 501(c)(3), agencias municipales y patrocinadores corporativos bajo un único marco de cumplimiento. Nuestro norte: reducir los animales sacrificados en cumplimiento con la ley estatal.",
+      "subtitle": "Quiénes somos",
+      "title": "Acerca de RescueHub"
+    },
+    "contact": {
+      "body": "Correo: hello@rescuehub.org  ·  Prensa: press@rescuehub.org  ·  Cumplimiento: compliance@rescuehub.org  ·  Emergencias (línea 24/7 del refugio): +1 (555) 010-2024. Respondemos a emergencias del refugio en 30 minutos, consultas generales en un día hábil y divulgaciones de seguridad en 24 horas.",
+      "subtitle": "Mantente en contacto",
+      "title": "Contacto"
+    },
+    "legal": {
+      "body": "Estamos comprometidos con firmas electrónicas conformes a ESIGN/UETA, seguimiento de retención de callejeros por la Ley Hayden, cumplimiento del puerto seguro de patrocinio cualificado IRC § 513(i), manejo de datos GDPR/CCPA, y controles operativos alineados con SOC 2. Las páginas de patrocinadores nunca incluyen llamadas a la acción; los feeds de adopción excluyen estructuralmente a los animales marcados para evaluación conductual; las donaciones llevan banderas de restricción legal para evitar la mezcla de fondos. El cumplimiento está integrado en el producto, no añadido después.",
+      "subtitle": "Lo que garantizamos",
+      "title": "Legal y Cumplimiento"
+    },
+    "mission": {
+      "body": "RescueHub existe para cerrar la brecha entre los animales en riesgo del refugio y las personas que pueden salvarlos. Construimos software legalmente conforme que permite a los rescates 501(c)(3), refugios municipales, patrocinadores corporativos y al público trabajar juntos sin riesgo de cumplimiento, violaciones de mezcla de fondos o fallos en la retención de callejeros. Cada función — desde las exoneraciones electrónicas ESIGN/UETA hasta los reconocimientos de patrocinadores IRC § 513(i) — existe para garantizar que más animales salgan del refugio con vida, a tiempo y con un rastro documental limpio.",
+      "subtitle": "Por qué existe RescueHub",
+      "title": "Nuestra Misión"
+    },
+    "process": {
+      "body": "Paso 1: Un animal entra al sistema a través del portal público de entrega o el ingreso por personal. Paso 2: La cuenta regresiva estatutaria de retención de callejeros comienza automáticamente según la Ley Hayden. Paso 3: El triaje médico determina la urgencia y la elegibilidad para adopción. Paso 4: Los animales en riesgo aparecen en las emisiones para patrocinadores corporativos y en el crowdfunding de emergencia. Paso 5: Los adoptantes completan una exoneración ESIGN/UETA; el animal sale del refugio con una cadena de custodia completa y lista para auditoría.",
+      "subtitle": "Cómo ocurre el rescate en cinco pasos",
+      "title": "Nuestro Proceso"
+    },
+    "story": {
+      "body": "RescueHub comenzó como un proyecto paralelo para un pequeño refugio municipal que seguía perdiendo animales por errores en los tiempos de retención de callejeros. Tras ver las mismas brechas de cumplimiento en dos refugios más, el equipo reconstruyó el flujo de trabajo desde cero con revisión legal integrada en cada lanzamiento. Hoy apoyamos rescates en varios estados con una sola promesa: cada minuto que un refugio pasa en papeleo es un minuto que no se dedica a salvar animales.",
+      "subtitle": "Construido por rescatistas, para rescatistas",
+      "title": "Nuestra Historia"
+    }
+  },
+  "intake_hub": {
+    "ai_body": "Solo personal: carga masiva de tarjetas de jaula y hojas de ingreso. La visión de Gemini extrae registros estructurados (nombre, raza, edad, estado médico, banderas de riesgo) directamente al flujo de ingreso.",
+    "ai_cta": "Iniciar Escaneo de Documentos",
+    "ai_title": "Escaneo de Documentos con IA",
+    "medical_body": "Hoja de control ASPCA TPR (Temperatura/Pulso/Respiración), banderas de signos de emergencia, historial médico y enlace de archivos para el personal del refugio.",
+    "medical_cta": "Abrir Ingreso Médico",
+    "medical_title": "Ingreso Médico del Personal",
+    "public_body": "Exoneración electrónica conforme a ESIGN/UETA para ciudadanos que entregan una mascota o reportan una mascota encontrada. Crea una cadena de custodia legalmente defendible.",
+    "public_cta": "Abrir Portal",
+    "public_title": "Portal Público de Entrega",
+    "subtitle": "Elija una vía de ingreso para comenzar a procesar el registro de un animal.",
+    "title": "Operaciones de Ingreso",
+    "staff_only_badge": "Sólo Personal"
+  },
+  "public_intake": {
+    "title": "Portal de rendición pública",
+    "intro": "Esta exención electrónica que cumple con ESIGN/UETA crea una cadena de custodia legalmente defendible. Seleccione la opción que se aplique a su situación.",
+    "found_stray_label": "🐾 Encontré un animal callejero",
+    "found_stray_desc": "Encontraste un animal que parece estar perdido, abandonado o herido.",
+    "owner_surrender_label": "📝 Necesito entregar mi mascota",
+    "owner_surrender_desc": "Usted es el propietario legal y desea transferir la custodia a RescueHub.",
+    "waiver_title": "Renuncia Electrónica",
+    "waiver_intro": "Revise y firme la exención de responsabilidad que cumple con ESIGN/UETA. Su nombre legal escrito constituye una firma electrónica según la ley federal.",
+    "cancel_prefix": "Cancelar -",
+    "confirm_title": "Envío completo",
+    "confirm_body": "Su solicitud de rendición ha sido registrada. El hash de exención de ESIGN a continuación sirve como su recibo electrónico verificable.",
+    "hash_label": "Registro de exención ESIGN",
+    "hash_description": "Hash SHA-256 de su firma de nombre escrito y transacción de consentimiento. Guarde esto para sus registros."
+  },
+  "esign": {
+    "owner_surrender_title": "Rendición del propietario: renuncia a la transferencia de propiedad",
+    "found_stray_title": "Callejero encontrado - Declaración de admisión",
+    "legal_intro": "Según la Ley de Firmas Electrónicas en el Comercio Nacional y Global (ESIGN) y la Ley Uniforme de Transacciones Electrónicas (UETA), su consentimiento y firma electrónicos son legalmente equivalentes a una firma física en papel.",
+    "consent_label": "Doy mi consentimiento para realizar negocios electrónicos con RescueHub y la organización receptora de rescate de animales. Acepto que todos los registros, divulgaciones y firmas se puedan proporcionar y conservar electrónicamente.",
+    "full_legal_name": "Nombre Legal Completo (Firma Electrónica)",
+    "signature_placeholder": "Escriba su nombre legal completo como firma electrónica",
+    "affirmation_hint": "Al escribir su nombre arriba, afirmativamente tiene la intención de firmar este documento electrónicamente bajo ESIGN/UETA.",
+    "error_consent_required": "Debe dar su consentimiento para realizar negocios electrónicos y proporcionar su nombre legal completo para ejecutar esta renuncia.",
+    "error_unexpected": "Se produjo un error inesperado. Por favor inténtalo de nuevo.",
+    "processing_button": "Tratamiento...",
+    "execute_button": "Ejecutar renuncia y enviar"
+  },
+  "fundraising": {
+    "title": "Campañas de recaudación de fondos",
+    "subtitle": "Apoye a los animales bajo nuestro cuidado. Cada donación se rastrea con indicadores de restricción legal para evitar la mezcla de fondos.",
+    "back_to_dashboard": "← Volver al Panel de control",
+    "percent_funded": "{pct}% financiado",
+    "goal_reached": "✓ Meta alcanzada",
+    "donate_cta": "Donar →",
+    "showing_count": "Mostrando {count} campañas activas. Una lista completa estará disponible una vez que la base de datos esté conectada. Todas las transacciones cumplen con los Principios de Charleston para la recaudación de fondos benéficos a través de Internet.",
+    "back_to_list": "Volver a la lista de recaudación de fondos",
+    "wallet": {
+      "title": "Campaña de recaudación de fondos",
+      "animal_id": "Identificación del animal: {id}",
+      "raised": "{amount} recaudados",
+      "goal_label": "de {goal} gol",
+      "percent_funded": "{pct}% financiado",
+      "goal_reached_msg": "✓ Objetivo alcanzado: la restricción cambiará automáticamente para evitar la mezcla de fondos",
+      "medical_allocated": "Médico: {amount}",
+      "general_allocated": "Generales: {amount}",
+      "donate_title": "Enviar donación",
+      "amount_label": "Monto ($)",
+      "amount_placeholder": "p.ej. 25.00",
+      "allocation_label": "Asignación de fondos",
+      "allocation_general": "Cuidado general (operaciones de refugio)",
+      "allocation_medical": "Médico (tratamiento directo)",
+      "mixing_warning": "⚠️ Objetivo alcanzado. Las nuevas donaciones cambiarán el indicador de restricción para evitar la mezcla de fondos legalmente restringidos, de acuerdo con el seguimiento de la intención de los donantes.",
+      "donate_processing": "Tratamiento...",
+      "donate_submit": "Enviar donación",
+      "ledger_title": "Libro mayor de transacciones",
+      "entries_count": "({count} entradas)",
+      "empty_ledger": "Aún no hay donaciones. Envíe una donación arriba para iniciar el libro mayor."
+    }
+  },
+  "chatbot": {
+    "title": "Asistente de RescueHub",
+    "open_label": "abrir chat",
+    "close_label": "Cerrar chat",
+    "greeting": "Hola. Soy el asistente de RescueHub. Entiendo que estás buscando a tu mascota y estoy aquí para ayudarte. Respira hondo. Para empezar, ¿cómo se llama tu mascota?",
+    "input_placeholder": "Escribe tu respuesta...",
+    "attach_label": "Adjuntar archivo",
+    "send_label": "enviar mensaje",
+    "error": "Lo siento, encontré un error. Por favor inténtalo de nuevo. ({error})"
+  },
+  "document_scan": {
+    "title": "Entrada de IA: carga de documentos por lotes",
+    "description": "Coloque las tarjetas de jaula o las hojas de admisión (imágenes/PDF) a continuación. El modelo Gemini extraerá registros de admisión estructurados.",
+    "dropzone_headline": "Arrastre y suelte archivos aquí o haga clic para explorar",
+    "dropzone_caption": "JPEG, PNG, WEBP, HEIC o PDF: se permiten varios archivos",
+    "aria_dropzone": "Carga de lotes de admisión de IA",
+    "error_invalid_type": "Solo se aceptan imágenes (JPEG, PNG, WEBP, HEIC) y PDF.",
+    "error_unknown": "Error de carga desconocido.",
+    "staged_files": "Archivos preparados ({count})",
+    "clear_all": "Borrar todo",
+    "remove_file": "Quitar {name}",
+    "size_kb": "{kb} KB",
+    "run_extraction": "Ejecute la extracción de ingesta de IA",
+    "analyzing": "Analizando documentos con IA…",
+    "rate_limit_note": "El procesamiento secuencial nos mantiene por debajo del límite de velocidad de API (~2 segundos por archivo).",
+    "results_heading": "Registros extraídos ({count})",
+    "results_aria": "Resultados de extracción",
+    "empty_results_title": "No se detectaron registros de admisión en estos documentos.",
+    "empty_results_body": "La IA escaneó sus archivos con éxito pero no pudo encontrar ningún registro de entrada legible. Intente cargar imágenes más nítidas, asegúrese de que el texto de la tarjeta de la jaula sea legible o elija un documento diferente.",
+    "empty_results_dismiss": "Despedir",
+    "pre_submission_hint": "Aún no hay extracciones. Prepare algunos de los archivos anteriores para comenzar.",
+    "unnamed_animal": "Animal sin nombre #{n}",
+    "unknown_species": "especies desconocidas",
+    "age_unknown": "Edad desconocida",
+    "age_yr": "{n} año",
+    "field_species": "Especies",
+    "field_breed": "Criar",
+    "field_age": "Edad",
+    "field_sex": "Sexo",
+    "field_medical": "Médico",
+    "field_hold_cleared": "Mantener borrado",
+    "yes": "Sí",
+    "no": "No",
+    "intake_notes": "Notas de admisión",
+    "intake_number": "Ingesta #{n}"
   }
 }

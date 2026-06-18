@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,6 +18,8 @@ export interface FundraisingWalletProps {
   animalId: string;
   targetGoal: number;
   currentBalance: number;
+  /** Optional locale. Falls back to localStorage-driven state. */
+  locale?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -56,6 +58,78 @@ function randomDonor(): string {
 }
 
 // ---------------------------------------------------------------------------
+// Synchronous i18n (6 locales + SSR-safe English fallbacks)
+// ---------------------------------------------------------------------------
+
+import enDict from "../../../locales/en.json";
+import esDict from "../../../locales/es.json";
+import zhCNDict from "../../../locales/zh-CN.json";
+import zhTWDict from "../../../locales/zh-TW.json";
+import jaDict from "../../../locales/ja.json";
+import koDict from "../../../locales/ko.json";
+import zhLegacyDict from "../../../locales/zh.json";
+
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
+  zh: zhLegacyDict as unknown as Record<string, unknown>,
+};
+const STORAGE_KEY = "rescuehub_locale";
+
+function resolveLocale(stored: string | null): string {
+  if (stored === "zh") return "zh-CN";
+  if (
+    stored === "en" || stored === "es" || stored === "zh-CN" ||
+    stored === "zh-TW" || stored === "ja" || stored === "ko"
+  ) return stored;
+  return "en";
+}
+
+const EN_FALLBACK: Record<string, string> = {
+  "fundraising.wallet.title": "Fundraising Campaign",
+  "fundraising.wallet.animal_id": "Animal ID: {id}",
+  "fundraising.wallet.raised": "{amount} raised",
+  "fundraising.wallet.goal_label": "of {goal} goal",
+  "fundraising.wallet.percent_funded": "{pct}% funded",
+  "fundraising.wallet.goal_reached_msg":
+    "✓ Goal reached — restriction will auto-switch to prevent fund mixing",
+  "fundraising.wallet.medical_allocated": "Medical: {amount}",
+  "fundraising.wallet.general_allocated": "General: {amount}",
+  "fundraising.wallet.donate_title": "Submit Donation",
+  "fundraising.wallet.amount_label": "Amount ($)",
+  "fundraising.wallet.amount_placeholder": "e.g. 25.00",
+  "fundraising.wallet.allocation_label": "Fund Allocation",
+  "fundraising.wallet.allocation_general": "General Care (shelter ops)",
+  "fundraising.wallet.allocation_medical": "Medical (direct treatment)",
+  "fundraising.wallet.mixing_warning":
+    "⚠️ Target reached. New donations will switch the restriction flag to prevent legally restricted fund mixing, in accordance with donor intent tracking.",
+  "fundraising.wallet.donate_processing": "Processing...",
+  "fundraising.wallet.donate_submit": "Submit Donation",
+  "fundraising.wallet.ledger_title": "Transaction Ledger",
+  "fundraising.wallet.entries_count": "({count} entries)",
+  "fundraising.wallet.empty_ledger":
+    "No donations yet. Submit a donation above to seed the ledger.",
+};
+
+function trFor(locale: string, key: string, vars?: Record<string, string | number>): string {
+  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+  const parts = key.split(".");
+  let value: unknown = dict;
+  for (const p of parts) {
+    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
+    value = (value as Record<string, unknown>)[p];
+  }
+  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
+  if (!vars) return value;
+  return Object.entries(vars).reduce((str, [k, v]) =>
+    str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)), value);
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -63,6 +137,7 @@ export function FundraisingWallet({
   animalId,
   targetGoal,
   currentBalance: initialBalance,
+  locale: localeProp,
 }: FundraisingWalletProps): ReactNode {
   // ── State ───────────────────────────────────────────────────────────
   const [balance, setBalance] = useState(initialBalance);
@@ -72,6 +147,30 @@ export function FundraisingWallet({
     "general",
   );
   const [submitting, setSubmitting] = useState(false);
+
+  // Locale: prop preferred, fallback to localStorage.
+  const [fallbackLocale, setFallbackLocale] = useState("en");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setFallbackLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+    } catch {
+      /* default */
+    }
+    const handler = () => {
+      try {
+        setFallbackLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    return () =>
+      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+  }, []);
+  const locale = localeProp ?? fallbackLocale;
+  const t = (key: string, vars?: Record<string, string | number>) =>
+    trFor(locale, key, vars);
 
   // ── Derived ─────────────────────────────────────────────────────────
   const progressPct = useMemo(() => {
@@ -121,10 +220,10 @@ export function FundraisingWallet({
       {/* ── Header ──────────────────────────────────────────── */}
       <div>
         <h1 className="text-xl font-semibold text-neutral-900">
-          Fundraising Campaign
+          {t("fundraising.wallet.title")}
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Animal ID: <strong>{animalId}</strong>
+          {t("fundraising.wallet.animal_id", { id: animalId })}
         </p>
       </div>
 
@@ -132,10 +231,12 @@ export function FundraisingWallet({
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-md">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-neutral-700">
-            {formatCurrency(balance)} raised
+            {t("fundraising.wallet.raised", { amount: formatCurrency(balance) })}
           </span>
           <span className="text-xs text-neutral-400">
-            of {formatCurrency(targetGoal)} goal
+            {t("fundraising.wallet.goal_label", {
+              goal: formatCurrency(targetGoal),
+            })}
           </span>
         </div>
 
@@ -150,11 +251,14 @@ export function FundraisingWallet({
         </div>
 
         <div className="mt-2 flex items-center justify-between text-xs text-neutral-400">
-          <span>{Math.round(progressPct)}% funded</span>
+          <span>
+            {t("fundraising.wallet.percent_funded", {
+              pct: Math.round(progressPct).toString(),
+            })}
+          </span>
           {isGoalReached && (
             <span className="font-semibold text-green-600">
-              &#x2713; Goal reached &mdash; restriction will auto-switch to
-              prevent fund mixing
+              {t("fundraising.wallet.goal_reached_msg")}
             </span>
           )}
         </div>
@@ -163,10 +267,14 @@ export function FundraisingWallet({
         {transactions.length > 0 && (
           <div className="mt-4 flex gap-6 border-t pt-3 text-xs text-neutral-500">
             <span>
-              Medical: <strong className="text-neutral-700">{formatCurrency(medicalTotal)}</strong>
+              {t("fundraising.wallet.medical_allocated", {
+                amount: formatCurrency(medicalTotal),
+              })}
             </span>
             <span>
-              General: <strong className="text-neutral-700">{formatCurrency(generalTotal)}</strong>
+              {t("fundraising.wallet.general_allocated", {
+                amount: formatCurrency(generalTotal),
+              })}
             </span>
           </div>
         )}
@@ -175,7 +283,7 @@ export function FundraisingWallet({
       {/* ── Donation form ────────────────────────────────────── */}
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-md">
         <h2 className="mb-3 text-sm font-semibold text-neutral-700">
-          Submit Donation
+          {t("fundraising.wallet.donate_title")}
         </h2>
 
         <div className="mb-3">
@@ -183,7 +291,7 @@ export function FundraisingWallet({
             htmlFor="donation-amount"
             className="mb-1 block text-xs font-medium text-neutral-600"
           >
-            Amount ($)
+            {t("fundraising.wallet.amount_label")}
           </label>
           <input
             id="donation-amount"
@@ -192,7 +300,7 @@ export function FundraisingWallet({
             min="0.01"
             value={donationAmount}
             onChange={(e) => setDonationAmount(e.target.value)}
-            placeholder="e.g. 25.00"
+            placeholder={t("fundraising.wallet.amount_placeholder")}
             className="w-full rounded border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
@@ -200,13 +308,21 @@ export function FundraisingWallet({
         {/* Allocation radio toggles */}
         <fieldset className="mb-4">
           <legend className="mb-1.5 text-xs font-medium text-neutral-600">
-            Fund Allocation
+            {t("fundraising.wallet.allocation_label")}
           </legend>
           <div className="flex gap-4">
-            {[
-              { value: "general" as const, label: "General Care (shelter ops)" },
-              { value: "medical" as const, label: "Medical (direct treatment)" },
-            ].map(({ value, label }) => (
+            {(
+              [
+                {
+                  value: "general" as const,
+                  labelKey: "fundraising.wallet.allocation_general",
+                },
+                {
+                  value: "medical" as const,
+                  labelKey: "fundraising.wallet.allocation_medical",
+                },
+              ]
+            ).map(({ value, labelKey }) => (
               <label
                 key={value}
                 className={`flex cursor-pointer items-center gap-2 rounded border px-3 py-2 text-xs transition ${
@@ -223,7 +339,7 @@ export function FundraisingWallet({
                   onChange={() => setAllocation(value)}
                   className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
                 />
-                {label}
+                {t(labelKey)}
               </label>
             ))}
           </div>
@@ -232,9 +348,7 @@ export function FundraisingWallet({
         {/* Restriction warning when goal is met */}
         {isGoalReached && (
           <div className="mb-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            &#x26A0;&#xFE0F; Target reached. New donations will switch the
-            restriction flag to prevent legally restricted fund mixing, in
-            accordance with donor intent tracking.
+            {t("fundraising.wallet.mixing_warning")}
           </div>
         )}
 
@@ -244,24 +358,28 @@ export function FundraisingWallet({
           disabled={submitting || !donationAmount || parseFloat(donationAmount) <= 0}
           className="w-full rounded bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
         >
-          {submitting ? "Processing..." : "Submit Donation"}
+          {submitting
+            ? t("fundraising.wallet.donate_processing")
+            : t("fundraising.wallet.donate_submit")}
         </button>
       </div>
 
       {/* ── Transaction ledger ───────────────────────────────── */}
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-md">
         <h2 className="mb-3 text-sm font-semibold text-neutral-700">
-          Transaction Ledger
+          {t("fundraising.wallet.ledger_title")}
           {transactions.length > 0 && (
             <span className="ml-2 font-normal text-neutral-400">
-              ({transactions.length} entries)
+              {t("fundraising.wallet.entries_count", {
+                count: transactions.length,
+              })}
             </span>
           )}
         </h2>
 
         {transactions.length === 0 ? (
           <p className="py-4 text-center text-xs text-neutral-400">
-            No donations yet. Submit a donation above to seed the ledger.
+            {t("fundraising.wallet.empty_ledger")}
           </p>
         ) : (
           <div className="max-h-64 space-y-1 overflow-y-auto">

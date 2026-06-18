@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ESIGNLiabilityWaiver,
@@ -8,39 +8,91 @@ import {
 } from "@/src/components/intake/ESIGNLiabilityWaiver";
 import { ArrowLeft, PawPrint, Shield, Heart } from "lucide-react";
 
-// ── Synchronous i18n ─────────────────────────────────────────────────────
+// ── Synchronous i18n: import every locale dictionary statically so the
+//    first paint renders the right language without a flash. ──────────────
 import enDict from "../../../../locales/en.json";
 import esDict from "../../../../locales/es.json";
-import zhDict from "../../../../locales/zh.json";
+import zhCNDict from "../../../../locales/zh-CN.json";
+import zhTWDict from "../../../../locales/zh-TW.json";
+import jaDict from "../../../../locales/ja.json";
+import koDict from "../../../../locales/ko.json";
+import zhLegacyDict from "../../../../locales/zh.json";
 
 const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
   en: enDict as unknown as Record<string, unknown>,
   es: esDict as unknown as Record<string, unknown>,
-  zh: zhDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
+  zh: zhLegacyDict as unknown as Record<string, unknown>,
 };
 
 const STORAGE_KEY = "rescuehub_locale";
 
-function t(key: string): string {
-  if (typeof window === "undefined") return key;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const locale = stored === "es" || stored === "zh" ? stored : "en";
-    const parts = key.split(".");
-    let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-    for (const part of parts) {
-      if (typeof value !== "object" || value === null) return key;
-      value = (value as Record<string, unknown>)[part];
-    }
-    return typeof value === "string" ? value : key;
-  } catch {
-    return key;
-  }
+function resolveLocale(stored: string | null): string {
+  if (stored === "zh") return "zh-CN"; // legacy alias
+  if (
+    stored === "en" || stored === "es" || stored === "zh-CN" ||
+    stored === "zh-TW" || stored === "ja" || stored === "ko"
+  ) return stored;
+  return "en";
 }
 
-const SURRENDER_TYPES: { value: SurrenderType; label: string }[] = [
-  { value: "FOUND_STRAY", label: "🐾  I found a stray animal" },
-  { value: "OWNER_SURRENDER", label: "📝  I need to surrender my pet" },
+// SSR-safe fallbacks (English) so the page is meaningful before hydration.
+const EN_FALLBACK: Record<string, string> = {
+  "public_intake.title": "Public Surrender Portal",
+  "public_intake.intro":
+    "This ESIGN/UETA-compliant electronic waiver creates a legally defensible chain of custody. Please select the option that applies to your situation.",
+  "public_intake.found_stray_label": "🐾  I found a stray animal",
+  "public_intake.found_stray_desc":
+    "You found an animal that appears to be lost, abandoned, or injured.",
+  "public_intake.owner_surrender_label": "📝  I need to surrender my pet",
+  "public_intake.owner_surrender_desc":
+    "You are the legal owner and wish to transfer custody to RescueHub.",
+  "public_intake.waiver_title": "Electronic Waiver",
+  "public_intake.waiver_intro":
+    "Review and sign the ESIGN/UETA-compliant liability waiver. Your typed legal name constitutes an electronic signature under federal law.",
+  "public_intake.cancel_prefix": "Cancel —",
+  "public_intake.confirm_title": "Submission Complete",
+  "public_intake.confirm_body":
+    "Your surrender request has been recorded. The ESIGN waiver hash below serves as your verifiable electronic receipt.",
+  "public_intake.hash_label": "ESIGN Waiver Record",
+  "public_intake.hash_description":
+    "SHA-256 hash of your typed-name signature and consent transaction. Keep this for your records.",
+  "nav.back_to_options": "Back to Intake Options",
+};
+
+function tr(locale: string, key: string, vars?: Record<string, string | number>): string {
+  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+  const parts = key.split(".");
+  let value: unknown = dict;
+  for (const p of parts) {
+    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
+    value = (value as Record<string, unknown>)[p];
+  }
+  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
+  if (!vars) return value;
+  return Object.entries(vars).reduce((str, [k, v]) =>
+    str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)), value);
+}
+
+/** Hardcoded surrender-type data — keys map to i18n via labelKey. */
+const SURRENDER_TYPES: {
+  value: SurrenderType;
+  labelKey: string;
+  descKey: string;
+}[] = [
+  {
+    value: "FOUND_STRAY",
+    labelKey: "public_intake.found_stray_label",
+    descKey: "public_intake.found_stray_desc",
+  },
+  {
+    value: "OWNER_SURRENDER",
+    labelKey: "public_intake.owner_surrender_label",
+    descKey: "public_intake.owner_surrender_desc",
+  },
 ];
 
 /** Fire a Telegram notification for a public intake. */
@@ -81,6 +133,38 @@ export default function PublicIntakePage(): ReactNode {
   const [step, setStep] = useState<"select" | "esign" | "confirm">("select");
   const [surrenderType, setSurrenderType] = useState<SurrenderType | null>(null);
   const [esignHash, setEsignHash] = useState<string | null>(null);
+  const [locale, setLocale] = useState<string>("en");
+
+  // Resolve locale after hydration (server always renders English first).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+    } catch {
+      // default to English
+    }
+  }, []);
+
+  // Re-render when locale changes anywhere else in the app.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => {
+      try {
+        setLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+      } catch {
+        // noop
+      }
+    };
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
+
+  const t = (key: string, vars?: Record<string, string | number>) =>
+    tr(locale, key, vars);
 
   const handleTypeSelected = (type: SurrenderType): void => {
     setSurrenderType(type);
@@ -157,31 +241,27 @@ export default function PublicIntakePage(): ReactNode {
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-emerald-500" />
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                  Public Surrender Portal
+                  {t("public_intake.title")}
                 </h1>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                This ESIGN/UETA-compliant electronic waiver creates a legally
-                defensible chain of custody. Please select the option that
-                applies to your situation.
+                {t("public_intake.intro")}
               </p>
             </div>
 
             {/* Premium surrender type cards */}
             <div className="grid gap-4">
-              {SURRENDER_TYPES.map(({ value, label }) => (
+              {SURRENDER_TYPES.map(({ value, labelKey, descKey }) => (
                 <button
                   key={value}
                   onClick={() => handleTypeSelected(value)}
                   className="group w-full rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-emerald-200 hover:shadow-md"
                 >
                   <span className="text-base font-semibold text-slate-900 group-hover:text-emerald-700">
-                    {label}
+                    {t(labelKey)}
                   </span>
                   <span className="mt-1 block text-sm text-slate-400">
-                    {value === "FOUND_STRAY"
-                      ? "You found an animal that appears to be lost, abandoned, or injured."
-                      : "You are the legal owner and wish to transfer custody to RescueHub."}
+                    {t(descKey)}
                   </span>
                 </button>
               ))}
@@ -207,19 +287,18 @@ export default function PublicIntakePage(): ReactNode {
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-emerald-500" />
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                  Electronic Waiver
+                  {t("public_intake.waiver_title")}
                 </h1>
               </div>
               <p className="mt-1 text-sm text-slate-500">
-                Review and sign the ESIGN/UETA-compliant liability waiver.
-                Your typed legal name constitutes an electronic signature
-                under federal law.
+                {t("public_intake.waiver_intro")}
               </p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <ESIGNLiabilityWaiver
                 surrenderType={surrenderType!}
+                locale={locale}
                 onSigned={handleEsignComplete}
               />
             </div>
@@ -230,7 +309,7 @@ export default function PublicIntakePage(): ReactNode {
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Cancel — {t("nav.back_to_options")}
+                {t("public_intake.cancel_prefix")} {t("nav.back_to_options")}
               </Link>
             </div>
           </div>
@@ -243,26 +322,24 @@ export default function PublicIntakePage(): ReactNode {
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-emerald-600" />
                 <h1 className="text-xl font-bold tracking-tight text-emerald-900">
-                  Submission Complete
+                  {t("public_intake.confirm_title")}
                 </h1>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-emerald-700">
-                Your surrender request has been recorded. The ESIGN waiver
-                hash below serves as your verifiable electronic receipt.
+                {t("public_intake.confirm_body")}
               </p>
             </div>
 
             {/* Hash display */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500">
-                ESIGN Waiver Record
+                {t("public_intake.hash_label")}
               </p>
               <p className="mt-2 text-xs font-mono text-slate-600 break-all">
                 {esignHash}
               </p>
               <p className="mt-3 text-xs text-slate-400">
-                SHA-256 hash of your typed-name signature and consent
-                transaction. Keep this for your records.
+                {t("public_intake.hash_description")}
               </p>
             </div>
 

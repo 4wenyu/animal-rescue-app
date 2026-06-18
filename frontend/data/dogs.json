@@ -7,7 +7,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-09T10:00:00Z",
+    "intakeTimestamp": "2026-06-14T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=1"
   },
   {
@@ -18,7 +18,7 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "IMMEDIATE_BEHAVIORAL",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-11T10:00:00Z",
+    "intakeTimestamp": "2026-06-14T21:20:47Z",
     "imageUrl": "https://placedog.net/400/400?id=2"
   },
   {
@@ -29,7 +29,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-10T10:00:00Z",
+    "intakeTimestamp": "2026-06-12T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=3"
   },
   {
@@ -40,7 +40,7 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "AT_RISK",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-09T10:00:00Z",
+    "intakeTimestamp": "2026-06-17T09:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=4"
   },
   {
@@ -51,7 +51,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-08T10:00:00Z",
+    "intakeTimestamp": "2026-06-10T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=5"
   },
   {
@@ -62,7 +62,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-10T10:00:00Z",
+    "intakeTimestamp": "2026-06-15T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=6"
   },
   {
@@ -73,7 +73,7 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "AT_RISK",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-09T10:00:00Z",
+    "intakeTimestamp": "2026-06-17T19:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=7"
   },
   {
@@ -84,7 +84,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-11T10:00:00Z",
+    "intakeTimestamp": "2026-06-03T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=8"
   },
   {
@@ -95,7 +95,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-12T10:00:00Z",
+    "intakeTimestamp": "2026-06-13T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=9"
   },
   {
@@ -106,7 +106,7 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "IMMEDIATE_BEHAVIORAL",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-06T10:00:00Z",
+    "intakeTimestamp": "2026-06-14T20:20:47Z",
     "imageUrl": "https://placedog.net/400/400?id=10"
   },
   {
@@ -117,7 +117,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-13T10:00:00Z",
+    "intakeTimestamp": "2026-06-16T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=11"
   },
   {
@@ -128,7 +128,7 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-13T14:00:00Z",
+    "intakeTimestamp": "2026-06-11T21:50:47Z",
     "imageUrl": "https://placedog.net/400/400?id=12"
   }
 ]

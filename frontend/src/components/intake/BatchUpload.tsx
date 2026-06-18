@@ -5,6 +5,7 @@ import {
   type DragEvent,
   type ReactNode,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -21,9 +22,99 @@ import {
   X,
 } from "lucide-react";
 
-// `hasAttemptedSubmission` distinguishes "user hasn't tried yet, fresh slate"
-// from "user submitted and we got back 0 records, queue finished." Without
-// this, the empty-results yellow alert would flash on initial page load.
+// ---------------------------------------------------------------------------
+// Synchronous i18n (6 locales + SSR-safe English fallbacks)
+// ---------------------------------------------------------------------------
+
+import enDict from "../../../locales/en.json";
+import esDict from "../../../locales/es.json";
+import zhCNDict from "../../../locales/zh-CN.json";
+import zhTWDict from "../../../locales/zh-TW.json";
+import jaDict from "../../../locales/ja.json";
+import koDict from "../../../locales/ko.json";
+import zhLegacyDict from "../../../locales/zh.json";
+
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
+  zh: zhLegacyDict as unknown as Record<string, unknown>,
+};
+const STORAGE_KEY = "rescuehub_locale";
+
+function resolveLocale(stored: string | null): string {
+  if (stored === "zh") return "zh-CN";
+  if (
+    stored === "en" || stored === "es" || stored === "zh-CN" ||
+    stored === "zh-TW" || stored === "ja" || stored === "ko"
+  ) return stored;
+  return "en";
+}
+
+const EN_FALLBACK: Record<string, string> = {
+  "document_scan.title": "AI Intake — Batch Document Upload",
+  "document_scan.description":
+    "Drop cage cards or intake sheets (images / PDFs) below. The Gemini model will extract structured intake records.",
+  "document_scan.dropzone_headline":
+    "Drag & drop files here, or click to browse",
+  "document_scan.dropzone_caption":
+    "JPEG, PNG, WEBP, HEIC, or PDF — multiple files allowed",
+  "document_scan.aria_dropzone": "AI Intake Batch Upload",
+  "document_scan.error_invalid_type":
+    "Only images (JPEG, PNG, WEBP, HEIC) and PDFs are accepted.",
+  "document_scan.error_unknown": "Unknown upload error.",
+  "document_scan.staged_files": "Staged files ({count})",
+  "document_scan.clear_all": "Clear all",
+  "document_scan.remove_file": "Remove {name}",
+  "document_scan.size_kb": "{kb} KB",
+  "document_scan.run_extraction": "Run AI Intake Extraction",
+  "document_scan.analyzing": "Analyzing documents with AI…",
+  "document_scan.rate_limit_note":
+    "Sequential processing keeps us under the API rate limit (~2 sec per file).",
+  "document_scan.results_heading": "Extracted Records ({count})",
+  "document_scan.results_aria": "Extraction results",
+  "document_scan.empty_results_title":
+    "No intake records detected in these documents.",
+  "document_scan.empty_results_body":
+    "The AI scanned your files successfully but could not find any readable intake records. Try uploading sharper images, ensure the cage card text is legible, or pick a different document.",
+  "document_scan.empty_results_dismiss": "Dismiss",
+  "document_scan.pre_submission_hint":
+    "No extractions yet. Stage some files above to get started.",
+  // AnimalCard subcomponent
+  "document_scan.unnamed_animal": "Unnamed animal #{n}",
+  "document_scan.unknown_species": "unknown species",
+  "document_scan.age_unknown": "Age unknown",
+  "document_scan.age_yr": "{n} yr",
+  "document_scan.field_species": "Species",
+  "document_scan.field_breed": "Breed",
+  "document_scan.field_age": "Age",
+  "document_scan.field_sex": "Sex",
+  "document_scan.field_medical": "Medical",
+  "document_scan.field_hold_cleared": "Hold Cleared",
+  "document_scan.yes": "Yes",
+  "document_scan.no": "No",
+  "document_scan.intake_notes": "Intake Notes",
+  "document_scan.intake_number": "Intake #{n}",
+};
+
+function trFor(locale: string, key: string, vars?: Record<string, string | number>): string {
+  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+  const parts = key.split(".");
+  let value: unknown = dict;
+  for (const p of parts) {
+    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
+    value = (value as Record<string, unknown>)[p];
+  }
+  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
+  if (!vars) return value;
+  return Object.entries(vars).reduce(
+    (str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
+    value,
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -62,10 +153,22 @@ export interface BatchUploadProps {
   endpoint?: string;
   /** Called once after each successful submission with all extracted records. */
   onComplete?: (animals: ExtractedAnimal[]) => void;
-  /** Optional caption shown above the drop zone. */
+  /**
+   * Optional override for the header title.
+   * When omitted, falls back to `document_scan.title`.
+   */
   title?: string;
-  /** Optional helper text shown beneath the drop zone title. */
+  /**
+   * Optional override for the header description.
+   * When omitted, falls back to `document_scan.description`.
+   */
   description?: string;
+  /**
+   * Optional locale override. When omitted, the component resolves the
+   * active locale from localStorage and listens for the
+   * `rescuehub-locale-change` event.
+   */
+  locale?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,8 +178,9 @@ export interface BatchUploadProps {
 export function BatchUpload({
   endpoint = "/api/shelter/intake/map",
   onComplete,
-  title = "AI Intake — Batch Document Upload",
-  description = "Drop cage cards or intake sheets (images / PDFs) below. The Gemini model will extract structured intake records.",
+  title,
+  description,
+  locale: localeProp,
 }: BatchUploadProps): ReactNode {
   // ── State ────────────────────────────────────────────────────────────
   const [files, setFiles] = useState<File[]>([]);
@@ -84,13 +188,39 @@ export function BatchUpload({
   const [results, setResults] = useState<ExtractedAnimal[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  // Flips true the first time the user hits submit. Used to gate the
-  // empty-results yellow alert so it only appears AFTER a real run
-  // (never on initial page load when `results.length === 0` is the
-  // expected "haven't tried yet" state).
   const [hasAttemptedSubmission, setHasAttemptedSubmission] = useState(false);
+  const [fallbackLocale, setFallbackLocale] = useState("en");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Locale: prop preferred, otherwise localStorage + event listener.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setFallbackLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+    } catch {
+      /* default */
+    }
+    const handler = () => {
+      try {
+        setFallbackLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    return () =>
+      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+  }, []);
+  const locale = localeProp ?? fallbackLocale;
+  const t = useCallback(
+    (key: string, vars?: Record<string, string | number>) =>
+      trFor(locale, key, vars),
+    [locale],
+  );
+
+  const headerTitle = title ?? t("document_scan.title");
+  const headerDescription = description ?? t("document_scan.description");
 
   // ── File selection helpers ───────────────────────────────────────────
   const ACCEPTED_MIME = [
@@ -103,21 +233,23 @@ export function BatchUpload({
   ];
   const ACCEPTED_ATTR = ACCEPTED_MIME.join(",");
 
-  const addFiles = useCallback((incoming: FileList | File[]) => {
-    const arr = Array.from(incoming);
-    const filtered = arr.filter(
-      (f) =>
-        ACCEPTED_MIME.includes(f.type) ||
-        // Some browsers leave file.type empty for PDFs; fall back to extension.
-        /\.(jpe?g|png|webp|heic|pdf)$/i.test(f.name),
-    );
-    if (filtered.length === 0) {
-      setError("Only images (JPEG, PNG, WEBP, HEIC) and PDFs are accepted.");
-      return;
-    }
-    setError(null);
-    setFiles((prev) => [...prev, ...filtered]);
-  }, []);
+  const addFiles = useCallback(
+    (incoming: FileList | File[]) => {
+      const arr = Array.from(incoming);
+      const filtered = arr.filter(
+        (f) =>
+          ACCEPTED_MIME.includes(f.type) ||
+          /.(jpe?g|png|webp|heic|pdf)$/i.test(f.name),
+      );
+      if (filtered.length === 0) {
+        setError(t("document_scan.error_invalid_type"));
+        return;
+      }
+      setError(null);
+      setFiles((prev) => [...prev, ...filtered]);
+    },
+    [t],
+  );
 
   const removeFile = useCallback((idx: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== idx));
@@ -127,8 +259,6 @@ export function BatchUpload({
     setFiles([]);
     setResults([]);
     setError(null);
-    // Also reset the submission flag so the green/yellow banners go away
-    // and the user sees the fresh "stage some files" state again.
     setHasAttemptedSubmission(false);
   }, []);
 
@@ -161,7 +291,6 @@ export function BatchUpload({
     (e: ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
         addFiles(e.target.files);
-        // Reset so re-selecting the same file fires onChange again.
         e.target.value = "";
       }
     },
@@ -174,30 +303,17 @@ export function BatchUpload({
     setIsLoading(true);
     setError(null);
 
-    // Use an exit flag so the finally block can distinguish a clean run
-    // from one where every file failed before any records were committed.
     let succeededCleanly = false;
     const accumulated: ExtractedAnimal[] = [];
 
     try {
-      // Mark that we've attempted at least one submission. This drives
-      // the yellow "0 records" alert rendering below.
       setHasAttemptedSubmission(true);
       for (const file of files) {
-        // Per-file isolation: one bad upload must NOT poison the rest
-        // of the queue, leave the spinner stuck, or hide already-completed
-        // extractions. Each iteration pushes into `accumulated` directly,
-        // and failures throw out of this try block.
         try {
           const formData = new FormData();
-          // Field name MUST be "files" (plural) — the route does
-          // formData.getAll("files") and iterates each entry.
           formData.append("files", file, file.name);
 
-          const res = await fetch(endpoint, {
-            method: "POST",
-            body: formData,
-          });
+          const res = await fetch(endpoint, { method: "POST", body: formData });
 
           if (!res.ok) {
             const text = await res.text().catch(() => "");
@@ -211,62 +327,48 @@ export function BatchUpload({
             accumulated.push(...json.animals);
           }
         } finally {
-          // ALWAYS remove the processed file from staging so the queue UI
-          // reflects ground truth, even if this specific file threw.
           setFiles((prev) => prev.filter((f) => f !== file));
         }
 
-        // 2-second rate-limit safety delay per file (mirrors route-side delay).
-        // Skip the delay after the last file so success lands instantly.
         if (files.indexOf(file) < files.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       }
 
-      // Loop completed end-to-end: commit accumulated results to state.
       setResults(accumulated);
       onComplete?.(accumulated);
       succeededCleanly = true;
     } catch (err) {
-      // A single file failed. Show the error AND surface whatever partial
-      // records were extracted from the files that succeeded before it.
       const message =
-        err instanceof Error ? err.message : "Unknown upload error.";
+        err instanceof Error ? err.message : t("document_scan.error_unknown");
       setError(message);
       if (accumulated.length > 0) {
         setResults(accumulated);
         onComplete?.(accumulated);
       }
     } finally {
-      // Bulletproof reset — runs on every exit path (success, per-failure,
-      // and total crash). This is the contract that prevents the spinner
-      // from getting stuck.
       setIsLoading(false);
-
-      // Clear staging on a clean full-pass success. (Per-file cleanup
-      // already happens in the inner finally above.)
       if (succeededCleanly) {
         setFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     }
-  }, [files, isLoading, endpoint, onComplete]);
+  }, [files, isLoading, endpoint, onComplete, t]);
 
-  // ── Render ───────────────────────────────────────────────────────────
   const canSubmit = files.length > 0 && !isLoading;
 
   return (
     <section
-      aria-label="AI Intake Batch Upload"
+      aria-label={t("document_scan.aria_dropzone")}
       className="w-full max-w-4xl mx-auto p-4 sm:p-6 space-y-6"
     >
       {/* Header */}
       <header className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <PawPrint className="h-6 w-6 text-rose-600" aria-hidden />
-          {title}
+          {headerTitle}
         </h1>
-        <p className="text-sm text-slate-600">{description}</p>
+        <p className="text-sm text-slate-600">{headerDescription}</p>
       </header>
 
       {/* Drop zone */}
@@ -289,10 +391,10 @@ export function BatchUpload({
         />
         <div className="space-y-1">
           <p className="text-base font-semibold text-slate-800">
-            Drag & drop files here, or click to browse
+            {t("document_scan.dropzone_headline")}
           </p>
           <p className="text-xs text-slate-500">
-            JPEG, PNG, WEBP, HEIC, or PDF — multiple files allowed
+            {t("document_scan.dropzone_caption")}
           </p>
         </div>
         <input
@@ -312,7 +414,7 @@ export function BatchUpload({
         <div className="rounded-xl border border-slate-200 bg-white">
           <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200">
             <h2 className="text-sm font-semibold text-slate-700">
-              Staged files ({files.length})
+              {t("document_scan.staged_files", { count: files.length })}
             </h2>
             {!isLoading && (
               <button
@@ -321,7 +423,7 @@ export function BatchUpload({
                 className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-rose-600 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                Clear all
+                {t("document_scan.clear_all")}
               </button>
             )}
           </div>
@@ -339,14 +441,16 @@ export function BatchUpload({
                   )}
                   <span className="truncate text-slate-800">{file.name}</span>
                   <span className="text-xs text-slate-400 shrink-0">
-                    {(file.size / 1024).toFixed(0)} KB
+                    {t("document_scan.size_kb", {
+                      kb: Math.round(file.size / 1024),
+                    })}
                   </span>
                 </span>
                 {!isLoading && (
                   <button
                     type="button"
                     onClick={() => removeFile(idx)}
-                    aria-label={`Remove ${file.name}`}
+                    aria-label={t("document_scan.remove_file", { name: file.name })}
                     className="text-slate-400 hover:text-rose-600 transition-colors"
                   >
                     <X className="h-4 w-4" />
@@ -374,18 +478,18 @@ export function BatchUpload({
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              Analyzing documents with AI…
+              {t("document_scan.analyzing")}
             </>
           ) : (
             <>
               <UploadCloud className="h-4 w-4" aria-hidden />
-              Run AI Intake Extraction
+              {t("document_scan.run_extraction")}
             </>
           )}
         </button>
         {isLoading && (
           <p className="text-xs text-slate-500">
-            Sequential processing keeps us under the API rate limit (~2 sec per file).
+            {t("document_scan.rate_limit_note")}
           </p>
         )}
       </div>
@@ -403,17 +507,25 @@ export function BatchUpload({
 
       {/* Results */}
       {results.length > 0 && (
-        <section aria-label="Extraction results" className="space-y-3">
+        <section
+          aria-label={t("document_scan.results_aria")}
+          className="space-y-3"
+        >
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-600" aria-hidden />
             <h2 className="text-lg font-semibold text-slate-900">
-              Extracted Records ({results.length})
+              {t("document_scan.results_heading", { count: results.length })}
             </h2>
           </div>
 
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {results.map((animal, idx) => (
-              <AnimalCard key={animal.intakeNumber ?? idx} animal={animal} index={idx} />
+              <AnimalCard
+                key={animal.intakeNumber ?? idx}
+                animal={animal}
+                index={idx}
+                t={t}
+              />
             ))}
           </ul>
         </section>
@@ -437,18 +549,16 @@ export function BatchUpload({
             />
             <div className="flex-1 space-y-1">
               <p className="font-semibold">
-                No intake records detected in these documents.
+                {t("document_scan.empty_results_title")}
               </p>
               <p className="text-xs text-amber-800/80 leading-relaxed">
-                The AI scanned your files successfully but could not find any
-                readable intake records. Try uploading sharper images, ensure
-                the cage card text is legible, or pick a different document.
+                {t("document_scan.empty_results_body")}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setHasAttemptedSubmission(false)}
-              aria-label="Dismiss"
+              aria-label={t("document_scan.empty_results_dismiss")}
               className="text-amber-600 hover:text-amber-800 transition-colors"
             >
               <X className="h-4 w-4" />
@@ -456,14 +566,14 @@ export function BatchUpload({
           </div>
         )}
 
-      {/* Pre-submission hint (only when nothing has been done yet) */}
+      {/* Pre-submission hint */}
       {!isLoading &&
         !hasAttemptedSubmission &&
         results.length === 0 &&
         files.length === 0 &&
         !error && (
           <p className="text-center text-xs text-slate-400 pt-2">
-            No extractions yet. Stage some files above to get started.
+            {t("document_scan.pre_submission_hint")}
           </p>
         )}
     </section>
@@ -474,20 +584,26 @@ export function BatchUpload({
 // Subcomponent: extracted animal card
 // ---------------------------------------------------------------------------
 
+type TranslateFn = (key: string, vars?: Record<string, string | number>) => string;
+
 function AnimalCard({
   animal,
   index,
+  t,
 }: {
   animal: ExtractedAnimal;
   index: number;
+  t: TranslateFn;
 }): ReactNode {
-  const name = animal.name ?? `Unnamed animal #${index + 1}`;
-  const species = animal.species ?? "unknown species";
+  const name = animal.name ?? t("document_scan.unnamed_animal", { n: index + 1 });
+  const species = animal.species ?? t("document_scan.unknown_species");
   const breed = animal.breed ?? "—";
   const ageRaw = animal.age;
-  const age = typeof ageRaw === "number" ? `${ageRaw} yr` : "Age unknown";
+  const age =
+    typeof ageRaw === "number"
+      ? t("document_scan.age_yr", { n: ageRaw })
+      : t("document_scan.age_unknown");
 
-  // Compliance: highlight IMMEDIATE_BEHAVIORAL so staff visually catch it.
   const risk = animal.euthanasia_risk_status ?? null;
   const riskStyles =
     risk === "IMMEDIATE_BEHAVIORAL"
@@ -512,11 +628,11 @@ function AnimalCard({
       </header>
 
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        <Field label="Species" value={species} />
-        <Field label="Breed" value={breed} />
-        <Field label="Age" value={age} />
+        <Field label={t("document_scan.field_species")} value={species} />
+        <Field label={t("document_scan.field_breed")} value={breed} />
+        <Field label={t("document_scan.field_age")} value={age} />
         <Field
-          label="Sex"
+          label={t("document_scan.field_sex")}
           value={
             typeof animal.sex === "string" && animal.sex.length > 0
               ? animal.sex
@@ -524,7 +640,7 @@ function AnimalCard({
           }
         />
         <Field
-          label="Medical"
+          label={t("document_scan.field_medical")}
           value={
             typeof animal.medicalStatus === "string" && animal.medicalStatus.length > 0
               ? animal.medicalStatus
@@ -532,12 +648,12 @@ function AnimalCard({
           }
         />
         <Field
-          label="Hold Cleared"
+          label={t("document_scan.field_hold_cleared")}
           value={
             typeof animal.statutoryHoldCleared === "boolean"
               ? animal.statutoryHoldCleared
-                ? "Yes"
-                : "No"
+                ? t("document_scan.yes")
+                : t("document_scan.no")
               : "—"
           }
         />
@@ -546,7 +662,7 @@ function AnimalCard({
       {animal.notes && (
         <div className="mt-3 pt-3 border-t border-slate-100">
           <p className="text-[11px] uppercase tracking-wide font-semibold text-slate-500 mb-1">
-            Intake Notes
+            {t("document_scan.intake_notes")}
           </p>
           <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
             {animal.notes}
@@ -556,7 +672,7 @@ function AnimalCard({
 
       {animal.intakeNumber && (
         <p className="mt-3 text-[11px] text-slate-400 font-mono">
-          Intake #{animal.intakeNumber}
+          {t("document_scan.intake_number", { n: animal.intakeNumber })}
         </p>
       )}
     </li>

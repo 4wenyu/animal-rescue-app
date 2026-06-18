@@ -33,16 +33,24 @@ import { HeroMesh } from "@/src/components/HeroMesh";
 import enDict from "../locales/en.json";
 import esDict from "../locales/es.json";
 import zhDict from "../locales/zh.json";
+import zhCNDict from "../locales/zh-CN.json";
+import zhTWDict from "../locales/zh-TW.json";
+import jaDict from "../locales/ja.json";
+import koDict from "../locales/ko.json";
 
 const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
   en: enDict as unknown as Record<string, unknown>,
   es: esDict as unknown as Record<string, unknown>,
   zh: zhDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
 };
 
 const STORAGE_KEY = "rescuehub_locale";
 
-type LocaleCode = "en" | "es" | "zh";
+type LocaleCode = "en" | "es" | "zh" | "zh-CN" | "zh-TW" | "ja" | "ko";
 
 function t(locale: string, key: string, vars?: Record<string, string | number>): string {
   const parts = key.split(".");
@@ -64,8 +72,8 @@ function useI18n() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored === "es" || stored === "zh") setLocaleState(stored);
+        const stored = localStorage.getItem(STORAGE_KEY) as LocaleCode;
+        if (stored && Object.keys(LOCALE_DICTS).includes(stored)) setLocaleState(stored);
         else setLocaleState("en");
       } catch {
         setLocaleState("en");
@@ -78,14 +86,14 @@ function useI18n() {
     if (typeof window === "undefined") return;
     const handler = (e: CustomEvent) => {
       const l = e.detail as LocaleCode;
-      if (l === "es" || l === "zh" || l === "en") setLocaleState(l);
+      if (Object.keys(LOCALE_DICTS).includes(l)) setLocaleState(l);
     };
     window.addEventListener("rescuehub-locale-change", handler as EventListener);
     return () => window.removeEventListener("rescuehub-locale-change", handler as EventListener);
   }, []);
 
   const setLocale = useCallback((l: string) => {
-    const code = (l === "es" || l === "zh" ? l : "en") as LocaleCode;
+    const code = (Object.keys(LOCALE_DICTS).includes(l) ? l : "en") as LocaleCode;
     setLocaleState(code);
     if (typeof window !== "undefined") {
       try { localStorage.setItem(STORAGE_KEY, code); } catch {}
@@ -172,12 +180,12 @@ function getAgeLabel(age: number, tr: (key: string) => string): string {
 
 // ── Component ──────────────────────────────────────────────────────────────
 const HAMBURGER_LINKS = [
-  { href: "/about", label: "Mission", icon: Shield },
-  { href: "/legal", label: "Legal", icon: Scale },
-  { href: "/process", label: "Process", icon: BookOpen },
-  { href: "/story", label: "Story", icon: FileText },
-  { href: "/about", label: "About Us", icon: Users },
-  { href: "/contact", label: "Contact", icon: Phone },
+  { href: "/about/mission", labelKey: "nav.about.mission", icon: Shield },
+  { href: "/about/legal", labelKey: "nav.about.legal", icon: Scale },
+  { href: "/about/process", labelKey: "nav.about.process", icon: BookOpen },
+  { href: "/about/story", labelKey: "nav.about.story", icon: FileText },
+  { href: "/about/about-us", labelKey: "nav.about.about_us", icon: Users },
+  { href: "/about/contact", labelKey: "nav.about.contact", icon: Phone },
 ] as const;
 
 export default function PublicHomePage() {
@@ -208,18 +216,18 @@ export default function PublicHomePage() {
             {/* About dropdown */}
             <div className="relative group">
               <button className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-                About
+                {tr("nav.about.label")}
                 <ChevronDown className="h-3.5 w-3.5 transition group-hover:rotate-180" />
               </button>
               <div className="invisible absolute left-0 top-full z-50 mt-1 min-w-[180px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg opacity-0 transition-all group-hover:visible group-hover:opacity-100">
-                {HAMBURGER_LINKS.map(({ href, label, icon: Icon }) => (
+                {HAMBURGER_LINKS.map(({ href, labelKey, icon: Icon }) => (
                   <Link
-                    key={label}
+                    key={href}
                     href={href}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                   >
                     <Icon className="h-4 w-4 text-slate-400" />
-                    {label}
+                    {tr(labelKey)}
                   </Link>
                 ))}
               </div>
@@ -271,15 +279,15 @@ export default function PublicHomePage() {
             className="border-t border-slate-200/60 bg-white px-6 pb-4 pt-2 md:hidden"
           >
             <div className="space-y-1">
-              {HAMBURGER_LINKS.map(({ href, label, icon: Icon }) => (
+              {HAMBURGER_LINKS.map(({ href, labelKey, icon: Icon }) => (
                 <Link
-                  key={label}
+                  key={href}
                   href={href}
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                 >
                   <Icon className="h-4 w-4 text-slate-400" />
-                  {label}
+                  {tr(labelKey)}
                 </Link>
               ))}
               <hr className="my-2 border-slate-100" />
@@ -358,7 +366,7 @@ export default function PublicHomePage() {
                 className="inline-flex items-center gap-2 rounded-xl bg-[#10B981] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-[#059669] hover:shadow-xl active:scale-[0.97]"
               >
                 <Heart className="h-4 w-4" />
-                Emergency Crowdfunding
+                {tr("hero.cta_crowdfunding")}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
@@ -366,7 +374,7 @@ export default function PublicHomePage() {
                 className="inline-flex items-center gap-2 rounded-xl bg-transparent border-2 border-slate-300 px-6 py-3 text-sm font-semibold text-[#334155] shadow-sm transition hover:bg-white/50 active:scale-[0.97]"
               >
                 <Heart className="h-4 w-4" />
-                Public Surrender Portal
+                {tr("hero.cta_surrender")}
             </Link>
           </motion.div>
         </div>

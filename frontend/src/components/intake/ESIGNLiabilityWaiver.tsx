@@ -4,6 +4,7 @@ import {
   type FormEvent,
   type ReactNode,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -22,6 +23,70 @@ async function sha256(payload: string): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
+// Synchronous i18n (6 locales + SSR-safe English fallbacks)
+// ---------------------------------------------------------------------------
+
+import enDict from "../../../locales/en.json";
+import esDict from "../../../locales/es.json";
+import zhCNDict from "../../../locales/zh-CN.json";
+import zhTWDict from "../../../locales/zh-TW.json";
+import jaDict from "../../../locales/ja.json";
+import koDict from "../../../locales/ko.json";
+import zhLegacyDict from "../../../locales/zh.json";
+
+const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
+  en: enDict as unknown as Record<string, unknown>,
+  es: esDict as unknown as Record<string, unknown>,
+  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
+  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
+  ja: jaDict as unknown as Record<string, unknown>,
+  ko: koDict as unknown as Record<string, unknown>,
+  zh: zhLegacyDict as unknown as Record<string, unknown>,
+};
+
+const STORAGE_KEY = "rescuehub_locale";
+
+function resolveLocale(stored: string | null): string {
+  if (stored === "zh") return "zh-CN";
+  if (
+    stored === "en" || stored === "es" || stored === "zh-CN" ||
+    stored === "zh-TW" || stored === "ja" || stored === "ko"
+  ) return stored;
+  return "en";
+}
+
+const EN_FALLBACK: Record<string, string> = {
+  "esign.owner_surrender_title":
+    "Owner Surrender — Transfer of Ownership Waiver",
+  "esign.found_stray_title": "Found Stray — Intake Declaration",
+  "esign.legal_intro":
+    "Under the Electronic Signatures in Global and National Commerce Act (ESIGN) and the Uniform Electronic Transactions Act (UETA), your electronic consent and signature are legally equivalent to a physical signature on paper.",
+  "esign.consent_label":
+    "I consent to conduct electronic business with RescueHub and the receiving animal rescue organisation. I agree that all records, disclosures, and signatures may be provided and retained electronically.",
+  "esign.full_legal_name": "Full Legal Name (Electronic Signature)",
+  "esign.signature_placeholder":
+    "Type your full legal name as your electronic signature",
+  "esign.affirmation_hint":
+    "By typing your name above, you affirmatively intend to sign this document electronically under ESIGN / UETA.",
+  "esign.error_consent_required":
+    "You must consent to electronic business and provide your full legal name to execute this waiver.",
+  "esign.error_unexpected": "An unexpected error occurred. Please try again.",
+  "esign.processing_button": "Processing...",
+  "esign.execute_button": "Execute Waiver & Submit",
+};
+
+function trFor(locale: string, key: string): string {
+  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
+  const parts = key.split(".");
+  let value: unknown = dict;
+  for (const p of parts) {
+    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
+    value = (value as Record<string, unknown>)[p];
+  }
+  return typeof value === "string" ? value : EN_FALLBACK[key] ?? key;
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -32,6 +97,11 @@ export interface ESIGNLiabilityWaiverProps {
   animalId?: string;
   /** Surrender category. */
   surrenderType: SurrenderType;
+  /**
+   * Active locale code. When omitted, the component subscribes to the
+   * `rescuehub-locale-change` event itself.
+   */
+  locale?: string;
   /** Called with the SHA-256 hash of the waiver payload on valid submission. */
   onSigned: (esignHash: string) => void;
 }
@@ -43,14 +113,39 @@ export interface ESIGNLiabilityWaiverProps {
 export function ESIGNLiabilityWaiver({
   animalId,
   surrenderType,
+  locale: localeProp,
   onSigned,
 }: ESIGNLiabilityWaiverProps): ReactNode {
-  // ── State ────────────────────────────────────────────────────────────
   const [consentChecked, setConsentChecked] = useState(false);
   const [affirmativeName, setAffirmativeName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+
+  // Locale: prefer prop, fallback to localStorage-driven state (so the waiver
+  // is usable standalone — when this component is the only consumer of i18n).
+  const [fallbackLocale, setFallbackLocale] = useState("en");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setFallbackLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+    } catch {
+      /* default */
+    }
+    const handler = () => {
+      try {
+        setFallbackLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
+      } catch {
+        /* default */
+      }
+    };
+    window.addEventListener("rescuehub-locale-change", handler as EventListener);
+    return () =>
+      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
+  }, []);
+
+  const locale = localeProp ?? fallbackLocale;
+  const t = (key: string) => trFor(locale, key);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -71,9 +166,7 @@ export function ESIGNLiabilityWaiver({
 
       // Block submission if consent or signature is missing
       if (!canSubmit) {
-        setError(
-          "You must consent to electronic business and provide your full legal name to execute this waiver.",
-        );
+        setError(t("esign.error_consent_required"));
         triggerShake();
         return;
       }
@@ -96,19 +189,29 @@ export function ESIGNLiabilityWaiver({
         const esignHash = await sha256(payload);
         onSigned(esignHash);
       } catch {
-        setError("An unexpected error occurred. Please try again.");
+        setError(t("esign.error_unexpected"));
       } finally {
         setSubmitting(false);
       }
     },
-    [canSubmit, surrenderType, affirmativeName, animalId, onSigned, triggerShake],
+    [
+      canSubmit,
+      surrenderType,
+      affirmativeName,
+      animalId,
+      onSigned,
+      triggerShake,
+      t,
+    ],
   );
 
   // ── Render ────────────────────────────────────────────────────────────
-  const title =
+  const title = trFor(
+    locale,
     surrenderType === "OWNER_SURRENDER"
-      ? "Owner Surrender — Transfer of Ownership Waiver"
-      : "Found Stray — Intake Declaration";
+      ? "esign.owner_surrender_title"
+      : "esign.found_stray_title",
+  );
 
   return (
     <form
@@ -117,13 +220,7 @@ export function ESIGNLiabilityWaiver({
       className={`space-y-6 rounded-xl border border-neutral-200 bg-white p-6 shadow-md transition-all ${shake ? "animate-shake" : ""}`}
     >
       <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
-      <p className="text-sm text-neutral-500">
-        Under the <strong>Electronic Signatures in Global and National
-        Commerce Act (ESIGN)</strong> and the{" "}
-        <strong>Uniform Electronic Transactions Act (UETA)</strong>, your
-        electronic consent and signature are legally equivalent to a physical
-        signature on paper.
-      </p>
+      <p className="text-sm text-neutral-500">{t("esign.legal_intro")}</p>
 
       {/* ── Step 1: Consent to electronic business ───────────── */}
       <label className="flex items-start gap-3 rounded border border-neutral-100 bg-neutral-50 p-3 transition hover:border-blue-200">
@@ -134,10 +231,7 @@ export function ESIGNLiabilityWaiver({
           className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
         />
         <span className="text-sm leading-relaxed text-neutral-700">
-          <strong>I consent to conduct electronic business</strong> with
-          RescueHub and the receiving animal rescue organisation. I agree that
-          all records, disclosures, and signatures may be provided and
-          retained electronically.
+          {t("esign.consent_label")}
         </span>
       </label>
 
@@ -147,21 +241,20 @@ export function ESIGNLiabilityWaiver({
           htmlFor="esign-name"
           className="mb-1 block text-sm font-medium text-neutral-700"
         >
-          Full Legal Name (Electronic Signature)
+          {t("esign.full_legal_name")}
         </label>
         <input
           id="esign-name"
           type="text"
           value={affirmativeName}
           onChange={(e) => setAffirmativeName(e.target.value)}
-          placeholder="Type your full legal name as your electronic signature"
+          placeholder={t("esign.signature_placeholder")}
           className="w-full rounded border border-neutral-300 px-3 py-2 text-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           autoComplete="name"
           required
         />
         <p className="mt-1 text-xs text-neutral-400">
-          By typing your name above, you affirmatively intend to sign this
-          document electronically under ESIGN / UETA.
+          {t("esign.affirmation_hint")}
         </p>
       </div>
 
@@ -185,7 +278,7 @@ export function ESIGNLiabilityWaiver({
             : "cursor-not-allowed bg-neutral-300"
         }`}
       >
-        {submitting ? "Processing..." : "Execute Waiver & Submit"}
+        {submitting ? t("esign.processing_button") : t("esign.execute_button")}
       </button>
     </form>
   );

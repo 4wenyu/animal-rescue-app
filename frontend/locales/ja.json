@@ -1,0 +1,355 @@
+{
+  "$schema": "./schema.json",
+  "site": {
+    "title": "RescueHub",
+    "tagline": "レスキュー・スポンサー・永遠の家族をつなぐ",
+    "description": "501(c)(3)の動物レスキュー団体、自治体シェルター、企業スポンサー、そして一般市民向けのマルチテナント規制コンプライアンスエンジンです。"
+  },
+  "nav": {
+    "public_portal": "一般向けポータル",
+    "dashboard": "ダッシュボード",
+    "intake": "受入",
+    "medical": "医療",
+    "fundraising": "資金調達",
+    "surrender": "引渡し",
+    "staff_login": "スタッフログイン",
+    "locale_switch": "言語",
+    "back_to_options": "受入オプションに戻る",
+    "about": {
+      "label": "概要",
+      "mission": "理念",
+      "legal": "法令",
+      "process": "プロセス",
+      "story": "ストーリー",
+      "about_us": "私たちについて",
+      "contact": "お問い合わせ"
+    }
+  },
+  "hero": {
+    "badge": "法令準拠プラットフォーム",
+    "headline": "一秒を争います。コンプライアンスを効率化し、より多くの命を救おう。",
+    "cta_crowdfunding": "緊急クラウドファンディング",
+    "cta_surrender": "一般向け引渡しポータル"
+  },
+  "adoption_feed": {
+    "title": "里親募集放送",
+    "available": "里親募集中の動物 {count} 頭",
+    "excluded": "行動評価中のため本フィードから除外された動物 {count} 頭",
+    "compliance_note": "行動評価に基づく安楽死例外のコンプライアンスに準拠",
+    "at_risk_badge": "この動物は危険状態 — 緊急の企業スポンサーが必要です",
+    "view_details": "詳細を見る",
+    "empty_state": "現在、里親募集放送中の動物はいません。",
+    "status": {
+      "available": "里親募集中",
+      "urgent_sponsor": "緊急スポンサーが必要",
+      "under_evaluation": "評価中"
+    }
+  },
+  "clock": {
+    "hold_cleared": "保留解除済み",
+    "hold_overdue": "⚠ 保留期間超過",
+    "stray_hold_active": "迷子保留中",
+    "remaining": "残り",
+    "legal_action_required": "超過 — 法的措置が必要です"
+  },
+  "dashboard": {
+    "title": "トリアージダッシュボード",
+    "active_roster": "在籍一覧 · {count} 頭",
+    "clear_filter": "フィルター解除: {filter}",
+    "add_animal": "動物を追加",
+    "v3": "RescueHub · トリアージシステム · v3.5",
+    "stats": {
+      "total_dogs": "犬の総数",
+      "healthy": "健康",
+      "needs_review": "要確認",
+      "avg_age": "平均年齢",
+      "yrs": "歳",
+      "filter_healthy": "フィルター: 健康",
+      "filter_needs_review": "フィルター: 要確認"
+    },
+    "table": {
+      "title": "動物カルテ",
+      "subtitle": "迷子保留ガーディアン",
+      "active_holds": "保留中 {count} 件{plural}",
+      "cleared": "{count} 件 解除済み",
+      "hayden_act": "ヘイデン法 {count} 件",
+      "view_all": "すべて表示",
+      "columns": {
+        "animal": "動物",
+        "breed": "犬種",
+        "age": "年齢",
+        "euth_risk": "安楽死リスク",
+        "legal_status": "法的ステータス",
+        "actions": "操作",
+        "medical": "医療"
+      },
+      "bsl_suffix": "（ミックス犬 ⚖️）",
+      "locked": "ロック中",
+      "hayden_note": "ヘイデン法 — 操作不可",
+      "adopt": "里親決定",
+      "transfer": "譲渡",
+      "on_hold": "保留中",
+      "locked_btn": "ロック中",
+      "compliance_footer": "すべての迷子保留期間はヘイデン法に基づき算出されています。",
+      "age_yr": "歳",
+      "age_yrs": "歳"
+    },
+    "badges": {
+      "safe": "安全",
+      "at_risk": "危険",
+      "hayden_act": "ヘイデン法 ⚠️",
+      "hayden_tag": "ヘイデン"
+    }
+  },
+  "sponsors": {
+    "title": "企業スポンサー",
+    "description": "これらの団体は IRC § 513(i) に基づく適格企業スポンサーシップを通じて動物福祉を支援しています。",
+    "compliance_title": "適格企業スポンサーシップ — IRC § 513(i)",
+    "compliance_body": "スポンサーへの謝意表示は、適格スポンサーシップ支払いセーフハーバーに準拠した価値中立的な記載として表示されます。広告・推奨・価格表示・行動喚起は一切表示されません。この分類により、501(c)(3) テナントの収入が非関連事業所得税（UBIT）の対象外として維持されます。"
+  },
+  "breeds": {
+    "Golden Retriever": "ゴールデンレトリバー",
+    "French Bulldog": "フレンチブルドッグ",
+    "Siberian Husky": "シベリアンハスキー",
+    "Beagle": "ビーグル",
+    "Labrador Retriever": "ラブラドールレトリバー",
+    "Boxer": "ボクサー",
+    "Cocker Spaniel": "コッカースパニエル",
+    "Poodle": "プードル",
+    "Dachshund": "ダックスフンド",
+    "German Shepherd": "ジャーマンシェパード",
+    "Rottweiler": "ロットワイラー",
+    "Shih Tzu": "シーズー"
+  },
+  "medical": {
+    "Healthy": "健康",
+    "Needs Review": "要確認",
+    "title": "医療記録",
+    "subtitle": "ASPCA/CART に準拠した医療摂取検査を表示または更新する動物を選択します。",
+    "back_to_dashboard": "ダッシュボードに戻る",
+    "species_intaken": "{species} · 摂取 {date}",
+    "view_examination": "検査を見る",
+    "compliance_esign": "ESIGN/UETA準拠",
+    "compliance_aspca": "ASPCA/CART 試験に準拠",
+    "compliance_irs": "IRS § 501(c)(3)",
+    "back_to_list": "医療記録に戻る",
+    "checksheet": {
+      "title": "医療摂取量チェックシート",
+      "subtitle": "ASPCA / CART に準拠した簡単な摂取試験 — 動物 ID: {id} · 種: {species}",
+      "weight": "重さ",
+      "weight_unit": "ポンド",
+      "tpr_header": "TPR (体温、脈拍、呼吸)",
+      "tpr_temp": "温度",
+      "tpr_pulse": "脈",
+      "tpr_resp": "呼吸",
+      "unit_f": "°F",
+      "unit_bpm": "BPM",
+      "unit_brpm": "brpm",
+      "procedures_header": "摂取手順",
+      "procedure_microchip": "マイクロチップをスキャンしました",
+      "procedure_vaccines": "投与されたワクチン",
+      "procedure_dewormer": "駆虫剤投与済み",
+      "procedure_topspot": "一番上のノミ/ダニが適用されました",
+      "emergency_signs_header": "緊急標識",
+      "vet_flagged": "獣医師による警告",
+      "detected_warning": "⚠️ 緊急兆候が検出されました — 保存時に獣医師に通知されます。",
+      "save_button": "医療摂取記録の保存",
+      "confirm_title": "医療摂取量の記録",
+      "confirm_complete": "動物{id} ({species}) 健康診断完了。",
+      "new_exam": "新しい試験",
+      "vet_required": "⚠️獣医師への通知が必要です",
+      "vet_required_body": "緊急兆候が検出されました: {signs}。獣医師は即時検査を受けるよう報告されました。",
+      "emergency_sign": {
+        "ulcers_in_mouth_or_nose": "口や鼻の潰瘍",
+        "vomiting": "嘔吐",
+        "diarrhea_bloody": "下痢（血性）",
+        "coughing": "咳",
+        "patchy_hair_loss": "斑状の脱毛",
+        "open_wounds_lacerations": "開いた傷/裂傷",
+        "seizures": "発作",
+        "difficulty_breathing": "呼吸困難",
+        "limping_unable_to_bear_weight": "足を引きずる/体重に耐えられない",
+        "conjunctivitis_eye_discharge": "結膜炎（目やに）"
+      }
+    }
+  },
+  "quick_links": {
+    "surrender_title": "一般向け引渡しポータル",
+    "surrender_body": "迷子を保護した、またはペットを手放す必要がありますか？ESIGN/UETA準拠の電子放棄同意書が、法的に有効な管理の連鎖を作成します。",
+    "surrender_cta": "引渡し手続きを開始",
+    "fundraising_title": "緊急クラウドファンディング",
+    "fundraising_body": "シェルター動物の緊急医療・手術・療養費の支援にご協力ください。すべての寄付は資金混同を防ぐ法的制限フラグ付きで管理されます。",
+    "fundraising_cta": "進行中のキャンペーンを見る"
+  },
+  "footer": {
+    "tagline": "501(c)(3)の動物レスキュー団体、自治体シェルター、企業スポンサー、および一般市民向けのマルチテナント SaaS コンプライアンスエンジンです。",
+    "public_section": "一般向け",
+    "surrender_portal": "引渡しポータル",
+    "fundraising_campaigns": "資金調達キャンペーン",
+    "adoption_feed": "里親募集フィード",
+    "platform_section": "プラットフォーム",
+    "privacy_policy": "プライバシーポリシー",
+    "terms_of_service": "利用規約",
+    "compliance_report": "コンプライアンスレポート",
+    "copyright": "© {year} RescueHub. All rights reserved."
+  },
+  "common": {
+    "year": "歳",
+    "years": "歳",
+    "and": "および",
+    "of": "の",
+    "total": "合計"
+  },
+  "about": {
+    "mission": {
+      "title": "私たちの理念",
+      "subtitle": "RescueHub が存在する理由",
+      "body": "RescueHub は、危険にさらされたシェルター動物とそれらを救える人々の間のギャップを埋めるために存在します。501(c)(3) のレスキュー団体、自治体シェルター、企業スポンサー、一般市民が、コンプライアンス違反・資金混同・迷子保留期間の管理ミスなしに協力できるよう、法令準拠のソフトウェアを開発しています。電子 ESIGN/UETA 放棄同意書から IRC § 513(i) のスポンサー表示まで、すべての機能は一貫して、より多くの動物が、期限内かつクリーンな証跡と共にシェルターから出ていけるようにするためのものです。"
+    },
+    "legal": {
+      "title": "法令・コンプライアンス",
+      "subtitle": "私たちが保証すること",
+      "body": "私たちは ESIGN/UETA 準拠の電子署名、ヘイデン法に基づく迷子保留期間の管理、IRC § 513(i) の適格スポンサーシップセーフハーバーへの準拠、GDPR/CCPA に基づくデータ取り扱い、SOC 2 に整合した運用管理を約束します。スポンサーページには行動喚起を含めないこと、里親募集フィードは行動評価対象の動物を構造的に除外すること、寄付には資金混同を防ぐための法的制限フラグが付与されること。コンプライアンスは後付けではなく、最初から製品に組み込まれています。"
+    },
+    "process": {
+      "title": "私たちのプロセス",
+      "subtitle": "レスキューが 5 ステップで進みます",
+      "body": "ステップ 1: 動物は一般向け引渡しポータルまたはスタッフによる受入を通じてシステムに登録されます。ステップ 2: ヘイデン法に基づく法定の迷子保留カウントダウンが自動的に開始されます。ステップ 3: 医療トリアージで緊急性と里親適格性を判断します。ステップ 4: 危険状態の動物は企業スポンサー放送と緊急クラウドファンディングに掲示されます。ステップ 5: 里親希望者は ESIGN/UETA 準拠の放棄同意書を完了し、動物は監査可能な完全な管理の連鎖と共にシェルターを巣立ちます。"
+    },
+    "story": {
+      "title": "私たちの歩み",
+      "subtitle": "救う側のために、救う側が作る",
+      "body": "RescueHub は、迷子保留期間の管理ミスで動物を失い続けていた小さな自治体シェルターのサイドプロジェクトとして始まりました。さらに 2 つのシェルターで同じコンプライアンスのギャップを目にした後チームはワークフローをゼロから再構築し、各リリースに法務レビューを統合しました。現在、複数州のレスキュー団体を支援していますが、揺るぎない約束はひとつです。シェルターが事務作業に費やす 1 分は、動物の命を救う 1 分ではないということ。"
+    },
+    "about-us": {
+      "title": "RescueHub について",
+      "subtitle": "私たちの紹介",
+      "body": "私たちは元シェルター運営者、コンプライアンス弁護士、エンジニアからなる少数チームで、動物福祉専用のソフトウェアを構築しています。RescueHub は独立して運営されるマルチテナントのシステムであり、単一のコンプライアンス枠組みのもと 501(c)(3) 非営利団体、自治体機関、企業スポンサーにサービスを提供します。北極星は州法に準拠したうえで、安楽死される動物をできる限り減らすことです。"
+    },
+    "contact": {
+      "title": "お問い合わせ",
+      "subtitle": "継続的なご連絡先",
+      "body": "Eメール：hello@rescuehub.org  ·  報道：press@rescuehub.org  ·  コンプライアンス：compliance@rescuehub.org  ·  緊急対応（24 時間シェルターホットライン）：+1 (555) 010-2024。シェルターの緊急事態には 30 分以内、一般的なお問い合わせには 1 営業日以内、セキュリティ情報開示には 24 時間以内に対応します。"
+    }
+  },
+  "intake_hub": {
+    "ai_body": "スタッフ専用：ケージカードや受入記録を一括アップロード。Gemini ビジョンが構造化データ（名前・犬種・年齢・医療・リスクフラグ）を抽出し、直接受入パイプラインに保存します。",
+    "ai_cta": "文書スキャンを起動",
+    "ai_title": "AI 文書スキャン",
+    "medical_body": "ASPCA TPR（体温・脈拍・呼吸）チェックシート、緊急兆候フラグ、病歴、ファイル連携をシェルタースタッフ向けに提供します。",
+    "medical_cta": "医療受入を開く",
+    "medical_title": "スタッフ医療受入",
+    "public_body": "ペットの引渡しや迷子の届け出を行う市民向けの ESIGN/UETA 準拠電子放棄同意書です。法的に有効な管理の連鎖を作成します。",
+    "public_cta": "ポータルを開く",
+    "public_title": "一般向け引渡しポータル",
+    "subtitle": "動物の記録処理を開始するには、受入方法を選択してください。",
+    "title": "受入業務",
+    "staff_only_badge": "関係者以外立ち入り禁止"
+  },
+  "public_intake": {
+    "title": "公開降伏ポータル",
+    "intro": "この ESIGN/UETA 準拠の電子権利放棄により、法的に防御可能な保管連鎖が形成されます。あなたの状況に当てはまるオプションを選択してください。",
+    "found_stray_label": "🐾 野良動物を見つけました",
+    "found_stray_desc": "迷子になったり、捨てられたり、怪我をしたと思われる動物を見つけました。",
+    "owner_surrender_label": "📝 ペットを引き渡さなければなりません",
+    "owner_surrender_desc": "あなたは法的所有者であり、管理権を RescueHub に移管したいと考えています。",
+    "waiver_title": "電子的権利放棄",
+    "waiver_intro": "ESIGN/UETA 準拠の責任放棄を確認し、署名します。入力された正式な名前は、連邦法に基づく電子署名を構成します。",
+    "cancel_prefix": "キャンセル -",
+    "confirm_title": "提出完了",
+    "confirm_body": "あなたの降伏要求は記録されました。以下の ESIGN 権利放棄ハッシュは、検証可能な電子領収書として機能します。",
+    "hash_label": "ESIGN権利放棄記録",
+    "hash_description": "入力された名前の署名と同意トランザクションの SHA-256 ハッシュ。これを記録として保管してください。"
+  },
+  "esign": {
+    "owner_surrender_title": "所有者の明け渡し — 所有権の移転の放棄",
+    "found_stray_title": "迷子発見 — 摂取申告",
+    "legal_intro": "世界および国内商取引法 (ESIGN) および統一電子取引法 (UETA) における電子署名に基づいて、お客様の電子同意と署名は法的に紙の物理的な署名と同等です。",
+    "consent_label": "私は、RescueHub および受け入れ先の動物保護団体と電子ビジネスを行うことに同意します。私は、すべての記録、開示、署名が電子的に提供および保存されることに同意します。",
+    "full_legal_name": "正式な正式名 (電子署名)",
+    "signature_placeholder": "電子署名として正式な氏名を入力してください",
+    "affirmation_hint": "上に名前を入力すると、ESIGN / UETA に基づいてこの文書に電子的に署名する意思があることになります。",
+    "error_consent_required": "この権利放棄を実行するには、電子ビジネスに同意し、正式な氏名を入力する必要があります。",
+    "error_unexpected": "予期しないエラーが発生しました。もう一度試してください。",
+    "processing_button": "処理...",
+    "execute_button": "権利放棄を実行して送信する"
+  },
+  "fundraising": {
+    "title": "募金キャンペーン",
+    "subtitle": "私たちが世話している動物たちをサポートしてください。すべての寄付は、資金の混合を防ぐために法的制限フラグで追跡されます。",
+    "back_to_dashboard": "← ダッシュボードに戻る",
+    "percent_funded": "{pct}% が資金提供されました",
+    "goal_reached": "✓ 目標達成",
+    "donate_cta": "寄付する →",
+    "showing_count": "{count} のアクティブなキャンペーンを表示しています。データベースに接続すると、完全なリストが利用可能になります。すべての取引は、インターネットベースの慈善募金に関するチャールストン原則に準拠しています。",
+    "back_to_list": "募金リストに戻る",
+    "wallet": {
+      "title": "募金活動",
+      "animal_id": "動物ID: {id}",
+      "raised": "{amount} 募金済み",
+      "goal_label": "{goal} 目標の",
+      "percent_funded": "{pct}% が資金提供されました",
+      "goal_reached_msg": "✓ 目標達成 — 資金の混合を防ぐために制限が自動的に切り替わります",
+      "medical_allocated": "医療: {amount}",
+      "general_allocated": "一般: {amount}",
+      "donate_title": "寄付を送信する",
+      "amount_label": "金額 ($)",
+      "amount_placeholder": "例えば25.00",
+      "allocation_label": "資金配分",
+      "allocation_general": "一般的なケア（避難所運営）",
+      "allocation_medical": "医療（直接治療）",
+      "mixing_warning": "⚠️目標達成しました。新たな寄付は、寄付者の意図の追跡に従って、法的に制限された資金の混合を防ぐために制限フラグを切り替えます。",
+      "donate_processing": "処理...",
+      "donate_submit": "寄付を送信する",
+      "ledger_title": "取引台帳",
+      "entries_count": "({count} エントリ)",
+      "empty_ledger": "まだ寄付はありません。台帳をシードするには、上記の寄付を送信してください。"
+    }
+  },
+  "chatbot": {
+    "title": "RescueHub アシスタント",
+    "open_label": "オープンチャット",
+    "close_label": "チャットを閉じる",
+    "greeting": "こんにちは。私は RescueHub アシスタントです。ペットを探しているとのことですが、お手伝いさせていただきます。深呼吸してください。まず始めに、あなたのペットの名前は何ですか?",
+    "input_placeholder": "応答を入力してください...",
+    "attach_label": "ファイルを添付する",
+    "send_label": "メッセージを送信する",
+    "error": "申し訳ありませんが、エラーが発生しました。もう一度試してください。 ({error})"
+  },
+  "document_scan": {
+    "title": "AI の取り込み — ドキュメントのバッチアップロード",
+    "description": "これまでに X ドルが集まりました。",
+    "dropzone_headline": "ここにファイルをドラッグ アンド ドロップするか、クリックして参照します",
+    "dropzone_caption": "JPEG、PNG、WEBP、HEIC、または PDF — 複数のファイルが許可されます",
+    "aria_dropzone": "AI取り込み一括アップロード",
+    "error_invalid_type": "画像 (JPEG、PNG、WEBP、HEIC) および PDF のみが受け入れられます。",
+    "error_unknown": "不明なアップロード エラー。",
+    "staged_files": "ステージングされたファイル ({count})",
+    "clear_all": "すべてクリア",
+    "remove_file": "{name} を削除します",
+    "size_kb": "{kb} KB",
+    "run_extraction": "AI 摂取量抽出の実行",
+    "analyzing": "AIで書類を分析…",
+    "rate_limit_note": "シーケンシャル処理により、API レート制限 (ファイルあたり最大 2 秒) 内に維持されます。",
+    "results_heading": "抽出されたレコード ({count})",
+    "results_aria": "抽出結果",
+    "empty_results_title": "これらの文書では摂取記録は検出されませんでした。",
+    "empty_results_body": "AI はファイルを正常にスキャンしましたが、読み取り可能な摂取レコードを見つけることができませんでした。より鮮明な画像をアップロードするか、ケージ カードのテキストが判読できることを確認するか、別のドキュメントを選択してください。",
+    "empty_results_dismiss": "却下する",
+    "pre_submission_hint": "まだ抽出はありません。開始するには、上記のいくつかのファイルをステージングしてください。",
+    "unnamed_animal": "名前のない動物 #{n}",
+    "unknown_species": "未知の種",
+    "age_unknown": "年齢不詳",
+    "age_yr": "{n} 年",
+    "field_species": "種",
+    "field_breed": "繁殖",
+    "field_age": "年",
+    "field_sex": "セックス",
+    "field_medical": "医学",
+    "field_hold_cleared": "保留解除",
+    "yes": "はい",
+    "no": "いいえ",
+    "intake_notes": "摂取メモ",
+    "intake_number": "摂取量 #{n}"
+  }
+}

@@ -14,7 +14,16 @@
     "surrender": "Surrender",
     "staff_login": "Staff Login",
     "locale_switch": "Language",
-    "back_to_options": "Back to Intake Options"
+    "back_to_options": "Back to Intake Options",
+    "about": {
+      "label": "About",
+      "mission": "Mission",
+      "legal": "Legal",
+      "process": "Process",
+      "story": "Story",
+      "about_us": "About Us",
+      "contact": "Contact"
+    }
   },
   "hero": {
     "badge": "Legally Compliant Platform",
@@ -124,6 +133,176 @@
     "fundraising_body": "Support urgent medical care, surgery, and recovery costs for shelter animals. Every donation is tracked with legal restriction flags to prevent fund mixing.",
     "fundraising_cta": "View active campaigns"
   },
+  "intake_hub": {
+    "title": "Intake Operations",
+    "subtitle": "Choose an intake path to begin processing an animal record.",
+    "public_title": "Public Surrender Portal",
+    "public_body": "ESIGN/UETA-compliant electronic waiver for citizens surrendering a pet or reporting a found stray. Creates a legally defensible chain of custody.",
+    "public_cta": "Open Portal",
+    "medical_title": "Staff Medical Intake",
+    "medical_body": "ASPCA TPR (Temp/Pulse/Respiration) checksheet, emergency signs flags, medical history, and file linking for shelter staff.",
+    "medical_cta": "Open Medical Intake",
+    "ai_title": "AI Document Scan",
+    "ai_body": "Staff-only: bulk-upload cage cards and intake sheets. Gemini vision extracts structured records (name, breed, age, medical, risk flags) directly into the intake pipeline.",
+    "ai_cta": "Launch Document Scan",
+    "staff_only_badge": "Staff Only"
+  },
+  "public_intake": {
+    "title": "Public Surrender Portal",
+    "intro": "This ESIGN/UETA-compliant electronic waiver creates a legally defensible chain of custody. Please select the option that applies to your situation.",
+    "found_stray_label": "🐾  I found a stray animal",
+    "found_stray_desc": "You found an animal that appears to be lost, abandoned, or injured.",
+    "owner_surrender_label": "📝  I need to surrender my pet",
+    "owner_surrender_desc": "You are the legal owner and wish to transfer custody to RescueHub.",
+    "waiver_title": "Electronic Waiver",
+    "waiver_intro": "Review and sign the ESIGN/UETA-compliant liability waiver. Your typed legal name constitutes an electronic signature under federal law.",
+    "cancel_prefix": "Cancel —",
+    "confirm_title": "Submission Complete",
+    "confirm_body": "Your surrender request has been recorded. The ESIGN waiver hash below serves as your verifiable electronic receipt.",
+    "hash_label": "ESIGN Waiver Record",
+    "hash_description": "SHA-256 hash of your typed-name signature and consent transaction. Keep this for your records."
+  },
+  "esign": {
+    "owner_surrender_title": "Owner Surrender — Transfer of Ownership Waiver",
+    "found_stray_title": "Found Stray — Intake Declaration",
+    "legal_intro": "Under the Electronic Signatures in Global and National Commerce Act (ESIGN) and the Uniform Electronic Transactions Act (UETA), your electronic consent and signature are legally equivalent to a physical signature on paper.",
+    "consent_label": "I consent to conduct electronic business with RescueHub and the receiving animal rescue organisation. I agree that all records, disclosures, and signatures may be provided and retained electronically.",
+    "full_legal_name": "Full Legal Name (Electronic Signature)",
+    "signature_placeholder": "Type your full legal name as your electronic signature",
+    "affirmation_hint": "By typing your name above, you affirmatively intend to sign this document electronically under ESIGN / UETA.",
+    "error_consent_required": "You must consent to electronic business and provide your full legal name to execute this waiver.",
+    "error_unexpected": "An unexpected error occurred. Please try again.",
+    "processing_button": "Processing...",
+    "execute_button": "Execute Waiver & Submit"
+  },
+  "chatbot": {
+    "title": "RescueHub Assistant",
+    "open_label": "Open chat",
+    "close_label": "Close chat",
+    "greeting": "Hello. I am the RescueHub Assistant. I understand you are looking for your pet, and I am here to help. Take a deep breath. To start, what is your pet's name?",
+    "input_placeholder": "Type your response...",
+    "attach_label": "Attach file",
+    "send_label": "Send message",
+    "error": "Sorry, I encountered an error. Please try again. ({error})"
+  },
+  "document_scan": {
+    "title": "AI Intake — Batch Document Upload",
+    "description": "Drop cage cards or intake sheets (images / PDFs) below. The Gemini model will extract structured intake records.",
+    "dropzone_headline": "Drag & drop files here, or click to browse",
+    "dropzone_caption": "JPEG, PNG, WEBP, HEIC, or PDF — multiple files allowed",
+    "aria_dropzone": "AI Intake Batch Upload",
+    "error_invalid_type": "Only images (JPEG, PNG, WEBP, HEIC) and PDFs are accepted.",
+    "error_unknown": "Unknown upload error.",
+    "staged_files": "Staged files ({count})",
+    "clear_all": "Clear all",
+    "remove_file": "Remove {name}",
+    "size_kb": "{kb} KB",
+    "run_extraction": "Run AI Intake Extraction",
+    "analyzing": "Analyzing documents with AI…",
+    "rate_limit_note": "Sequential processing keeps us under the API rate limit (~2 sec per file).",
+    "results_heading": "Extracted Records ({count})",
+    "results_aria": "Extraction results",
+    "empty_results_title": "No intake records detected in these documents.",
+    "empty_results_body": "The AI scanned your files successfully but could not find any readable intake records. Try uploading sharper images, ensure the cage card text is legible, or pick a different document.",
+    "empty_results_dismiss": "Dismiss",
+    "pre_submission_hint": "No extractions yet. Stage some files above to get started.",
+    "unnamed_animal": "Unnamed animal #{n}",
+    "unknown_species": "unknown species",
+    "age_unknown": "Age unknown",
+    "age_yr": "{n} yr",
+    "field_species": "Species",
+    "field_breed": "Breed",
+    "field_age": "Age",
+    "field_sex": "Sex",
+    "field_medical": "Medical",
+    "field_hold_cleared": "Hold Cleared",
+    "yes": "Yes",
+    "no": "No",
+    "intake_notes": "Intake Notes",
+    "intake_number": "Intake #{n}"
+  },
+  "medical": {
+    "title": "Medical Records",
+    "subtitle": "Select an animal to view or update its ASPCA/CART-aligned medical intake examination.",
+    "back_to_dashboard": "Back to Dashboard",
+    "species_intaken": "{species} · intaken {date}",
+    "view_examination": "View examination",
+    "compliance_esign": "ESIGN/UETA Compliant",
+    "compliance_aspca": "ASPCA/CART Exam Aligned",
+    "compliance_irs": "IRS § 501(c)(3)",
+    "back_to_list": "Back to Medical Records",
+    "checksheet": {
+      "title": "Medical Intake Checksheet",
+      "subtitle": "ASPCA / CART-aligned brief intake exam — Animal ID: {id} · Species: {species}",
+      "weight": "Weight",
+      "weight_unit": "lbs",
+      "tpr_header": "TPR (Temperature, Pulse, Respiration)",
+      "tpr_temp": "Temperature",
+      "tpr_pulse": "Pulse",
+      "tpr_resp": "Respiration",
+      "unit_f": "°F",
+      "unit_bpm": "bpm",
+      "unit_brpm": "brpm",
+      "procedures_header": "Intake Procedures",
+      "procedure_microchip": "Microchip Scanned",
+      "procedure_vaccines": "Vaccines Administered",
+      "procedure_dewormer": "Dewormer Administered",
+      "procedure_topspot": "Topspot flea/tick applied",
+      "emergency_signs_header": "Emergency Signs",
+      "vet_flagged": "VET FLAGGED",
+      "detected_warning": "⚠️ Emergency signs detected — a veterinarian will be notified upon save.",
+      "save_button": "Save Medical Intake Record",
+      "confirm_title": "Medical Intake Recorded",
+      "confirm_complete": "Animal {id} ({species}) medical check complete.",
+      "new_exam": "New Exam",
+      "vet_required": "⚠️ Veterinary Notification Required",
+      "vet_required_body": "Emergency signs detected: {signs}. A veterinarian has been flagged for immediate review.",
+      "emergency_sign": {
+        "ulcers_in_mouth_or_nose": "Ulcers in mouth or nose",
+        "vomiting": "Vomiting",
+        "diarrhea_bloody": "Diarrhea (bloody)",
+        "coughing": "Coughing",
+        "patchy_hair_loss": "Patchy hair loss",
+        "open_wounds_lacerations": "Open wounds / lacerations",
+        "seizures": "Seizures",
+        "difficulty_breathing": "Difficulty breathing",
+        "limping_unable_to_bear_weight": "Limping / unable to bear weight",
+        "conjunctivitis_eye_discharge": "Conjunctivitis (eye discharge)"
+      }
+    }
+  },
+  "fundraising": {
+    "title": "Fundraising Campaigns",
+    "subtitle": "Support the animals in our care. Every donation is tracked with legal restriction flags to prevent fund mixing.",
+    "back_to_dashboard": "← Back to Dashboard",
+    "percent_funded": "{pct}% funded",
+    "goal_reached": "✓ Goal reached",
+    "donate_cta": "Donate →",
+    "showing_count": "Showing {count} active campaigns. A full list will be available once the database is connected. All transactions comply with the Charleston Principles for internet-based charitable fundraising.",
+    "back_to_list": "Back to Fundraising List",
+    "wallet": {
+      "title": "Fundraising Campaign",
+      "animal_id": "Animal ID: {id}",
+      "raised": "{amount} raised",
+      "goal_label": "of {goal} goal",
+      "percent_funded": "{pct}% funded",
+      "goal_reached_msg": "✓ Goal reached — restriction will auto-switch to prevent fund mixing",
+      "medical_allocated": "Medical: {amount}",
+      "general_allocated": "General: {amount}",
+      "donate_title": "Submit Donation",
+      "amount_label": "Amount ($)",
+      "amount_placeholder": "e.g. 25.00",
+      "allocation_label": "Fund Allocation",
+      "allocation_general": "General Care (shelter ops)",
+      "allocation_medical": "Medical (direct treatment)",
+      "mixing_warning": "⚠️ Target reached. New donations will switch the restriction flag to prevent legally restricted fund mixing, in accordance with donor intent tracking.",
+      "donate_processing": "Processing...",
+      "donate_submit": "Submit Donation",
+      "ledger_title": "Transaction Ledger",
+      "entries_count": "({count} entries)",
+      "empty_ledger": "No donations yet. Submit a donation above to seed the ledger."
+    }
+  },
   "footer": {
     "tagline": "A multi-tenant SaaS compliance engine for 501(c)(3) animal rescues, municipal shelters, corporate sponsors, and the public.",
     "public_section": "Public",
@@ -142,5 +321,37 @@
     "and": "and",
     "of": "of",
     "total": "total"
+  },
+  "about": {
+    "mission": {
+      "title": "Our Mission",
+      "subtitle": "Why RescueHub exists",
+      "body": "RescueHub exists to close the gap between at-risk shelter animals and the people who can save them. We build legally compliant software that lets 501(c)(3) rescues, municipal shelters, corporate sponsors, and the public work together without compliance risk, fund-mixing violations, or stray-hold failures. Every feature — from electronic ESIGN/UETA waivers to IRC § 513(i) sponsor acknowledgments — exists to ensure more animals leave shelters alive, on time, and with a clean paper trail."
+    },
+    "legal": {
+      "title": "Legal & Compliance",
+      "subtitle": "What we guarantee",
+      "body": "We are committed to ESIGN/UETA-compliant electronic signatures, Hayden Act stray-hold tracking, IRC § 513(i) qualified sponsorship safe-harbor compliance, GDPR/CCPA data handling, and SOC 2-aligned operational controls. Sponsor pages never include calls to action; adoption feeds structurally exclude animals flagged for behavioral evaluation; donations carry legal-restriction flags to prevent fund mixing. Compliance is built into the product, not bolted on."
+    },
+    "process": {
+      "title": "Our Process",
+      "subtitle": "How rescue happens in five steps",
+      "body": "Step 1: An animal enters the system via the public surrender portal or staff intake. Step 2: Statutory stray-hold countdown begins automatically per the Hayden Act. Step 3: Medical triage determines urgency and adoption eligibility. Step 4: At-risk animals surface to corporate sponsor broadcasts and emergency crowdfunding. Step 5: Adopters complete an ESIGN/UETA waiver; the animal leaves shelter with a complete, audit-ready chain of custody."
+    },
+    "story": {
+      "title": "Our Story",
+      "subtitle": "Built by rescuers, for rescuers",
+      "body": "RescueHub began as a side project for a small municipal shelter that kept losing animals to stray-hold timing errors. After seeing the same compliance gaps in two more shelters, the team rebuilt the workflow from scratch with legal review built into every release. Today we support rescues across multiple states with a single promise: every minute a shelter spends on paperwork is a minute not spent saving animals."
+    },
+    "about-us": {
+      "title": "About RescueHub",
+      "subtitle": "Who we are",
+      "body": "We are a small team of former shelter operators, compliance attorneys, and engineers building purpose-fit software for animal welfare. RescueHub is independently operated, multi-tenant, and serves 501(c)(3) nonprofits, municipal agencies, and corporate sponsors under a single compliance framework. Our north star: fewer euthanized animals in compliance with state law."
+    },
+    "contact": {
+      "title": "Contact",
+      "subtitle": "Stay in touch",
+      "body": "Email: hello@rescuehub.org  ·  Press: press@rescuehub.org  ·  Compliance: compliance@rescuehub.org  ·  Emergencies (24/7 shelter line): +1 (555) 010-2024. We respond to shelter emergencies within 30 minutes, general inquiries within one business day, and security disclosures within 24 hours."
+    }
   }
 }
