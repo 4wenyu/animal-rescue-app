@@ -16,7 +16,7 @@ datasource db {
 
 enum OrgType {
   MUNICIPAL_SHELTER
-  FIVEC_3_RESCUE      // 501(c)(3) Rescue
+  FIVEC_3_RESCUE // 501(c)(3) Rescue
   CORPORATE_SPONSOR
 }
 
@@ -49,6 +49,64 @@ enum Render {
 }
 
 // ============================================================
+// EPIC 2 — Viral Token & Brand Sponsorship Gateway
+// Enums: SharePlatform / VerificationStatus / TokenAction /
+// TokenDirection / SponsorshipTxStatus / TokenWalletStatus.
+// ============================================================
+
+enum SharePlatform {
+  FACEBOOK_GROUP
+  NEXTDOOR
+  SUBREDDIT
+  WHATSAPP_GROUP
+  INSTAGRAM_STORY
+  GENERIC_LINK
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum TokenAction {
+  // Earn reasons
+  SHARE_10_GROUPS_EARN
+  VOLUNTEER_HOUR_EARN
+  REFERRAL_CONVERTED_EARN
+  ONBOARDING_BONUS_EARN
+  // Spend reasons
+  SEARCH_FEE_WAIVE_SPEND
+  PRIORITY_LISTING_SPEND
+  PRINTED_FLYER_SPEND
+  SHARE_BOOST_SPEND
+  // Lifecycle
+  EXPIRE_DEDUCT
+  ADJUSTMENT_ADMIN
+}
+
+enum TokenDirection {
+  EARN
+  SPEND
+  EXPIRE
+  REFUND
+}
+
+enum SponsorshipTxStatus {
+  AUTHORIZED
+  CAPTURED
+  REVOKED
+  REFUNDED
+}
+
+enum TokenWalletStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+// ============================================================
 // MODELS
 // ============================================================
 
@@ -56,86 +114,285 @@ enum Render {
 model Organization {
   orgId                String   @id @default(uuid())
   orgType              OrgType
-  einNumber            String   @unique                     // Verified via IRS API
-  stateAgLicenseNumber String?                               // Mandatory for states like IL (PACFA)
-  charlestonCompliance Json?                                 // Array of state IDs for solicitation legality
+  einNumber            String   @unique // Verified via IRS API
+  stateAgLicenseNumber String? // Mandatory for states like IL (PACFA)
+  charlestonCompliance Json? // Array of state IDs for solicitation legality
   animals              Animal[]
+
+  // ── EPIC 2 backward relations (additive; non-breaking) ──
+  // Sponsor (1:1 child): exactly one row when orgType=CORPORATE_SPONSOR.
+  sponsor           Sponsor?
+  // Token-ledger attribution (1:N): the user-token rows that name this
+  // org as the sponsor who funded the redemption. Authoritative sponsor
+  // economics live on SponsorshipContribution, not on this counter.
+  tokenTransactions TokenTransaction[]
 
   @@map("organizations")
 }
 
 // Central asset ledger tracking the legal custody and health of the animal
 model Animal {
-  animalId             String    @id @default(uuid())
+  animalId             String       @id @default(uuid())
   custodianOrgId       String
   organization         Organization @relation(fields: [custodianOrgId], references: [orgId])
-  breedDesignation     String    @default("Mixed Breed")     // Prevents BSL insurance liability
-  intakeTimestamp      DateTime  @default(now())
+  breedDesignation     String       @default("Mixed Breed") // Prevents BSL insurance liability
+  intakeTimestamp      DateTime     @default(now())
   strayHoldExpiresAt   DateTime?
-  statutoryHoldCleared Boolean   @default(false)             // Strictly controlled by Rules Engine
+  statutoryHoldCleared Boolean      @default(false) // Strictly controlled by Rules Engine
   medicalStatus        MedState
 
   // Relations
-  intakeRecord         IntakeRecord?
-  medicalLogs          MedicalLog[]
-  fundraisingWallet    FundraisingWallet?
+  intakeRecord      IntakeRecord?
+  medicalLogs       MedicalLog[]
+  fundraisingWallet FundraisingWallet?
 
   @@map("animals")
 }
 
 // Intake split between authenticated officials and public citizens
 model IntakeRecord {
-  intakeId               String   @id @default(uuid())
-  animalId               String   @unique
-  animal                 Animal   @relation(fields: [animalId], references: [animalId])
-  intakeType             InType
+  intakeId   String @id @default(uuid())
+  animalId   String @unique
+  animal     Animal @relation(fields: [animalId], references: [animalId])
+  intakeType InType
 
   // Public Flow
-  esignIntentHash        String?
-  electronicConsentFlag  Boolean  @default(false)
-  documentSnapshotUrl    String?  // AWS S3 Immutable Link
+  esignIntentHash       String?
+  electronicConsentFlag Boolean @default(false)
+  documentSnapshotUrl   String? // AWS S3 Immutable Link
 
   // County Flow
-  officerBadgeNumber     String?
-  departmentId           String?
+  officerBadgeNumber String?
+  departmentId       String?
 
   @@map("intake_records")
 }
 
 // ASPCA/CART aligned medical check parameters
 model MedicalLog {
-  logId                  String   @id @default(uuid())
-  animalId               String
-  animal                 Animal   @relation(fields: [animalId], references: [animalId])
-  weightLbs              Float?
-  tempPulseResp          Json?    // TPR tracking
-  microchipScanned       Boolean  @default(false)
-  vaccinesAdministered   Json?
-  dewormerAdministered   Json?
-  emergencySignsNoted    Json?    // Array of symptoms (e.g. coughing, patchy hair loss)
+  logId                String  @id @default(uuid())
+  animalId             String
+  animal               Animal  @relation(fields: [animalId], references: [animalId])
+  weightLbs            Float?
+  tempPulseResp        Json? // TPR tracking
+  microchipScanned     Boolean @default(false)
+  vaccinesAdministered Json?
+  dewormerAdministered Json?
+  emergencySignsNoted  Json? // Array of symptoms (e.g. coughing, patchy hair loss)
 
   @@map("medical_logs")
 }
 
 // Tracks donor intent and automatically restricts fund mixing
 model FundraisingWallet {
-  walletId           String   @id @default(uuid())
-  animalId           String   @unique
-  animal             Animal   @relation(fields: [animalId], references: [animalId])
-  targetAmount       Decimal
-  currentBalance     Decimal  @default(0.00)
-  restrictionType    FundType
+  walletId        String   @id @default(uuid())
+  animalId        String   @unique
+  animal          Animal   @relation(fields: [animalId], references: [animalId])
+  targetAmount    Decimal
+  currentBalance  Decimal  @default(0.00)
+  restrictionType FundType
 
   @@map("fundraising_wallets")
 }
 
 // UBIT compliant vendor perk distribution
 model SponsorshipPerk {
-  perkId           String   @id @default(uuid())
-  sponsorOrgId     String
-  triggerEvent     Trigger
-  uiRenderMode     Render   @default(NEUTRAL_ACKNOWLEDGMENT)  // Prevents UBIT triggers
-  rewardCode       String
+  perkId       String  @id @default(uuid())
+  sponsorOrgId String
+  triggerEvent Trigger
+  uiRenderMode Render  @default(NEUTRAL_ACKNOWLEDGMENT) // Prevents UBIT triggers
+  rewardCode   String
 
   @@map("sponsorship_perks")
+}
+
+// ============================================================
+// EPIC 2 — Viral Token & Brand Sponsorship Gateway
+// New models (User / Sponsor / TokenWallet / ViralShareVerification
+// / TokenTransaction / SponsorshipContribution).
+//
+// INVARIANTS (enforced at the application layer; documented here
+// for future migration authors):
+//   * Ledger integrity: sum(signed amount) over a user's TokenTransaction
+//     rows equals tokenWallets.cachedBalance (reconciliation job).
+//   * Idempotency: every TokenTransaction carries a unique
+//     idempotencyKey so retrying an upstream job never forks the ledger.
+//   * Append-only: TokenTransaction rows are not UPDATEd except via
+//     paired reversal rows (`isAdjustment=true`, `reverseOfTxnId`).
+// ============================================================
+
+// 1) User — citizen actor that owns a token wallet.
+model User {
+  userId         String    @id @default(uuid())
+  email          String    @unique
+  displayName    String
+  marketingOptIn Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  deletedAt      DateTime?
+
+  tokenWallet         TokenWallet?
+  tokenTransactions   TokenTransaction[]
+  viralShares         ViralShareVerification[]
+  contributionsAsUser SponsorshipContribution[]
+
+  @@map("users")
+}
+
+// 2) Sponsor — 1:1 child of Organization; sponsor-economics.
+model Sponsor {
+  sponsorOrgId String       @id
+  organization Organization @relation(fields: [sponsorOrgId], references: [orgId])
+
+  brandDisplayName   String // "Chewy", "PetSmart"
+  contactEmail       String
+  // Decimal to avoid float drift on money; tokens are integer-counted.
+  allocatedTokenPool Decimal   @default(0)
+  consumedTokenPool  Decimal   @default(0)
+  totalBudget        Decimal   @default(0)
+  budgetCurrency     String    @default("USD")
+  // IRC § 513(i) QSP safe-harbor — value-neutral acknowledgment copy.
+  // Never rendered on user-facing surfaces; admin-only read.
+  acknowledgmentCopy String?
+  perkCatalogEnabled Boolean   @default(true)
+  lastPoolTopUpAt    DateTime?
+  createdAt          DateTime  @default(now())
+  archivedAt         DateTime?
+
+  contributions SponsorshipContribution[]
+
+  @@map("sponsors")
+}
+
+// 3) TokenWallet — 1:1 cached running balance per User. Mutable.
+// Authoritative balance is the sum of the ledger; this is a hot-cache.
+model TokenWallet {
+  walletId String @id @default(uuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [userId])
+
+  cachedBalance   Int               @default(0)
+  lifetimeEarned  Int               @default(0)
+  lifetimeSpent   Int               @default(0)
+  lifetimeExpired Int               @default(0)
+  status          TokenWalletStatus @default(ACTIVE)
+  frozenReason    String?
+  lastActivityAt  DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+
+  @@map("token_wallets")
+}
+
+// 4) ViralShareVerification — Path B (earn by sharing platform).
+model ViralShareVerification {
+  shareId String @id @default(uuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [userId])
+
+  platform         SharePlatform
+  contentUrl       String?
+  platformPostId   String?            @unique
+  evidenceSnapshot Json?
+  observedAt       DateTime?
+  status           VerificationStatus @default(PENDING)
+  reviewerNote     String?
+  reviewedAt       DateTime?
+  resolvedAction   TokenAction?
+  // Inverse of TokenTransaction's "ShareResolved" — this side carries
+  // the FK column. Forces 1:1: at most one settled ledger row per share.
+  resolvedTxnId    String?            @unique
+  resolvingTxn     TokenTransaction?  @relation("ShareResolved", fields: [resolvedTxnId], references: [txnId])
+  // Inverse of TokenTransaction's "ShareForward" — no FK on this side.
+  downstreamTxn    TokenTransaction[] @relation("ShareForward")
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, platform])
+  @@index([status])
+  @@map("viral_share_verifications")
+}
+
+// 5) TokenTransaction (Ledger) — append-only history.
+model TokenTransaction {
+  txnId  String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [userId])
+
+  direction    TokenDirection // algebraic sign of `amount`
+  actionType   TokenAction
+  amount       Int // always ≥ 0; sign comes from direction
+  balanceAfter Int // snapshot of cachedBalance at insert time
+
+  // Provenance — links this ledger row to the originating viral share.
+  // Two named relations cross ViralShareVerification ↔ TokenTransaction:
+  //   "ShareForward"  : N:1, FK lives on TokenTransaction (this side).
+  //                     Use this to ask "what rows did this share spawn?"
+  //   "ShareResolved" : 1:1 in reverse, FK lives on ViralShareVerification.
+  //                     Use this to ask "did this share settle into exactly
+  //                     one row that the share system marked complete?"
+  // Prisma forbids declaring fields AND references on both sides of any
+  // relation, so we annotate only one side per named relation.
+  sourceViralShareId String?                 @unique
+  viralShare         ViralShareVerification? @relation("ShareForward", fields: [sourceViralShareId], references: [shareId])
+  // Inverse of "ShareResolved" on the ViralShareVerification side.
+  resolvedShare      ViralShareVerification? @relation("ShareResolved")
+
+  // For spend entries: the cost basis of the waived service.
+  costBasisMinorUnits Int?
+  currency            String? @default("USD")
+
+  // Sponsor attribution (optional). Many ledger rows may not carry one
+  // (e.g., onboarding grants); rows that DO carry one funded the
+  // redemption through a specific corporate sponsor. The strict
+  // sponsor-side counter lives on SponsorshipContribution.
+  sponsorOrgId String?
+  sponsor      Organization? @relation(fields: [sponsorOrgId], references: [orgId])
+
+  issuedByJob    String?
+  issuedByUserId String?
+  notes          String?
+
+  // External idempotency key (one ledger row per logical operation).
+  idempotencyKey String @unique
+
+  // Admin-corrected reversals. The original row stays; this row cancels it.
+  isAdjustment   Boolean           @default(false)
+  reverseOfTxnId String?           @unique
+  reverseOf      TokenTransaction? @relation("Reversal", fields: [reverseOfTxnId], references: [txnId])
+  reversal       TokenTransaction? @relation("Reversal")
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([sponsorOrgId])
+  @@map("token_transactions")
+}
+
+// 6) SponsorshipContribution — sponsor-side bookkeeping.
+// Pairs with TokenTransaction: same shape, opposite viewpoint.
+// Triggers UBIT reporting on CAPTURED events under IRC § 513(i).
+model SponsorshipContribution {
+  contributionId String  @id @default(uuid())
+  sponsorOrgId   String
+  sponsor        Sponsor @relation(fields: [sponsorOrgId], references: [sponsorOrgId])
+
+  // Null for pure top-ups, populated for redemption events.
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [userId])
+  tokenTxnId String? @unique
+
+  type                SponsorshipTxStatus
+  tokensContributed   Int
+  costBasisMinorUnits Int
+  currency            String              @default("USD")
+
+  authorizedAt DateTime  @default(now())
+  capturedAt   DateTime?
+  revokedAt    DateTime?
+  refundedAt   DateTime?
+  notes        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([sponsorOrgId, type])
+  @@map("sponsorship_contributions")
 }
