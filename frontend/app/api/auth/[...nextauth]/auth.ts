@@ -6,16 +6,19 @@ import type { NextAuthConfig } from "next-auth";
 // Note: aligned with the demo credentials advertised on /login page:
 //   admin@rescuehub.org / admin123
 //   staff@rescuehub.org / staff123
+// IDs are valid UUIDs because `TokenTransactionDataSchema.userId` and
+// other Epic 2 flows call `z.string().uuid()` on the session-derived id.
+// Using plain "1"/"2" would 400 every authenticated POST.
 const MOCK_USERS = [
   {
-    id: "1",
+    id: "00000000-0000-0000-0000-000000000001",
     email: "admin@rescuehub.org",
     password: "admin123",
     name: "Admin User",
     role: "ADMIN" as const,
   },
   {
-    id: "2",
+    id: "00000000-0000-0000-0000-000000000002",
     email: "staff@rescuehub.org",
     password: "staff123",
     name: "Staff User",
