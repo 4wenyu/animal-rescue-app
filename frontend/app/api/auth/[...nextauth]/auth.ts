@@ -6,19 +6,21 @@ import type { NextAuthConfig } from "next-auth";
 // Note: aligned with the demo credentials advertised on /login page:
 //   admin@rescuehub.org / admin123
 //   staff@rescuehub.org / staff123
-// IDs are valid UUIDs because `TokenTransactionDataSchema.userId` and
-// other Epic 2 flows call `z.string().uuid()` on the session-derived id.
-// Using plain "1"/"2" would 400 every authenticated POST.
+// IDs are valid v4 UUIDs. Crypto-grade random (not zero-padded).
+// Several strcmp-strict ID validators — including Prisma's `userId: @id @default(uuid())`
+// and any consumer running its own RFC4122 v4 variant/version check —
+// reject `00000000-...` form because char 12 (version nibble) must be
+// `4` and char 16 (variant nibble) must be `8|9|a|b`. Real v4s only.
 const MOCK_USERS = [
   {
-    id: "00000000-0000-0000-0000-000000000001",
+    id: "d290f1ee-6c54-4b01-90e6-d701748f0851",
     email: "admin@rescuehub.org",
     password: "admin123",
     name: "Admin User",
     role: "ADMIN" as const,
   },
   {
-    id: "00000000-0000-0000-0000-000000000002",
+    id: "a77484df-f236-407b-80a2-218f262176c4",
     email: "staff@rescuehub.org",
     password: "staff123",
     name: "Staff User",
