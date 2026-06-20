@@ -23,6 +23,7 @@ import { AnimalTable } from "@/src/components/dashboard/AnimalTable";
 import { UbitSponsorWidget, EsignStatsWidget } from "@/src/components/dashboard/widgets";
 import { TokenWalletCardClient } from "@/src/components/dashboard/TokenWalletCard.client";
 import { TestEarnButton } from "@/src/components/dashboard/TestEarnButton";
+import { SignOutButton } from "@/src/components/auth/SignOutButton";
 
 // ── Synchronous i18n ─────────────────────────────────────────────────────
 import enDict from "../../locales/en.json";
@@ -202,14 +203,17 @@ export default function Dashboard() {
               )}
             </p>
           </div>
-          <Link
-            href="/intake/public"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/30 active:scale-[0.97]"
-          >
-            <PawPrint className="h-4 w-4" />
-            {tr("dashboard.add_animal")}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <SignOutButton className="mr-1" />
+            <Link
+              href="/intake/public"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/30 active:scale-[0.97]"
+            >
+              <PawPrint className="h-4 w-4" />
+              {tr("dashboard.add_animal")}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
       </motion.header>
 
