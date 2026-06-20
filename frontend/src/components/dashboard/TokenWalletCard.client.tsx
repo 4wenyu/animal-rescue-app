@@ -298,21 +298,37 @@ export function TokenWalletCardClient({
 }: TokenWalletCardClientProps) {
   const [data, setData] = useState(initialData);
 
+  const reload = () => {
+    fetch("/api/tokens/wallet", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setData(j))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     if (initialData) return; // skip first fetch if parent streamed data
     let cancelled = false;
-    fetch("/api/tokens/wallet", { credentials: "same-origin" })
-      .then((r) => (r.ok ? r.json() : null))
+    if (cancelled) return;
+    const r = fetch("/api/tokens/wallet", { credentials: "same-origin" });
+    r.then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (!cancelled && json) setData(json);
       })
-      .catch(() => {
-        // Silent — empty/loading shell handles errors visually.
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [initialData]);
+
+  // ── Refresh-on-event: the dev "Earn 50 Tokens" test button (and future
+  // earn widgets) dispatch a `tokenwallet:refresh` window event after
+  // a successful POST. Listening here lets the card bump its balance
+  // without a full page reload.
+  useEffect(() => {
+    const onRefresh = () => reload();
+    window.addEventListener("tokenwallet:refresh", onRefresh);
+    return () => window.removeEventListener("tokenwallet:refresh", onRefresh);
+  }, []);
 
   useEffect(() => {
     if (!refreshMs || refreshMs < 5000) return;
