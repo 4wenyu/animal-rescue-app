@@ -46,6 +46,14 @@ export async function POST(request: Request) {
 
   const authenticatedUserId = session.user.id as string;
 
+  // DEV: prove what id the route is actually receiving. Strip once verified.
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[api/tokens/transaction] session.user.id = "${authenticatedUserId}" (len=${authenticatedUserId.length}, isUuid=${/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authenticatedUserId)})`,
+    );
+  }
+
   /* ── 2. Parse + validate body ─────────────────────────────────── */
   let body: Record<string, unknown>;
   try {
