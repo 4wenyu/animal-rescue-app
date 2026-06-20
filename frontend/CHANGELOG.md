@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-06-18 — Epic 2 End-to-End: Strict v4 UUIDs, Auth UI Escape Hatch & Prisma Seed
+
+### Fixed
+- **`TokenTransactionDataSchema.userId` strict v4 UUID requirement** — `MOCK_USERS.id` originally hardcoded as plain `"1"`/`"2"`, which `z.string().uuid()` rejects. First fix (`00000000-0000-0000-0000-000000000001` form) passed loose UUID checks but failed downstream v4 validators expecting char 13 = `4` and char 17 ∈ `{8,9,a,b}`. Final fix:
+  - Admin: `d290f1ee-6c54-4b01-90e6-d701748f0851`
+  - Staff: `a77484df-f236-407b-80a2-218f262176c4`
+- **`session.user.id "1"/"2"` ghost cache symptom** — Even with v4 UUIDs on disk, the running `next dev` process was serving stale module instances of `app/api/auth/[...nextauth]/auth.ts` from earlier compiles, until the dev server was hard-restarted. Diagnosed with a `d3c9e82` debug log that printed `session.user.id` on every POST. Log stripped in `9482e01` once the cause was understood.
+- **`P2003` foreign-key violation on `token_wallets.userId_fkey`** — Neon had no rows for the new v4 IDs. Authored `prisma/seed.mjs` (`a09db14`) to upsert/delete-recreate the two mock users; write-through path to `token_wallets` now resolves cleanly.
+- **Dev test affordance payload rejected by Zod v4** — initial `TestEarnButton.tsx` payload omitted schema fields and bare-bones error swallowed Zod `details[]`; `b1e8bbd` added dev-only `details[]` parsing so a future 400 reads "`<path>: <message>`" inline, no DevTools needed.
+
+### Added
+- **`SignOutButton` component** (`c17c219`) — `<SignOutButton />` at `src/components/auth/SignOutButton.tsx`. Three variants (`primary` / `ghost` / `icon`) using `signOut({ callbackUrl: "/login" })` from `next-auth/react` with `useTransition` for click-during-in-flight disable. Injected into the dashboard header next to "Add Animal" so the user always has a visible escape hatch to clear the ghost session cookie — the source-of-truth fix for the UUID-cache problem above.
+- **Dev Quick-Look: Test Earn Pipeline** — amber-pinned button on the dashboard (`<TestEarnButton />`) gated by `NODE_ENV !== "production"`. POSTs `{ direction: "EARN", actionType: "ONBOARDING_BONUS_EARN", amount: 50, idempotencyKey: random }` to `/api/tokens/transaction`. On success, dispatches `tokenwallet:refresh` window event so `TokenWalletCardClient` re-fetches without a reload. Marked `DEL_BEFORE_LAUNCH` in JSX comment + import.
+- **`prisma/seed.mjs`** — Node ESM script that wipes any prior `admin@/staff@rescuehub.org` rows and inserts the two canonical v4 user rows. Run with `node prisma/seed.mjs` from `frontend/`.
+- **Wallet-card reactivity wiring** — `TokenWalletCard.client.tsx` now exposes a `reload()` helper and subscribes to the `tokenwallet:refresh` event so any future EARN UI widget can re-trigger balance display without a page navigation.
+
+### Verified
+- `npm run build` → `✓ Compiled successfully` (3-4s incremental builds, ~7s cold)
+- `node prisma/seed.mjs` → 2 user rows confirmed in Neon via direct select
+- Visual confirmation from the dashboard: button click awarded +50 tokens, balance card bumped to `cachedBalance: 50` without reload, Prisma `$transaction` confirmed atomic via two-row insert in Neon console.
+
 ## 2026-06-18 — Epic 2 Environment Hardening: Prisma v6 Lock-In & Neon DB Connect
 
 ### Fixed
