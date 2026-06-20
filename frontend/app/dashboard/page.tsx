@@ -21,6 +21,7 @@ import dogs from "../../data/dogs.json";
 import { PremiumStatCard } from "@/src/components/dashboard/PremiumStatCard";
 import { AnimalTable } from "@/src/components/dashboard/AnimalTable";
 import { UbitSponsorWidget, EsignStatsWidget } from "@/src/components/dashboard/widgets";
+import { TokenWalletCardClient } from "@/src/components/dashboard/TokenWalletCard.client";
 
 // ── Synchronous i18n ─────────────────────────────────────────────────────
 import enDict from "../../locales/en.json";
@@ -210,6 +211,8 @@ export default function Dashboard() {
           </Link>
         </div>
       </motion.header>
+
+      <section className="mb-8"><TokenWalletCardClient/></section>
 
       {/* ── Stat Cards — clickable to filter the table ──────── */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

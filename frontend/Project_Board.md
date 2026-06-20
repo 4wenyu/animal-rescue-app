@@ -60,7 +60,16 @@ kanban-plugin: basic
 - [ ] Charleston compliance geo-map
 - [ ] Stray hold expiration forecast
 
+### Epic 2 — Environment & Database Hardening
+- [x] **Prisma v6/v7 workspace hoisting conflict resolved** — single v6.19.3 chain, `npm rebuild` to re-emit WASM/query-engine binaries dropped during the v7 churn
+- [x] **Turbopack import alias resolution restored** — removed `output = "..."` from `prisma/schema.prisma`, all `@/generated/prisma` imports migrated to canonical `@prisma/client`
+- [x] **Neon PostgreSQL connection** — `frontend/.env` populated with `DATABASE_URL`, `prisma generate` resolves cleanly
+- [x] **Legacy TS / Zod v4 API mismatches patched** — `err.issues`, `z.record(z.string(), z.unknown())`, body-spread null-guard, removed phantom `lifetimeRefunded`, fixed `Prisma` namespace-as-type, fixed `expireTokens()` missing `currency`
+- [x] **`npm run build` clean compile** — `✓ Compiled successfully in 7.6s` against current schema; `/api/tokens/transaction`, `/api/tokens/wallet`, `/dashboard` all compiled
+
 ## 🚀 In Progress
+
+- [ ] **Build Token Earning Logic** — Epic 2 core: implement the earn-side service functions (`awardOnboardingBonus`, `awardShareReward`, `awardReferralConverted`, `awardVolunteerHour`) atop `processTokenTransaction`. Wire UI affordances for share verification → automatic EARN ledger insert.
 
 - [ ] **Build Premium 2D CSS Animal Mesh Gradient for Hero Section** — Replace archived 3D WebGL with a pure CSS animated gradient mesh
 

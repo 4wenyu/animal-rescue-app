@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-18 — Epic 2 Environment Hardening: Prisma v6 Lock-In & Neon DB Connect
+
+### Fixed
+- **Prisma v6/v7 workspace hoisting conflict** — npm workspace had silently installed Prisma 7.x at `animal-rescue-app/node_modules` while the project's `package.json` requirement was met by 6.x hoisted under `frontend/node_modules`. The two-clients mix caused `npx prisma generate` to fail with "Could not resolve @prisma/client" because Prisma 7's CLI looked at root, where the v7 client didn't expose `library.js`. Cleaned to a single v6.19.3 chain (`npm install @prisma/client@6 prisma@6`) and added `npm rebuild @prisma/client prisma` to re-emit WASM/query-engine binaries that got dropped during the v6/v7 churn.
+- **`prisma-client` provider required an output path** — the v6 "new" generator (`provider = "prisma-client"`) refuses to generate with no `output` set, contradicting the usual "remove `output` to default to `node_modules`" workflow. Flipped the provider back to legacy `provider = "prisma-client-js"` so `@prisma/client` resolves out of `node_modules/.prisma/client` with no schema path gymnastics.
+- **Turbopack import alias resolution broken for `@/generated/prisma`** — the previous setup emitted Prisma client to `frontend/generated/prisma` and made every importer (`lib/prisma.ts`, `lib/services/tokenService.ts`) reference that alias. Turbopack (Next.js 16's bundler) could not resolve `@/generated/prisma` consistently across hot-reload boundaries, causing intermittent "Module not found" crashes. Switched **all** Prisma imports to the canonical `@prisma/client` package and removed `output = "..."` from `prisma/schema.prisma` entirely. Module resolution is now bulletproof.
+- **Neon PostgreSQL connection** — created `frontend/.env` with `DATABASE_URL` placeholder pointing at Neon, added `url = env("DATABASE_URL")` to `prisma/schema.prisma` datasource block (required by Prisma 6.x validator, no longer implicit from `prisma.config.ts`), `prisma generate` now resolves cleanly against the remote-DB URL format.
+- **Legacy TypeScript / Zod v4 API mismatches that surfaced after the alias fix** —
+  - `err.errors.map(...)` → `err.issues.map(...)` (zod v4 renamed the field)
+  - `z.record(z.unknown())` → `z.record(z.string(), z.unknown())` (zod v4 requires explicit key+value shapes)
+  - `body: unknown` then `{ ...body }` spread — TS forbade it; tightened parse to `Record<string, unknown>` with null-rejection guard
+  - `lifetimeRefunded: true` in wallet SELECT — column doesn't exist on `TokenWallet` (schema is `lifetimeEarned | lifetimeSpent | lifetimeExpired` only)
+  - `Prisma` namespace used as a TS *type* annotation — TS2709; switched to `PrismaClient` class for the singleton type while re-exporting `Prisma` so consumers can still write `Prisma.TokenAction` etc.
+  - `expireTokens()` missing required `currency` field per `TokenTransactionDataSchema` — added `"USD"` default to the helper
+
+### Verification
+- `npm run build` → `✓ Compiled successfully in 7.6s` against the current schema
+- `node -e "require('@prisma/client')"` confirms `PrismaClient`, `Prisma` namespace, `TokenAction`, `TokenDirection` enum all resolve from the package
+- Routes compiled: ƒ `/api/tokens/transaction`, ƒ `/api/tokens/wallet`, ○ `/dashboard`
+
 ## 2026-06-17 — Auth Hardlock, Gemini 2.5 Migration & Bulletproof BatchUpload
 
 ### Fixed
