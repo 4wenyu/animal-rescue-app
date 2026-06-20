@@ -134,6 +134,8 @@ export default function PublicIntakePage(): ReactNode {
   const [surrenderType, setSurrenderType] = useState<SurrenderType | null>(null);
   const [esignHash, setEsignHash] = useState<string | null>(null);
   const [locale, setLocale] = useState<string>("en");
+  const [isSubmittingIntake, setIsSubmittingIntake] = useState(false);
+  const [tokensAwarded, setTokensAwarded] = useState<number | null>(null);
 
   // Resolve locale after hydration (server always renders English first).
   useEffect(() => {
@@ -171,12 +173,50 @@ export default function PublicIntakePage(): ReactNode {
     setStep("esign");
   };
 
-  const handleEsignComplete = (hash: string): void => {
+  const handleEsignComplete = async (hash: string): Promise<void> => {
     setEsignHash(hash);
     if (surrenderType) {
-      notifyTelegram(surrenderType, hash);
+      // Telegram notification runs in parallel; do not await so the user
+      // sees their confirmation immediately.
+      void notifyTelegram(surrenderType, hash);
     }
-    setStep("confirm");
+
+    // Submit intake to /api/animals/intake. This is what creates the
+    // Animal + IntakeRecord + mints the +50 onboarding bonus. The route
+    // is idempotent for retries via the caller's idempotencyKey contract.
+    setIsSubmittingIntake(true);
+    try {
+      const res = await fetch("/api/animals/intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          animals: [
+            {
+              breed: "Mixed Breed",
+              medicalStatus: "Healthy",
+              euthanasia_risk_status: "SAFE",
+              statutoryHoldCleared: surrenderType === "STRAY",
+              intakeTimestamp: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+      if (res.ok) {
+        const json = (await res.json()) as {
+          tokensAwarded?: number;
+        };
+        setTokensAwarded(json.tokensAwarded ?? 50);
+      } else {
+        // Visible on the page so a failed submit isn't silent.
+        console.warn("[intake/public] intake POST non-ok", res.status);
+      }
+    } catch (err) {
+      console.warn("[intake/public] intake POST failed", err);
+    } finally {
+      setIsSubmittingIntake(false);
+      setStep("confirm");
+    }
   };
 
   return (
@@ -328,6 +368,22 @@ export default function PublicIntakePage(): ReactNode {
               <p className="mt-2 text-sm leading-relaxed text-emerald-700">
                 {t("public_intake.confirm_body")}
               </p>
+              {tokensAwarded !== null && (
+                <div
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900"
+                  data-testid="intake-token-reward"
+                >
+                  <span className="text-base">🎁</span>
+                  <span>
+                    +{tokensAwarded} tokens minted to your wallet
+                  </span>
+                </div>
+              )}
+              {isSubmittingIntake && (
+                <p className="mt-2 text-xs text-amber-700">
+                  Submitting intake…
+                </p>
+              )}
             </div>
 
             {/* Hash display */}

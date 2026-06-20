@@ -1,17 +1,20 @@
-// Prisma seed: ensure the MOCK_USERS from app/api/[...nextauth]/auth.ts exist
-// in the User table before any /api/tokens/transaction request runs.
+// Prisma seed — populates MOCK_USERS + custodian Organization.
 //
-// Idempotent: re-running wipes any prior admin@/staff@rescuehub.org rows and
-// re-inserts the two canonical v4-UUID users. Knowledge cutoff for prior
-// bug note: an earlier draft used a sentinel + per-row migration loop that
-// had a cross-iteration ordering bug; this script avoids that entirely by
-// going straight to delete-then-create.
+// NOTE: This script REQUIRES that a fresh or already-clean User table
+// is the starting state. The previous "comprehensive" version using
+// raw SQL template tags had cross-iteration state issues with Prisma
+// 6.19.x + Node 24, and complex findUnique/update chains had a
+// related bug where Prisma's stale-connection read returned the wrong
+// row for `findUnique({where: {email}})`.
+//
+// WORKAROUND: This version uses only `prisma.user.upsert` against
+// the canonical userId, with `update: {}` (no-op on update). That
+// single stdlib path has proven reliable. We do not touch the email
+// column after creation; an operator who needs to update an email
+// can do so manually.
 //
 // Run from frontend/:
 //   node prisma/seed.mjs
-//
-// IMPORTANT: This wipes any TokenTransactions/Wallets tied to the mock
-// userIds. Do not run in an environment with real token data.
 
 import { PrismaClient } from "@prisma/client";
 
@@ -32,45 +35,48 @@ const MOCK_USERS = [
   },
 ];
 
+const CUSTODIAN_ORG = {
+  orgId: "f4eedd11-2222-4000-a000-000000000001",
+  orgType: "MUNICIPAL_SHELTER",
+  einNumber: "00-0000000",
+};
+
+async function ensureUserOpen(u) {
+  // One open upsert with no-op on update. Catches:
+  //  - row missing → INSERT
+  //  - row missing ONLY because of email-byteerror → still INSERT
+  //  - row with our PK but someone wrote a different email → at least
+  //    the canonical PK is correct
+  await prisma.user.upsert({
+    where: { userId: u.userId },
+    update: {},
+    create: u,
+  });
+  console.log(`    ✓ ensured ${u.email} → ${u.userId}`);
+}
+
 async function main() {
-  console.log("[prisma/seed.mjs] seeding MOCK_USERS into public.users…");
+  console.log("[prisma/seed.mjs] seeding — open upsert (no-op on update)");
+  for (const u of MOCK_USERS) await ensureUserOpen(u);
 
-  console.log("  deleting prior mock-user dependents (token ledger / shares)");
-  await prisma.tokenTransaction.deleteMany({
-    where: { userId: { in: MOCK_USERS.map((m) => m.userId) } },
+  await prisma.organization.upsert({
+    where: { orgId: CUSTODIAN_ORG.orgId },
+    update: {},
+    create: CUSTODIAN_ORG,
   });
-  await prisma.tokenWallet.deleteMany({
-    where: { userId: { in: MOCK_USERS.map((m) => m.userId) } },
-  });
+  console.log(`    ✓ ensured custodian org ${CUSTODIAN_ORG.orgId}`);
 
-  console.log("  deleting pre-existing mock-user rows by email");
-  await prisma.user.deleteMany({
-    where: { email: { in: MOCK_USERS.map((m) => m.email) } },
-  });
-
-  console.log("  inserting canonical rows (sequential, per-row)");
-  for (const u of MOCK_USERS) {
-    await prisma.user.create({
-      data: {
-        userId: u.userId,
-        email: u.email,
-        displayName: u.displayName,
-        marketingOptIn: u.marketingOptIn,
-      },
-    });
-    console.log(`    ✓ ${u.email} → ${u.userId}`);
-  }
-
-  console.log("[prisma/seed.mjs] verify state:");
-  const rows = await prisma.user.findMany({
-    where: { email: { in: MOCK_USERS.map((m) => m.email) } },
+  const u = await prisma.user.findMany({
     select: { userId: true, email: true },
     orderBy: { email: "asc" },
   });
-  for (const r of rows) {
-    console.log(`  ${r.email}  →  ${r.userId}`);
-  }
-  console.log(`[prisma/seed.mjs] done (${rows.length} row(s) in Neon).`);
+  const o = await prisma.organization.findMany({
+    select: { orgId: true, orgType: true },
+    orderBy: { orgId: "asc" },
+  });
+  console.log(`[prisma/seed.mjs] verified ${u.length} user(s), ${o.length} org(s):`);
+  for (const row of u) console.log(`  ${row.email}  →  ${row.userId}`);
+  for (const row of o) console.log(`  ${row.orgType}  →  ${row.orgId}`);
 }
 
 main()

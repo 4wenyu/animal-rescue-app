@@ -235,6 +235,99 @@ export async function processTokenTransaction(
 }
 
 // ---------------------------------------------------------------------------
+// awardIntakeBonus — issued by /api/animals/intake on a successful animal
+// onboarding. Identity-proof: requires an explicit userId (no fallback).
+// ---------------------------------------------------------------------------
+
+/**
+ * Award an onboarding bonus when a user successfully onboards an animal.
+ * Used by /api/animals/intake. Idempotent via the caller's supplied
+ * idempotencyKey — typically "<intakeId>:intake-bonus".
+ *
+ * @param opts.userId         uuid of the user who submitted intake (from session)
+ * @param opts.intakeId       uuid of the new IntakeRecord (FK provenance)
+ * @param opts.actionType     defaults to SHARE_10_GROUPS_EARN/ONBOARDING/etc
+ *                            (only ONBOARDING_* is currently awarded; others throw)
+ * @param opts.amount         bonus in tokens (default 50)
+ * @param opts.idempotencyKey caller-generated unique key
+ */
+export interface AwardIntakeBonusOptions {
+  userId: string;
+  intakeId: string;
+  actionType?: "ONBOARDING_BONUS_EARN";
+  amount?: number;
+  idempotencyKey: string;
+  notes?: string;
+}
+
+export async function awardIntakeBonus({
+  userId,
+  intakeId,
+  actionType = "ONBOARDING_BONUS_EARN",
+  amount = 50,
+  idempotencyKey,
+  notes,
+}: AwardIntakeBonusOptions) {
+  return processTokenTransaction({
+    userId,
+    direction: "EARN",
+    actionType,
+    amount,
+    idempotencyKey,
+    currency: "USD",
+    notes: notes ?? `Intake onboarding bonus for intakeId=${intakeId}`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// awardShareReward — STUB, intended for ViralShareVerification flow.
+// Wired in fully when /api/shares/[shareId]/resolve runs.
+// ---------------------------------------------------------------------------
+
+export interface AwardShareRewardOptions {
+  userId: string;
+  shareId: string;
+  amount: number;
+  idempotencyKey: string;
+}
+
+/**
+ * Award EARN tokens when a viral share reaches the platform-traffic
+ * threshold. Currently a STUB that throws so we don't accidentally
+ * mint tokens before the share-resolution flow is wired (Phase 2 of
+ * the Viral Token work).
+ */
+export async function awardShareReward(
+  opts: AwardShareRewardOptions,
+): Promise<never> {
+  throw new Error(
+    "awardShareReward: viral share resolution not yet implemented. " +
+      "shareId=" +
+      opts.shareId,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// awardReferralConverted / awardVolunteerHour — STUBS, future work.
+// ---------------------------------------------------------------------------
+
+export async function awardReferralConverted(
+  opts: Omit<AwardShareRewardOptions, "shareId"> & { referralId: string },
+): Promise<never> {
+  throw new Error(
+    "awardReferralConverted not yet implemented. referralId=" + opts.referralId,
+  );
+}
+
+export async function awardVolunteerHour(
+  opts: Omit<AwardShareRewardOptions, "shareId"> & { hourLogId: string },
+): Promise<never> {
+  throw new Error(
+    "awardVolunteerHour not yet implemented. hourLogId=" + opts.hourLogId,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // expireTokens — called by the nightly expiry cron job
 // ---------------------------------------------------------------------------
 
