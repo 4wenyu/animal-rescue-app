@@ -52,7 +52,22 @@ export function TestEarnButton() {
       });
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.message ?? json.error ?? `HTTP ${res.status}`);
+        // Surface Zod validation details if present so the user doesn't need
+        // DevTools to debug a 400 in dev. In prod, drop the details.
+        const details = Array.isArray(json?.details)
+          ? json.details
+              .map(
+                (d: { path?: string; message?: string }) =>
+                  `${d.path ?? "(root)"}: ${d.message ?? "invalid"}`,
+              )
+              .join("; ")
+          : "";
+        throw new Error(
+          (json.message ?? json.error ?? `HTTP ${res.status}`) +
+            (details && process.env.NODE_ENV !== "production"
+              ? ` — ${details}`
+              : ""),
+        );
       }
       const newBal = json.wallet?.cachedBalance;
       setStatus("success");
