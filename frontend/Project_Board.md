@@ -65,16 +65,12 @@ kanban-plugin: basic
 - [x] **`MOCK_USERS.id` strict v4 UUIDs** — admin `d290f1ee-…`, staff `a77484df-…` (commits `c8095dd`, `96a0e0a`)
 - [x] **`SignOutButton` + dashboard injection** — escape hatch for ghost session cookies (commit `c17c219`)
 - [x] **`TokenWalletCard` (server + client) on dashboard** — pull-paginated ledger, ambient refresh on `tokenwallet:refresh` (commit `db714d6`)
-- [x] **`TestEarnButton` dev affordance** — env-gated (`NODE_ENV !== "production"`) test button for verifying the EARN pipeline end-to-end (commit `db714d6`)
+- [x] **`TestEarnButton` dev affordance** — env-gated (`NODE_ENV !== "production"`) test button for verifying the EARN pipeline end-to-end (commit `db714d6`, retired in `c0c3466`)
 - [x] **`prisma/seed.mjs`** — populates `admin@/staff@rescuehub.org` in Neon with the canonical v4 IDs (commit `a09db14`)
 - [x] **End-to-end click verified** — button award → 50 tokens → wallet bumps without page reload → `$transaction` atomic in Neon
-
-### Epic 2 — Viral Token & Brand Sponsorship Gateway: Build Token Earning Logic  *(NEXT)*
-- [ ] `awardOnboardingBonus` /
-      `awardShareReward` /
-      `awardReferralConverted` /
-      `awardVolunteerHour` atop `processTokenTransaction`
-- [ ] Wire UI affordances for share verification → automatic EARN ledger insert
+- [x] **`POST /api/animals/intake`** — atomic Animal + IntakeRecord insert + +50 onboarding bonus (commit `c0c3466`)
+- [x] **Closed viral-share loop** — `/api/shares` → row + tracking URL → `/p/<shareId>` landing mints +5 via `awardShareReward` with in-memory `(shareId, ip)` rate limit; `ShareToHelpButton` wired into `AnimalTable` (commits `3c5ffaa`, `f8f25b6`)
+- [x] **`awardIntakeBonus` / `awardShareReward` / `awardReferralConverted` (stub) / `awardVolunteerHour` (stub)** in `lib/services/tokenService.ts` — all atop `processTokenTransaction` (commit `c0c3466`)
 
 ### Epic 2 — Environment & Database Hardening
 - [x] **Prisma v6/v7 workspace hoisting conflict resolved** — single v6.19.3 chain, `npm rebuild` to re-emit WASM/query-engine binaries dropped during the v7 churn

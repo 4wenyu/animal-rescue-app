@@ -4,16 +4,16 @@ kanban-plugin: basic
 
 # RescueHub — Roadmap & Epic Status Board
 
-> **Current Active Phase:** **EPIC 2 — The Viral Token & Brand Sponsorship Gateway** (Phase 7)
-> **Active Task:** Database Schema & Prisma Models for Phase 7.0
-> **Last Updated:** 2026-06-17
+> **Current Active Phase:** **CLOSEOUT EPIC 2 — Viral Token & Brand Sponsorship Gateway** (Phase 7)
+> **Next Active Phase:** **EPIC 3 — Autonomous Outreach Engine** (Phase 8)
+> **Last Updated:** 2026-06-20
 
 | Epic | Status | Active Task |
 |---|---|---|
 | EPIC 1 — UI Polish & Global Localization | ✅ **COMPLETE** (2026-06-17) | All sub-tasks closed; 283 i18n keys at 100% parity across 7 locales |
-| EPIC 2 — Viral Token & Brand Sponsorship Gateway | 🟡 **IN PROGRESS** | Database Schema & Prisma Models (active now) |
-| EPIC 3 — Autonomous Outreach Engine | ⚪ Ready | — |
-| EPIC 4 — Wide-Net Search Engine | ⚪ Ready | — |
+| EPIC 2 — Viral Token & Brand Sponsorship Gateway | ✅ **CLOSING** (2026-06-20) | Closed: viral-share loop live, intake path mints +50, rate-limited landing rewards +5 |
+| EPIC 3 — Autonomous Outreach Engine | ⚪ Ready | Geolocation & SMS radius alerts |
+| EPIC 4 — Wide-Net Search Engine | ⚪ Ready | Live shelter API/scraping crawler |
 
 ## ✅ Done — EPIC 1: UI Polish & Global Localization (2026-06-17, complete)
 
@@ -35,16 +35,22 @@ Mock timer band (`dogs.json`) refreshed: 2 overdue (~1h past), 2 active (60-70h 
 
 ## Ready
 
-- [ ] **EPIC 2**: Viral Growth & Token Gateway
+- [x] **EPIC 2**: Viral Growth & Token Gateway · closed 2026-06-20 — viral-share loop live, intake award live
 - [ ] **EPIC 3**: Autonomous Outreach Engine
 - [ ] **EPIC 4**: Wide-Net Search Engine
+- [ ] **Milestone M1**: Brand Sponsorship & Rewarded Ad Network — strategy framed in roadmap, build behind EPIC 3 start
 - [ ] **TODO**: Reset intake countdown timers (`LiveTimer` per-second timer needs to be cleared on component unmount to avoid orphaned intervals)
 - [ ] **TODO**: Sidebar "Sign Out" / "Staff Login" labels still hardcoded English (small-polish follow-up)
 
 ## In Progress
 
-- [ ] **EPIC 2 — The Viral Token & Brand Sponsorship Gateway** (Phase 7)
-  - **🟢 Active Task:** Database Schema & Prisma Models — Define `ViralShareVerification`, `TokenWallet`, `TokenLedger`, `SponsorshipPayment` models + enums (`SharePlatform`, `VerificationStatus`, `TokenAction`, `PaymentProvider`) extending v7.
+- [x] **EPIC 2 — The Viral Token & Brand Sponsorship Gateway** (Phase 7) · closed 2026-06-20
+  - ✅ Schema live on Neon (v6.19.3 client)
+  - ✅ `/api/animals/intake` (atomic Animal+IntakeRecord insert + +50 ONBOARDING_BONUS_EARN award via `awardIntakeBonus`)
+  - ✅ `/api/shares` (ViralShareVerification writer + `/p/<shareId>` tracking URL)
+  - ✅ `/p/[shareId]` public landing (mints +5 via `awardShareReward`, in-memory `(shareId, ip)` rate-limited)
+  - ✅ `ShareToHelpButton` wired into `AnimalTable` rows
+  - ✅ End-to-end live test confirmed by user 2026-06-20
 
 ## Done
 
@@ -101,22 +107,66 @@ Mock timer band (`dogs.json`) refreshed: 2 overdue (~1h past), 2 active (60-70h 
 - ✅ `MockTimer` band refreshed so demo shows red urgent + amber live + green cleared states.
 - ✅ Pip dep `deep-translator` introduced (no `requirements.txt` yet — follow-up).
 
-### 🟡 IN PROGRESS — EPIC 2: Viral Growth & Token Gateway (Phase 7)
-**Problem:** Computing power for massive internet searches costs money; we want maximum accessibility.
+### ✅ COMPLETE — EPIC 2: Viral Growth & Token Gateway (Phase 7) · closed 2026-06-20
+**Problem:** Computing power for massive internet searches costs money; we want maximum accessibility — and a free path for users who can earn access by sharing.
 
-**Engineering Task:** Build a dual-path authorization gateway.
+**Engineering Task:** Build a dual-path authorization gateway (Path A — pay, Path B — viral loop), wired into every AI-assisted search.
 
-**Active task:** **Database Schema & Prisma Models** for Phase 7.0 — extending the v7 schema with `ViralShareVerification`, `TokenWallet`, `TokenLedger`, `SponsorshipPayment` models + enums.
+**Active task (as of 2026-06-17):** ~~Database Schema & Prisma Models~~ ✅ **done** (`User`, `TokenWallet`, `TokenTransaction`, `ViralShareVerification`, `Sponsor`, `SponsorshipContribution` all live on Neon with v6.19.3 Prisma client). **Active task (current):** ~~Wire the EARN path into real handlers~~ ✅ **done** — `awardIntakeBonus` (+50 on `/api/animals/intake`), `awardShareReward` (+5 per landing, in-memory rate-limited), `processTokenTransaction` atomic across wallet + ledger.
 
-**Functionality (Path A — Pay):** Standard Stripe fee to activate AI internet search.
+**Functionality (Path A — Pay):** Stripe fees activate AI internet search. Per-search credits priced in EARN/TOKEN ledger (`SEARCH_FEE_WAIVE_SPEND`).
 
 **Functionality (Path B — Viral Loop):**
-- User shares RescueHub to 10 local community groups / social platforms
-- On verification of sharing → token consumption cost waived
-- AI searches for free
+- User shares an animal via the dashboard `🔗 Share to Help` button → POST /api/shares → row + tracking URL `/p/<shareId>`
+- Visitor lands → server component captures IP, calls `awardShareReward`, mints +5 (rate-limited `(shareId, ip, 24h)`)
+- Repeat visits within 24h return the dedup slate panel
+- End-to-end closed loop verified by the user 2026-06-20 (commits `3c5ffaa`, `f8f25b6`)
 
-**Detailed Backlog Items:**
-- **Vision & Flyer Tool (Image upload to PDF generation)** — Allow users to upload photos of their lost pet. The system auto-generates a printable, shareable PDF flyer with the pet's photo, name, last-seen location, and contact info. The flyer can be downloaded or shared directly to social platforms as part of the viral loop verification.
+*Detailed Backlog Items:**
+- ~~Vision & Flyer Tool (Image upload to PDF generation)~~ deferred to a future iteration. The viral-share-loop is currently the leverage-driven funnel; flyer PDFs would compound it.
+
+### 💰 Monetization Milestones — *running parallel to EPICs 3 & 4*
+
+RescueHub's growth path forces two operating costs at scale: (a) GPU minutes for the conversational intake + search agents, and (b) outbound messaging (SMS/Telegram) for outreach. NEITHER is free. The two-gateway model Epic 2 closed opens a third monetization dimension — **hybrid value-capture** — where some users pay cash, some pay attention, and some pay nothing because a sponsor underwrote them.
+
+#### 💰 Milestone M1 — Brand Sponsorship & Rewarded Ad Network (NEW, 2026-06-20)
+
+**Strategy:** Sponsors pay USD for branded visibility slots; users earn EARN/TOKEN ledger credits by *viewing* sponsored content (rewarded ad). The token-credit landscape already has a home — `processTokenTransaction` + `TokenWallet` — so this integrates at the existing ledger level rather than requiring a parallel "ad-wallet" system.
+
+**Three interlocking streams:**
+
+1. **Sponsorship Slots (cash model, IRC § 513(i) safe)**
+   - Brand partners deposit into `Sponsor.allocatedTokenPool` (USD-denominated `Decimal`). Schema is already on Neon (commit `20853b9`).
+   - `SponsorshipContribution` rows pair against `TokenTransaction` ledger entries for UBIT reporting under IRC § 513(i).
+   - Surface area: static corporate sponsor section is already present on `/` (`app/page.tsx`) with neutral acknowledgment mode. Streams we add to it: a karaoke-style rotating sponsor hero in `/dashboard`, sponsor-only "urgency callouts" on social-share landing pages, sponsor-keyword targeting for the search engine in Epic 4.
+
+2. **Rewarded Ad Streams (TOKEN model — same ledger unit)**
+   - Users mint EARN/TOKEN ledger entries by **opt-in viewing** of 6–15s sponsor segments (TikTok-style).
+   - Read-receipt flow: a tiny `/api/sponsors/engagement/[engagementId]/confirm` endpoint reports time-on-segment + viewport-intersection; on qualifying engagement, `/api/sponsors/reward` mints EARN/TOKEN to the viewer's wallet via existing `processTokenTransaction` (cost basis `costBasisMinorUnits` optional).
+   - Reward ranges: tiered per platform — `SEARCH_FEE_WAIVE_SPEND` (waive one search fee per sponsor segment), `SHARE_BOOST_SPEND` (boost share-rank), etc. The enum is already on `TokenAction`.
+   - First-visit-per-segment rate limit reuses the same `(id, ip)` pattern proven in `awardShareReward`.
+
+3. **Hybrid Underwriting (viral loop on top of sponsor pools)**
+   - The viral share loop from Epic 2 funds ~$0.05 of GPU cost per share → per visit. Sponsors underwrite the deficit when share-reward payouts exceed external RevShare.
+   - Dashboards surface "this search sponsored by X" — participant identity is the existing static `/` corporate block; in-stream callouts go here.
+   - Cost-grants: each `Sponsor.allocatedTokenPool` increment is paired 1:1 with a `SponsorshipContribution(captured)` row so UBIT auditors can attribute exactly which sponsor dollar funded which rewarded adv.
+
+**Tying it back to existing data layer** (no migrations needed for V1):
+- `Sponsor`: rows already have `allocatedTokenPool` Decimal + `consumedTokenPool` Decimal — V1M1 uses both as cash/TOKEN balances.
+- `SponsorshipContribution`: paired 1:1 with `TokenTransaction` ledger row → auditor-friendly atomic record.
+- `TokenAction` enum already lists `PRINTED_FLYER_SPEND`, `SHARE_BOOST_SPEND`, `SEARCH_FEE_WAIVE_SPEND`. M1 adds brand-keyword-enumerated `BRAND_PARTNERSHIP_EARN` as the user-side rewarded-view action.
+- `tokenWallets_lifetimeEarned` already exists as a counter — separate counter `lifetimeRewardedViewings` is added at the same time as `BRAND_PARTNERSHIP_EARN` rows.
+- `ViralShareVerification` continues to drive organic reach; `Sponsor.userId` (via `SponsorshipContribution.tokenTxnId`) holds the link from a token-reward withdraw back to its sponsor.
+
+**KPI gates for V1M1→V2 promotion:**
+1. `Sponsor.consumedTokenPool` ≈ `allocatedTokenPool * 0.30` month-over-month (sponsor utilization > 30% — funds reaching fan pipes).
+2. Rewarded-ad `TokenTransaction` rows have a content-quality rating after week 4 (no fraud-vector — earned EARN/TOKEN from skip+refresh patterns).
+3. The `SponsorshipContribution.captured` rate plateaus around `allocatedTokenPool / 90 days` — predictably sponsor-budgetable accounting cycle.
+4. Watch-share correlation: `ViralShareVerification.observedAt NOT NULL AND TokenTransaction.actionType = 'SHARE_10_GROUPS_EARN'` reaches ≥ N/week.
+
+**Engineering alignment with upcoming epics:**
+- EPIC 3 ("Autonomous Outreach Engine") will send DMs carrying sponsor-marked cards → backfill M1 with sponsored DM templates.
+- EPIC 4 ("Wide-Net Search Engine") attaches `BRAND_PARTNERSHIP_EARN` to search-result impressions — sponsored-search slots become monetizable through the same M1 ledger unit.
 
 ### 📋 EPIC 3: Autonomous Outreach Engine (Phase 8)
 **Problem:** Animals are euthanized due to lack of visibility to potential fosters/adopters.
