@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import { LiveTimer } from "@/src/components/LiveTimer";
+import { ShareToHelpButton } from "@/src/components/dashboard/ShareToHelpButton";
 
 // ── Synchronous i18n ─────────────────────────────────────────────────────
 import enDict from "../../../locales/en.json";
@@ -266,6 +267,7 @@ function ActionButtons({ dog, tr }: { dog: Dog; tr: (k: string) => string }) {
           tr("dashboard.table.transfer")
         )}
       </button>
+      <ShareToHelpButton relatedAnimalId={dog.id} />
     </div>
   );
 }

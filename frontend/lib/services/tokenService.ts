@@ -280,31 +280,86 @@ export async function awardIntakeBonus({
 }
 
 // ---------------------------------------------------------------------------
-// awardShareReward — STUB, intended for ViralShareVerification flow.
-// Wired in fully when /api/shares/[shareId]/resolve runs.
+// awardShareReward — REAL, intended for ViralShareVerification flow.
+//
+// Behavior (V1, per user direction):
+//   - Landing /p/[shareId] ATTEMPTS to mint +5 tokens to the share's user.
+//   - The grant is rate-limited by IP per shareId per 24h. The first hit
+//     within that window awards; subsequent hits return idempotently
+//     without rewarding. (In-memory Map, dev-only — we'll move this to
+//     Postgres + `VisitLedger` in production.)
 // ---------------------------------------------------------------------------
 
+/** In-memory rate limit for the +5 viral-share reward. */
+const _shareRewardTimestamps = new Map<string, number>();
+const SHARE_REWARD_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
+const SHARE_REWARD_AMOUNT = 5;
+
+function rateKey(shareId: string, ip: string) {
+  return `${shareId}::${ip}`;
+}
+
+export function shareRewardShouldSkip(shareId: string, ip: string): boolean {
+  // Returns TRUE if a previous grant already exists for this (shareId, ip).
+  const key = rateKey(shareId, ip);
+  const ts = _shareRewardTimestamps.get(key);
+  if (ts && Date.now() - ts < SHARE_REWARD_WINDOW_MS) {
+    return true; // already rewarded within window → skip
+  }
+  return false;
+}
+
+export function recordShareReward(shareId: string, ip: string) {
+  _shareRewardTimestamps.set(rateKey(shareId, ip), Date.now());
+}
+
 export interface AwardShareRewardOptions {
-  userId: string;
+  userId: string;          // the share's creator (mint target)
   shareId: string;
-  amount: number;
+  amount?: number;         // default 5 per the V1 landing-reward rate
+  consumerIp?: string;     // for rate-limit pairing (callers passing ≥)
   idempotencyKey: string;
 }
 
+export interface AwardShareRewardResult {
+  transaction: unknown | null; // null when skipped due to rate limit
+  skipped: boolean;
+  skipReason?: "rate_limited";
+}
+
 /**
- * Award EARN tokens when a viral share reaches the platform-traffic
- * threshold. Currently a STUB that throws so we don't accidentally
- * mint tokens before the share-resolution flow is wired (Phase 2 of
- * the Viral Token work).
+ * Award EARN tokens when a visitor lands on a /p/[shareId] tracking page
+ * and hasn't been rewarded in the last 24h for this share.
+ *
+ * @param opts.userId         the userId of the share's *creator* (the
+ *                            referrer gets the reward, not the visitor)
+ * @param opts.shareId        the VirusShareVerification.shareId
+ * @param opts.amount         token count for a single landing (default 5)
+ * @param opts.consumerIp     visitor IP — required for rate-limit pairing
+ * @param opts.idempotencyKey caller-generated key, scoped per (shareId, ip)
  */
 export async function awardShareReward(
   opts: AwardShareRewardOptions,
-): Promise<never> {
-  throw new Error(
-    "awardShareReward: viral share resolution not yet implemented. " +
-      "shareId=" +
-      opts.shareId,
-  );
+): Promise<AwardShareRewardResult> {
+  const ip = opts.consumerIp ?? "0.0.0.0";
+
+  if (shareRewardShouldSkip(opts.shareId, ip)) {
+    return { transaction: null, skipped: true, skipReason: "rate_limited" };
+  }
+
+  const result = await processTokenTransaction({
+    userId: opts.userId,
+    direction: "EARN",
+    actionType: "SHARE_10_GROUPS_EARN",
+    amount: opts.amount ?? SHARE_REWARD_AMOUNT,
+    idempotencyKey: opts.idempotencyKey,
+    currency: "USD",
+    sourceViralShareId: opts.shareId,
+    notes: `Viral share landing reward for shareId=${opts.shareId}`,
+  });
+
+  recordShareReward(opts.shareId, ip);
+  return { transaction: result, skipped: false };
 }
 
 // ---------------------------------------------------------------------------

@@ -3,23 +3,22 @@
  * =================
  * Create a ViralShareVerification row when a user signs into the share
  * flow (e.g. clicks "Share this animal on Facebook"). Returns:
- *   - shareId : the verification UUID
- *   - trackingUrl : the platform-agnostic UTM-tagged URL the user can
- *                    send to social media, OR
- *   - shareBadgeUrl : the platform-specific deep-link helper
+ *   - shareId       : ViralShareVerification UUID
+ *   - trackingUrl   : canonical share URL — `/p/<shareId>` — the user
+ *                      pastes into WhatsApp, FB group, etc.
+ *   - platformShareHint : platform-specific one-click intent URLs where
+ *                          they exist (FB, Nextdoor, WA, Reddit).
  *
- * STUB NOTES
- * ----------
- * This stub:
- *   - Builds a per-animal tracking URL of the form
- *         /r/<animalId>?via=share&utm=<shareId>
- *   - Persists a ViralShareVerification in PENDING status
- *   - Does NOT yet build platform-specific deep-links (FB share dialog,
- *     Nextdoor, WhatsApp) — that's the next sprint's task
- *   - Does NOT award tokens; share resolution is a Phase 2 workstream.
- *
- * Once platform helpers land, this route will dispatch to them and
- * return their per-platform share buttons.
+ * Request body:
+ *   {
+ *     platform: "FACEBOOK_GROUP" | "NEXTDOOR" | ... (12 platforms),
+ *     platformPostId: string (unique nonce ≥ 12 chars, ≤ 128),
+ *     contentUrl?: string,
+ *     evidenceSnapshot?: record,
+ *     status?: "PENDING" | "VERIFIED" | ...,
+ *     relatedAnimalId?: string     // stored inside evidenceSnapshot
+ *                                   // so the landing page can find it.
+ *   }
  */
 
 import { NextResponse } from "next/server";
@@ -34,6 +33,7 @@ export const dynamic = "force-dynamic";
 
 const ORIGIN_FALLBACK = "http://localhost:3000";
 
+/** Read an authenticated request and write the share record. */
 export async function POST(request: Request) {
   // ── Auth ────────────────────────────────────────────────
   const session = await auth();
@@ -56,11 +56,23 @@ export async function POST(request: Request) {
     );
   }
 
+  // The optional relatedAnimalId lives outside the canonical schema —
+  // pull it out of the raw body before validation, then re-attach it
+  // into evidenceSnapshot once we know it's a valid UUID.
+  const rawBody = body as Record<string, unknown>;
+  const relatedAnimalId =
+    typeof rawBody.relatedAnimalId === "string"
+      ? rawBody.relatedAnimalId
+      : null;
+
   let parsed;
   try {
     parsed = ViralShareVerificationCreateSchema.parse({
       ...body,
       userId, // server-side override; never trust body
+      // Strip the optional relatedAnimalId field before schema validation
+      // (it's not on the canonical schema) but keep it in evidenceSnapshot.
+      relatedAnimalId: undefined,
     });
   } catch (err) {
     if (err instanceof ZodError) {
@@ -81,35 +93,41 @@ export async function POST(request: Request) {
     );
   }
 
-  // ── Look up the animal so we can build a meaningful tracking URL ──
-  // For now: accept any animalId and embed it in the URL. If the animal
-  // row exists in our DB it's a "verified" share; if not, the URL is
-  // still valid for the test path. A guard here becomes important when
-  // we wire platform-specific deep-links so we don't share `/r/<bogus>`.
-  const animalId = (body as { animalId?: string }).animalId ?? null;
-
   // ── Insert ViralShareVerification row (PENDING until reviewed) ──
   try {
+    const evidenceSnapshot = {
+      ...(parsed.evidenceSnapshot ?? {}),
+      ...(relatedAnimalId ? { relatedAnimalId } : {}),
+    };
+
     const share = await prisma.viralShareVerification.create({
       data: {
         userId,
         platform: parsed.platform,
         contentUrl: parsed.contentUrl,
         platformPostId: parsed.platformPostId,
-        evidenceSnapshot: (parsed.evidenceSnapshot as unknown as object) || undefined,
+        evidenceSnapshot: evidenceSnapshot as object,
         status: parsed.status,
-        // FK to related Animal is intentionally left out: the schema
-        // doesn't have a direct ANIMAL column on ViralShareVerification.
-        // Future: we add a follow-up migration to add `relatedAnimalId`.
       },
     });
 
-    // ── Build the canonical tracking URL ────────────────────
-    const origin =
-      process.env.NEXT_PUBLIC_BASE_URL ?? ORIGIN_FALLBACK;
-    const trackingUrl = animalId
-      ? `${origin.replace(/\/$/, "")}/r/${animalId}?via=share&utm=${share.shareId}`
-      : `${origin.replace(/\/$/, "")}/r/_?via=share&utm=${share.shareId}`;
+    // ── Build the canonical tracking URL: /p/<shareId> ─────────
+    const origin = process.env.NEXT_PUBLIC_BASE_URL ?? ORIGIN_FALLBACK;
+    const trackingUrl = `${origin.replace(/\/$/, "")}/p/${share.shareId}`;
+
+    const shareHint = share.platform === "FACEBOOK_GROUP"
+      ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(trackingUrl)}`
+      : share.platform === "WHATSAPP_GROUP"
+        ? `https://wa.me/?text=${encodeURIComponent(trackingUrl)}`
+        : share.platform === "SUBREDDIT"
+          ? `https://www.reddit.com/submit?url=${encodeURIComponent(trackingUrl)}&title=${encodeURIComponent("Please help this animal")}`
+          : share.platform === "NEXTDOOR"
+            ? `https://nextdoor.com/share?url=${encodeURIComponent(trackingUrl)}`
+            : share.platform === "INSTAGRAM_STORY"
+              ? null
+              : share.platform === "GENERIC_LINK"
+                ? null
+                : trackingUrl;
 
     return NextResponse.json(
       {
@@ -117,22 +135,16 @@ export async function POST(request: Request) {
         shareId: share.shareId,
         platform: share.platform,
         status: share.status,
+        // ← canonical URL the user pastes into WhatsApp / Reddit / FB
         trackingUrl,
-        resolvedAction: null,
+        // ← platform-specific helper URLs for one-click share buttons
+        platformShareHint: shareHint,
+        // ← animal context the landing page will reuse (for the profile stub)
+        relatedAnimalId,
+        // Echo the observedAt: undefined on initial create; the landing
+        // page will set this on first hit via a future resolver endpoint.
+        observedAt: share.observedAt?.toISOString() ?? null,
         createdAt: share.createdAt.toISOString(),
-        // Stub-only fields:
-        platformShareHint:
-          share.platform === "FACEBOOK_GROUP"
-            ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(trackingUrl)}`
-            : share.platform === "WHATSAPP_GROUP"
-              ? `https://wa.me/?text=${encodeURIComponent(trackingUrl)}`
-              : share.platform === "SUBREDDIT"
-                ? `https://www.reddit.com/submit?url=${encodeURIComponent(trackingUrl)}&title=${encodeURIComponent("Please help this animal")}`
-                : share.platform === "NEXTDOOR"
-                  ? `https://nextdoor.com/share?url=${encodeURIComponent(trackingUrl)}`
-                  : share.platform === "INSTAGRAM_STORY"
-                    ? null
-                    : trackingUrl,
       },
       { status: 201 },
     );
