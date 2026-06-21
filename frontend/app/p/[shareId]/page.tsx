@@ -27,7 +27,7 @@ import { PawPrint, Share2, ShieldCheck, Heart } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { awardShareReward } from "@/lib/services/tokenService";
-import dogsData from "../../../../data/dogs.json";
+import dogsData from "../../../data/dogs.json";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
