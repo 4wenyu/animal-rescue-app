@@ -57,7 +57,9 @@
     "active_roster": "活跃名册 · {count} 只动物",
     "clear_filter": "清除筛选: {filter}",
     "add_animal": "添加动物",
+    "find_my_pet": "🔍 寻找我的宠物",
     "v3": "RescueHub · 分诊系统 · v3.5",
+    "timer_format": "{h}时 {m}分 {s}秒",
     "stats": {
       "total_dogs": "狗总数",
       "healthy": "健康",
@@ -94,11 +96,99 @@
       "age_yr": "岁",
       "age_yrs": "岁"
     },
+    "share": {
+      "idle": "分享以提供帮助",
+      "idle_aria": "分享以提供帮助",
+      "idle_tooltip": "为此动物生成可分享的链接",
+      "pending": "分享中…",
+      "copied": "链接已复制",
+      "error": "重试",
+      "toast_ready": "分享链接已就绪",
+      "toast_error": "无法生成链接"
+    },
+    "medical": {
+      "Healthy": "健康",
+      "Needs_Review": "需要复查"
+    },
     "badges": {
       "safe": "安全",
       "at_risk": "有风险",
       "hayden_act": "海登法案 ⚠️",
       "hayden_tag": "海登"
+    },
+    "wallet": {
+      "title": "代币余额",
+      "wallet_subtitle": "{name}的钱包",
+      "tokens_unit": "代币",
+      "earned_label": "已获得",
+      "spent_label": "已花费",
+      "recent_activity_title": "最近活动",
+      "last_n_transactions": "最近 {count} 条交易",
+      "recent_activity_singular": "最近 {count} 条交易",
+      "no_activity_title": "尚无活动",
+      "no_activity_body": "获得第一枚代币后，系统将自动创建您的 TokenWallet。",
+      "direction": {
+        "EARN": "已获得",
+        "SPEND": "已花费",
+        "EXPIRE": "已过期",
+        "REFUND": "已退款"
+      },
+      "action": {
+        "SHARE_10_GROUPS_EARN": "分享至 10+ 群组",
+        "VOLUNTEER_HOUR_EARN": "志愿者服务时长已确认",
+        "REFERRAL_CONVERTED_EARN": "推荐转化",
+        "ONBOARDING_BONUS_EARN": "入驻奖励",
+        "SPONSOR_VIEW_CREDIT_EARN": "赞助方确认奖励",
+        "SEARCH_FEE_WAIVE_SPEND": "搜索费用减免",
+        "PRIORITY_LISTING_SPEND": "置顶推广",
+        "PRINTED_FLYER_SPEND": "纸质传单服务",
+        "SHARE_BOOST_SPEND": "分享加速",
+        "EXPIRE_DEDUCT": "不活跃扣减",
+        "ADJUSTMENT_ADMIN": "管理员调整",
+        "LOST_PET_SEARCH_SPEND": "走失宠物搜索服务"
+      },
+      "time": {
+        "just_now": "刚刚",
+        "minutes_ago": "{count} 分钟前",
+        "hours_ago": "{count} 小时前",
+        "days_ago": "{count} 天前"
+      },
+      "status": {
+        "active": "活跃",
+        "frozen": "已冻结",
+        "closed": "已关闭"
+      },
+      "no_wallet_title": "暂无钱包",
+      "no_wallet_body": "获得第一枚代币后，系统将自动创建您的 TokenWallet。",
+      "balance_after_short": "余额",
+      "last_n_transactions_singular": "最近 {count} 条交易"
+    },
+    "premium_stat_card": {
+      "meta": {
+        "peak_prefix": "峰值: {count}",
+        "healthy_pct": "占总 {pct}%",
+        "needs_review_dropped": "↓ 较上月减少 {count}",
+        "avg_age_across": "覆盖所有动物",
+        "default_of_n": "总计 {count} 只"
+      }
+    },
+    "ubit_sponsor": {
+      "title": "收入合规",
+      "irc_subtitle": "IRC § 513(i)",
+      "ubit_safe_badge": "UBIT 安全",
+      "qualified_label": "合格赞助",
+      "public_label": "公开捐赠",
+      "ratio_label": "赞助收入占比",
+      "footer": "合格赞助款项（IRC § 513(i)）不计入 UBIT。公开捐赠仍按 § 170 享有税前扣除资格。"
+    },
+    "esign": {
+      "title": "ESIGN / UETA 合规",
+      "compliance_label": "电子签名记录",
+      "compliance_pct_badge": "100% 合规",
+      "compliance_body": "所有摄入 ESIGN 免责协议均经过加密哈希并不可篡改地存储，100% 可随时审计。",
+      "active_hashes_label": "活跃 SHA-256 哈希",
+      "intakes_month_label": "本月摄入",
+      "verification_rate_label": "核验率"
     }
   },
   "sponsors": {
@@ -123,7 +213,7 @@
   },
   "medical": {
     "Healthy": "健康",
-    "Needs Review": "需要复查",
+    "Needs_Review": "需要复查",
     "title": "医疗记录",
     "subtitle": "选择动物以查看或更新其符合 ASPCA/CART 的医疗摄入检查。",
     "back_to_dashboard": "返回仪表板",
@@ -199,6 +289,26 @@
     "and": "和",
     "of": "的",
     "total": "总计"
+  },
+  "sponsorModal": {
+    "eyebrow": "赞助商致谢",
+    "title": "赞助商寄语",
+    "body": "Chewy is acknowledged as a proud sponsor of the Lost Pet Search program. View their sponsor message to receive a 50-token search grant.",
+    "body_translated": "Chewy 作为「走失宠物搜寻」项目的自豪赞助商在此致谢。查看其赞助信息即可获得 50 代币的搜寻资助。",
+    "value_neutral_compliance_badge": "价值中立致谢 — 符合 IRC § 513(i) 规定",
+    "countdown_viewed": "已查看",
+    "countdown_remaining": "剩余 {seconds} 秒",
+    "acknowledge_button_idle": "确认并继续",
+    "processing_button_qualified": "正在处理代币交易…",
+    "processing_button_default": "正在处理…",
+    "ack_disclaimer": "继续操作即表示您确认已查看上述赞助信息。您将获得 50 代币资助,并将为「走失宠物搜寻」服务支付 100 代币。",
+    "success_title": "赞助已确认",
+    "success_body": "已应用 50 代币资助,并已为「走失宠物搜寻」服务扣除 100 代币。正在启动搜索…",
+    "insufficient_title": "钱包余额不足",
+    "insufficient_body": "「走失宠物搜寻」费用为 100 代币,赞助商资助将额外提供 50 代币。目前您持有 {balance} 代币,即使加上资助仍不足以支付搜寻费用。请先获取更多代币后再试,或关闭此对话框以放弃此次请求。",
+    "insufficient_footnote": "由于支付流程未能完成,赞助信息未被计入。",
+    "close_aria_label": "关闭赞助商致谢",
+    "iframe_title": "赞助商致谢信息"
   },
   "about": {
     "about-us": {
@@ -315,6 +425,29 @@
     "attach_label": "附加文件",
     "send_label": "发送消息",
     "error": "抱歉，我遇到了错误。请再试一次。 ({error})"
+  },
+  "chatIntake": {
+    "greeting": "非常抱歉您的宠物走失了。我会帮您一起找回它。请先深呼吸——请问您要找的是什么宠物，您最后一次见到它是在哪里？",
+    "sidebar_title": "问诊进度",
+    "sidebar_help_species": "狗、猫、兔、鸟、其他",
+    "sidebar_help_breed": "拉布拉多、虎斑、虎皮鹦鹉、混血",
+    "sidebar_help_color": "主要特征、毛色或羽色",
+    "sidebar_help_collar": "铭牌、芯片、胸背带颜色、身份牌",
+    "sidebar_help_last_seen": "地址、十字路口、社区、地标",
+    "label_species": "物种",
+    "label_breed": "品种",
+    "label_color": "颜色与特征",
+    "label_collar": "项圈与身份",
+    "label_last_seen": "最后出现",
+    "input_placeholder": "请告诉我您宠物的情况…",
+    "send_label": "发送消息",
+    "ready_to_broadcast": "问诊完成 · 可发布至网络",
+    "activate_button": "🚀 启动搜索网络",
+    "activating_label": "正在激活…",
+    "private_note": "对话将被视为保密的问诊记录。本次搜索的代币已经扣除。",
+    "wallet_balance_label": "钱包余额:",
+    "wallet_balance_unit": "代币",
+    "stream_unavailable_title": "抱歉，问诊流遇到错误，请稍后再试。 ({error})"
   },
   "document_scan": {
     "title": "AI摄入——批量文档上传",

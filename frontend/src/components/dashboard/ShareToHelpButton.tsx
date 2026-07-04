@@ -16,6 +16,8 @@
 import { useEffect, useState } from "react";
 import { Share2, Link2, Check, AlertTriangle, Loader2 } from "lucide-react";
 
+import { useI18n } from "@/src/lib/useI18n";
+
 export interface ShareToHelpButtonProps {
   relatedAnimalId: string | number;
   /** When true, the link is generated for a generic landing w/o animal. */
@@ -30,6 +32,8 @@ export function ShareToHelpButton({
   relatedAnimalId,
   className = "",
 }: ShareToHelpButtonProps) {
+  const { tr } = useI18n();
+
   const [status, setStatus] = useState<Status>("idle");
   const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
@@ -97,8 +101,8 @@ export function ShareToHelpButton({
         type="button"
         onClick={handleClick}
         disabled={status === "pending"}
-        aria-label="Share to help"
-        title="Generate a shareable link to this animal"
+        aria-label={tr("dashboard.share.idle_aria")}
+        title={tr("dashboard.share.idle_tooltip")}
         className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition ${
           status === "pending"
             ? "cursor-not-allowed bg-amber-50 text-amber-700"
@@ -112,25 +116,25 @@ export function ShareToHelpButton({
         {status === "idle" && (
           <>
             <Share2 className="h-3 w-3" />
-            🔗 Share to Help
+            🔗 {tr("dashboard.share.idle")}
           </>
         )}
         {status === "pending" && (
           <>
             <Loader2 className="h-3 w-3 animate-spin" />
-            Sharing…
+            {tr("dashboard.share.pending")}
           </>
         )}
         {status === "copied" && (
           <>
             <Check className="h-3 w-3" />
-            Link copied
+            {tr("dashboard.share.copied")}
           </>
         )}
         {status === "error" && (
           <>
             <AlertTriangle className="h-3 w-3" />
-            Try again
+            {tr("dashboard.share.error")}
           </>
         )}
       </button>
@@ -155,8 +159,8 @@ export function ShareToHelpButton({
             <div className="text-xs leading-relaxed">
               <p className="font-semibold">
                 {status === "copied"
-                  ? "Share link ready"
-                  : "Couldn't generate link"}
+                  ? tr("dashboard.share.toast_ready")
+                  : tr("dashboard.share.toast_error")}
               </p>
               {status === "copied" && trackingUrl && (
                 <p className="mt-1 break-all font-mono text-[11px] text-emerald-700">

@@ -57,7 +57,9 @@
     "active_roster": "Active Roster · {count} animals",
     "clear_filter": "Clear filter: {filter}",
     "add_animal": "Add Animal",
+    "find_my_pet": "🔍 Find My Pet",
     "v3": "RescueHub · Triage System · v3.5",
+    "timer_format": "{h}h {m}m {s}s",
     "stats": {
       "total_dogs": "Total Dogs",
       "healthy": "Healthy",
@@ -94,11 +96,99 @@
       "age_yr": "yr",
       "age_yrs": "yrs"
     },
+    "share": {
+      "idle": "Share to Help",
+      "idle_aria": "Share to help",
+      "idle_tooltip": "Generate a shareable link to this animal",
+      "pending": "Sharing…",
+      "copied": "Link copied",
+      "error": "Try again",
+      "toast_ready": "Share link ready",
+      "toast_error": "Couldn't generate link"
+    },
+    "medical": {
+      "Healthy": "Healthy",
+      "Needs_Review": "Needs Review"
+    },
     "badges": {
       "safe": "SAFE",
       "at_risk": "AT RISK",
       "hayden_act": "HAYDEN ACT ⚠️",
       "hayden_tag": "HAYDEN"
+    },
+    "wallet": {
+      "title": "Token Balance",
+      "wallet_subtitle": "{name}'s wallet",
+      "tokens_unit": "tokens",
+      "earned_label": "Earned",
+      "spent_label": "Spent",
+      "recent_activity_title": "Recent activity",
+      "last_n_transactions": "Last {count} transactions",
+      "recent_activity_singular": "Last {count} transaction",
+      "no_activity_title": "No activity yet",
+      "no_activity_body": "Your TokenWallet will be created automatically when you earn your first token.",
+      "direction": {
+        "EARN": "Earned",
+        "SPEND": "Spent",
+        "EXPIRE": "Expired",
+        "REFUND": "Refunded"
+      },
+      "action": {
+        "SHARE_10_GROUPS_EARN": "Shared on 10+ groups",
+        "VOLUNTEER_HOUR_EARN": "Volunteer hour verified",
+        "REFERRAL_CONVERTED_EARN": "Referral converted",
+        "ONBOARDING_BONUS_EARN": "Onboarding bonus",
+        "SPONSOR_VIEW_CREDIT_EARN": "Sponsor acknowledgment credit",
+        "SEARCH_FEE_WAIVE_SPEND": "Search fee waived",
+        "PRIORITY_LISTING_SPEND": "Priority listing boost",
+        "PRINTED_FLYER_SPEND": "Printed flyer service",
+        "SHARE_BOOST_SPEND": "Share boost",
+        "EXPIRE_DEDUCT": "Inactivity expiration",
+        "ADJUSTMENT_ADMIN": "Admin adjustment",
+        "LOST_PET_SEARCH_SPEND": "Lost Pet Search service"
+      },
+      "time": {
+        "just_now": "just now",
+        "minutes_ago": "{count} min ago",
+        "hours_ago": "{count} hours ago",
+        "days_ago": "{count} days ago"
+      },
+      "status": {
+        "active": "Active",
+        "frozen": "Frozen",
+        "closed": "Closed"
+      },
+      "no_wallet_title": "No wallet yet",
+      "no_wallet_body": "Your TokenWallet will be created automatically when you earn your first token.",
+      "balance_after_short": "bal",
+      "last_n_transactions_singular": "Last {count} transaction"
+    },
+    "premium_stat_card": {
+      "meta": {
+        "peak_prefix": "Peak: {count}",
+        "healthy_pct": "{pct}% of total",
+        "needs_review_dropped": "↓ {count} from last month",
+        "avg_age_across": "Across all animals",
+        "default_of_n": "of {count} total"
+      }
+    },
+    "ubit_sponsor": {
+      "title": "Revenue Compliance",
+      "irc_subtitle": "IRC § 513(i)",
+      "ubit_safe_badge": "UBIT SAFE",
+      "qualified_label": "Qualified Sponsorships",
+      "public_label": "Public Donations",
+      "ratio_label": "Sponsorship Revenue Ratio",
+      "footer": "Qualified sponsorship payments (IRC § 513(i)) are excluded from UBIT. Public donations remain tax-deductible under § 170."
+    },
+    "esign": {
+      "title": "ESIGN / UETA Compliance",
+      "compliance_label": "Electronic Signature Records",
+      "compliance_pct_badge": "100% Compliance",
+      "compliance_body": "All intake ESIGN waivers are cryptographically hashed and stored immutably. 100% audit-ready.",
+      "active_hashes_label": "Active SHA-256 Hashes",
+      "intakes_month_label": "Intakes This Month",
+      "verification_rate_label": "Verification Rate"
     }
   },
   "sponsors": {
@@ -123,7 +213,55 @@
   },
   "medical": {
     "Healthy": "Healthy",
-    "Needs Review": "Needs Review"
+    "Needs_Review": "Needs Review",
+    "title": "Medical Records",
+    "subtitle": "Select an animal to view or update its ASPCA/CART-aligned medical intake examination.",
+    "back_to_dashboard": "Back to Dashboard",
+    "species_intaken": "{species} · intaken {date}",
+    "view_examination": "View examination",
+    "compliance_esign": "ESIGN/UETA Compliant",
+    "compliance_aspca": "ASPCA/CART Exam Aligned",
+    "compliance_irs": "IRS § 501(c)(3)",
+    "back_to_list": "Back to Medical Records",
+    "checksheet": {
+      "title": "Medical Intake Checksheet",
+      "subtitle": "ASPCA / CART-aligned brief intake exam — Animal ID: {id} · Species: {species}",
+      "weight": "Weight",
+      "weight_unit": "lbs",
+      "tpr_header": "TPR (Temperature, Pulse, Respiration)",
+      "tpr_temp": "Temperature",
+      "tpr_pulse": "Pulse",
+      "tpr_resp": "Respiration",
+      "unit_f": "°F",
+      "unit_bpm": "bpm",
+      "unit_brpm": "brpm",
+      "procedures_header": "Intake Procedures",
+      "procedure_microchip": "Microchip Scanned",
+      "procedure_vaccines": "Vaccines Administered",
+      "procedure_dewormer": "Dewormer Administered",
+      "procedure_topspot": "Topspot flea/tick applied",
+      "emergency_signs_header": "Emergency Signs",
+      "vet_flagged": "VET FLAGGED",
+      "detected_warning": "⚠️ Emergency signs detected — a veterinarian will be notified upon save.",
+      "save_button": "Save Medical Intake Record",
+      "confirm_title": "Medical Intake Recorded",
+      "confirm_complete": "Animal {id} ({species}) medical check complete.",
+      "new_exam": "New Exam",
+      "vet_required": "⚠️ Veterinary Notification Required",
+      "vet_required_body": "Emergency signs detected: {signs}. A veterinarian has been flagged for immediate review.",
+      "emergency_sign": {
+        "ulcers_in_mouth_or_nose": "Ulcers in mouth or nose",
+        "vomiting": "Vomiting",
+        "diarrhea_bloody": "Diarrhea (bloody)",
+        "coughing": "Coughing",
+        "patchy_hair_loss": "Patchy hair loss",
+        "open_wounds_lacerations": "Open wounds / lacerations",
+        "seizures": "Seizures",
+        "difficulty_breathing": "Difficulty breathing",
+        "limping_unable_to_bear_weight": "Limping / unable to bear weight",
+        "conjunctivitis_eye_discharge": "Conjunctivitis (eye discharge)"
+      }
+    }
   },
   "quick_links": {
     "surrender_title": "Public Surrender Portal",
@@ -185,6 +323,29 @@
     "send_label": "Send message",
     "error": "Sorry, I encountered an error. Please try again. ({error})"
   },
+  "chatIntake": {
+    "greeting": "I am so sorry your pet is missing. I'm here to help you find them. Take a deep breath—what kind of pet are you looking for, and where did you last see them?",
+    "sidebar_title": "Intake progress",
+    "sidebar_help_species": "Dog, cat, rabbit, bird, other",
+    "sidebar_help_breed": "Labrador, tabby, parakeet, mixed",
+    "sidebar_help_color": "Primary markings, fur/feather color",
+    "sidebar_help_collar": "Tags, microchip, harness color, ID plate",
+    "sidebar_help_last_seen": "Address, cross-streets, neighborhood, landmark",
+    "label_species": "Species",
+    "label_breed": "Breed",
+    "label_color": "Color & markings",
+    "label_collar": "Collar & ID",
+    "label_last_seen": "Last seen",
+    "input_placeholder": "Tell me about your pet…",
+    "send_label": "Send message",
+    "ready_to_broadcast": "Intake complete · ready to broadcast",
+    "activate_button": "🚀 Activate Search Network",
+    "activating_label": "Activating…",
+    "private_note": "Conversations are treated as confidential intake records. Tokens have already been debited for this search.",
+    "wallet_balance_label": "Wallet balance:",
+    "wallet_balance_unit": "tokens",
+    "stream_unavailable_title": "Sorry — the intake stream hit an error. Please try again in a moment. ({error})"
+  },
   "document_scan": {
     "title": "AI Intake — Batch Document Upload",
     "description": "Drop cage cards or intake sheets (images / PDFs) below. The Gemini model will extract structured intake records.",
@@ -220,56 +381,6 @@
     "no": "No",
     "intake_notes": "Intake Notes",
     "intake_number": "Intake #{n}"
-  },
-  "medical": {
-    "title": "Medical Records",
-    "subtitle": "Select an animal to view or update its ASPCA/CART-aligned medical intake examination.",
-    "back_to_dashboard": "Back to Dashboard",
-    "species_intaken": "{species} · intaken {date}",
-    "view_examination": "View examination",
-    "compliance_esign": "ESIGN/UETA Compliant",
-    "compliance_aspca": "ASPCA/CART Exam Aligned",
-    "compliance_irs": "IRS § 501(c)(3)",
-    "back_to_list": "Back to Medical Records",
-    "checksheet": {
-      "title": "Medical Intake Checksheet",
-      "subtitle": "ASPCA / CART-aligned brief intake exam — Animal ID: {id} · Species: {species}",
-      "weight": "Weight",
-      "weight_unit": "lbs",
-      "tpr_header": "TPR (Temperature, Pulse, Respiration)",
-      "tpr_temp": "Temperature",
-      "tpr_pulse": "Pulse",
-      "tpr_resp": "Respiration",
-      "unit_f": "°F",
-      "unit_bpm": "bpm",
-      "unit_brpm": "brpm",
-      "procedures_header": "Intake Procedures",
-      "procedure_microchip": "Microchip Scanned",
-      "procedure_vaccines": "Vaccines Administered",
-      "procedure_dewormer": "Dewormer Administered",
-      "procedure_topspot": "Topspot flea/tick applied",
-      "emergency_signs_header": "Emergency Signs",
-      "vet_flagged": "VET FLAGGED",
-      "detected_warning": "⚠️ Emergency signs detected — a veterinarian will be notified upon save.",
-      "save_button": "Save Medical Intake Record",
-      "confirm_title": "Medical Intake Recorded",
-      "confirm_complete": "Animal {id} ({species}) medical check complete.",
-      "new_exam": "New Exam",
-      "vet_required": "⚠️ Veterinary Notification Required",
-      "vet_required_body": "Emergency signs detected: {signs}. A veterinarian has been flagged for immediate review.",
-      "emergency_sign": {
-        "ulcers_in_mouth_or_nose": "Ulcers in mouth or nose",
-        "vomiting": "Vomiting",
-        "diarrhea_bloody": "Diarrhea (bloody)",
-        "coughing": "Coughing",
-        "patchy_hair_loss": "Patchy hair loss",
-        "open_wounds_lacerations": "Open wounds / lacerations",
-        "seizures": "Seizures",
-        "difficulty_breathing": "Difficulty breathing",
-        "limping_unable_to_bear_weight": "Limping / unable to bear weight",
-        "conjunctivitis_eye_discharge": "Conjunctivitis (eye discharge)"
-      }
-    }
   },
   "fundraising": {
     "title": "Fundraising Campaigns",
@@ -321,6 +432,25 @@
     "and": "and",
     "of": "of",
     "total": "total"
+  },
+  "sponsorModal": {
+    "eyebrow": "Sponsor acknowledgment",
+    "title": "A note from our sponsor",
+    "body": "Chewy is acknowledged as a proud sponsor of the Lost Pet Search program. View their sponsor message to receive a 50-token search grant.",
+    "value_neutral_compliance_badge": "Value-neutral acknowledgment — IRC § 513(i) compliant",
+    "countdown_viewed": "Viewed",
+    "countdown_remaining": "{seconds}s remaining",
+    "acknowledge_button_idle": "Acknowledge & continue",
+    "processing_button_qualified": "Processing token transaction…",
+    "processing_button_default": "Processing…",
+    "ack_disclaimer": "By continuing, you acknowledge the sponsor message above. You will receive a 50-token grant and 100 tokens will be charged for the Lost Pet Search service.",
+    "success_title": "Sponsor acknowledged",
+    "success_body": "50-token grant applied and 100 tokens charged for the Lost Pet Search service. Launching the search now…",
+    "insufficient_title": "Insufficient wallet balance",
+    "insufficient_body": "A Lost Pet Search costs 100 tokens and the sponsor grant adds 50. You currently hold {balance} tokens, which is not enough to cover the search fee after the grant. Earn more tokens and return, or close this dialog to abandon the request.",
+    "insufficient_footnote": "The sponsor message was not credited because the spend pathway could not complete.",
+    "close_aria_label": "Close sponsor acknowledgment",
+    "iframe_title": "Sponsor acknowledgment message"
   },
   "about": {
     "mission": {

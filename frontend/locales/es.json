@@ -57,7 +57,9 @@
     "active_roster": "Lista Activa · {count} animales",
     "clear_filter": "Limpiar filtro: {filter}",
     "add_animal": "Añadir Animal",
+    "find_my_pet": "🔍 Buscar mi mascota",
     "v3": "RescueHub · Sistema de Triaje · v3.5",
+    "timer_format": "{h}h {m}m {s}s",
     "stats": {
       "total_dogs": "Total Perros",
       "healthy": "Saludables",
@@ -94,11 +96,99 @@
       "age_yr": "año",
       "age_yrs": "años"
     },
+    "share": {
+      "idle": "Compartir para ayudar",
+      "idle_aria": "Compartir para ayudar",
+      "idle_tooltip": "Generar un enlace compartible para este animal",
+      "pending": "Compartiendo…",
+      "copied": "Enlace copiado",
+      "error": "Reintentar",
+      "toast_ready": "Enlace para compartir listo",
+      "toast_error": "No se pudo generar el enlace"
+    },
+    "medical": {
+      "Healthy": "Saludable",
+      "Needs_Review": "Necesita Revisión"
+    },
     "badges": {
       "safe": "SEGURO",
       "at_risk": "EN RIESGO",
       "hayden_act": "LEY HAYDEN ⚠️",
       "hayden_tag": "HAYDEN"
+    },
+    "wallet": {
+      "title": "Saldo de tokens",
+      "wallet_subtitle": "Cartera de {name}",
+      "tokens_unit": "tokens",
+      "earned_label": "Ganado",
+      "spent_label": "Gastado",
+      "recent_activity_title": "Actividad reciente",
+      "last_n_transactions": "Últimas {count} transacciones",
+      "recent_activity_singular": "Última {count} transacción",
+      "no_activity_title": "Sin actividad aún",
+      "no_activity_body": "Tu TokenWallet se creará automáticamente cuando ganes tu primer token.",
+      "direction": {
+        "EARN": "Ganado",
+        "SPEND": "Gastado",
+        "EXPIRE": "Caducado",
+        "REFUND": "Reembolsado"
+      },
+      "action": {
+        "SHARE_10_GROUPS_EARN": "Compartido en más de 10 grupos",
+        "VOLUNTEER_HOUR_EARN": "Hora de voluntariado verificada",
+        "REFERRAL_CONVERTED_EARN": "Referido convertido",
+        "ONBOARDING_BONUS_EARN": "Bonificación de alta",
+        "SPONSOR_VIEW_CREDIT_EARN": "Crédito por reconocimiento del patrocinador",
+        "SEARCH_FEE_WAIVE_SPEND": "Tarifa de búsqueda condonada",
+        "PRIORITY_LISTING_SPEND": "Mejora de publicación prioritaria",
+        "PRINTED_FLYER_SPEND": "Servicio de folleto impreso",
+        "SHARE_BOOST_SPEND": "Impulso de compartición",
+        "EXPIRE_DEDUCT": "Caducidad por inactividad",
+        "ADJUSTMENT_ADMIN": "Ajuste administrativo",
+        "LOST_PET_SEARCH_SPEND": "Servicio de búsqueda de mascota perdida"
+      },
+      "time": {
+        "just_now": "ahora mismo",
+        "minutes_ago": "hace {count} min",
+        "hours_ago": "hace {count} h",
+        "days_ago": "hace {count} días"
+      },
+      "status": {
+        "active": "Activo",
+        "frozen": "Congelado",
+        "closed": "Cerrado"
+      },
+      "no_wallet_title": "Aún sin cartera",
+      "no_wallet_body": "Tu TokenWallet se creará automáticamente cuando ganes tu primer token.",
+      "balance_after_short": "sal",
+      "last_n_transactions_singular": "Última {count} transacción"
+    },
+    "premium_stat_card": {
+      "meta": {
+        "peak_prefix": "Pico: {count}",
+        "healthy_pct": "{pct}% del total",
+        "needs_review_dropped": "↓ {count} desde el mes pasado",
+        "avg_age_across": "Para todos los animales",
+        "default_of_n": "de un total de {count}"
+      }
+    },
+    "ubit_sponsor": {
+      "title": "Cumplimiento de ingresos",
+      "irc_subtitle": "IRC § 513(i)",
+      "ubit_safe_badge": "LIBRE DE UBIT",
+      "qualified_label": "Patrocinios calificados",
+      "public_label": "Donaciones públicas",
+      "ratio_label": "Proporción de ingresos por patrocinios",
+      "footer": "Los pagos de patrocinio calificado (IRC § 513(i)) están excluidos del UBIT. Las donaciones públicas siguen siendo deducibles de impuestos según § 170."
+    },
+    "esign": {
+      "title": "Cumplimiento ESIGN / UETA",
+      "compliance_label": "Registros de firma electrónica",
+      "compliance_pct_badge": "100% de cumplimiento",
+      "compliance_body": "Todas las renuncias ESIGN de ingreso están cifradas criptográficamente y se almacenan de forma inmutable. 100% preparado para auditoría.",
+      "active_hashes_label": "Hashes SHA-256 activos",
+      "intakes_month_label": "Ingresos este mes",
+      "verification_rate_label": "Tasa de verificación"
     }
   },
   "sponsors": {
@@ -123,7 +213,7 @@
   },
   "medical": {
     "Healthy": "Saludable",
-    "Needs Review": "Necesita Revisión",
+    "Needs_Review": "Necesita Revisión",
     "title": "Registros médicos",
     "subtitle": "Seleccione un animal para ver o actualizar su examen médico de admisión alineado con ASPCA/CART.",
     "back_to_dashboard": "Volver al panel",
@@ -199,6 +289,26 @@
     "and": "y",
     "of": "de",
     "total": "total"
+  },
+  "sponsorModal": {
+    "eyebrow": "Reconocimiento del patrocinador",
+    "title": "Una nota de nuestro patrocinador",
+    "body": "Chewy is acknowledged as a proud sponsor of the Lost Pet Search program. View their sponsor message to receive a 50-token search grant.",
+    "body_translated": "Chewy es reconocido como un orgulloso patrocinador del programa Lost Pet Search. Vea el mensaje del patrocinador para recibir una subvención de búsqueda de 50 tokens.",
+    "value_neutral_compliance_badge": "Reconocimiento neutral — cumple con IRC § 513(i)",
+    "countdown_viewed": "Visto",
+    "countdown_remaining": "{seconds}s restantes",
+    "acknowledge_button_idle": "Reconocer y continuar",
+    "processing_button_qualified": "Procesando transacción de tokens…",
+    "processing_button_default": "Procesando…",
+    "ack_disclaimer": "Al continuar, reconoce el mensaje del patrocinador anterior. Recibirá una subvención de 50 tokens y se cobrarán 100 tokens por el servicio Lost Pet Search.",
+    "success_title": "Patrocinador reconocido",
+    "success_body": "Subvención de 50 tokens aplicada y 100 tokens cobrados por el servicio Lost Pet Search. Iniciando la búsqueda ahora…",
+    "insufficient_title": "Saldo insuficiente en el monedero",
+    "insufficient_body": "Una búsqueda Lost Pet Search cuesta 100 tokens y la subvención del patrocinador añade 50. Actualmente tiene {balance} tokens, lo cual no es suficiente para cubrir la tarifa de búsqueda después de la subvención. Gane más tokens y vuelva, o cierre este cuadro de diálogo para abandonar la solicitud.",
+    "insufficient_footnote": "El mensaje del patrocinador no fue acreditado porque la vía de gasto no pudo completarse.",
+    "close_aria_label": "Cerrar reconocimiento del patrocinador",
+    "iframe_title": "Mensaje de reconocimiento del patrocinador"
   },
   "about": {
     "about-us": {
@@ -315,6 +425,29 @@
     "attach_label": "Adjuntar archivo",
     "send_label": "enviar mensaje",
     "error": "Lo siento, encontré un error. Por favor inténtalo de nuevo. ({error})"
+  },
+  "chatIntake": {
+    "greeting": "Cuánto siento que tu mascota se haya perdido. Estoy aquí para ayudarte a encontrarla. Respira hondo: ¿qué tipo de mascota buscas y dónde la viste por última vez?",
+    "sidebar_title": "Progreso de la entrevista",
+    "sidebar_help_species": "Perro, gato, conejo, ave, otro",
+    "sidebar_help_breed": "Labrador, siamés, periquito, mestizo",
+    "sidebar_help_color": "Marcas principales, color de pelo o plumas",
+    "sidebar_help_collar": "Placas, microchip, color del arnés, identificación",
+    "sidebar_help_last_seen": "Dirección, intersecciones, barrio, punto de referencia",
+    "label_species": "Especie",
+    "label_breed": "Raza",
+    "label_color": "Color y marcas",
+    "label_collar": "Collar e identificación",
+    "label_last_seen": "Visto por última vez",
+    "input_placeholder": "Cuéntame sobre tu mascota…",
+    "send_label": "Enviar mensaje",
+    "ready_to_broadcast": "Entrevista completa · listo para difundir",
+    "activate_button": "🚀 Activar Red de Búsqueda",
+    "activating_label": "Activando…",
+    "private_note": "Las conversaciones se tratan como registros confidenciales de la entrevista. Ya se han cobrado los tokens por esta búsqueda.",
+    "wallet_balance_label": "Saldo del monedero:",
+    "wallet_balance_unit": "tokens",
+    "stream_unavailable_title": "Lo siento — el servicio de entrevista tuvo un error. Vuelve a intentarlo en un momento. ({error})"
   },
   "document_scan": {
     "title": "Entrada de IA: carga de documentos por lotes",

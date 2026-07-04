@@ -1,14 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
   ChevronRight,
   Lock,
   Unlock,
   AlertTriangle,
-  Clock,
   ShieldAlert,
   Ban,
   ShieldCheck,
@@ -18,68 +16,7 @@ import {
 } from "lucide-react";
 import { LiveTimer } from "@/src/components/LiveTimer";
 import { ShareToHelpButton } from "@/src/components/dashboard/ShareToHelpButton";
-
-// ── Synchronous i18n ─────────────────────────────────────────────────────
-import enDict from "../../../locales/en.json";
-import esDict from "../../../locales/es.json";
-import zhDict from "../../../locales/zh.json";
-
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  zh: zhDict as unknown as Record<string, unknown>,
-};
-
-const STORAGE_KEY = "rescuehub_locale";
-
-type LocaleCode = "en" | "es" | "zh";
-
-function t(locale: string, key: string, vars?: Record<string, string | number>): string {
-  const parts = key.split(".");
-  let value: unknown = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  for (const part of parts) {
-    if (typeof value !== "object" || value === null) return key;
-    value = (value as Record<string, unknown>)[part];
-  }
-  if (typeof value !== "string") return key;
-  if (!vars) return value;
-  return Object.entries(vars).reduce((str, [k, v]) => {
-    return str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
-  }, value);
-}
-
-function useI18n() {
-  const [locale, setLocaleState] = useState<LocaleCode>("en");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored === "es" || stored === "zh") setLocaleState(stored);
-        else setLocaleState("en");
-      } catch {
-        setLocaleState("en");
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handler = (e: CustomEvent) => {
-      const l = e.detail as LocaleCode;
-      if (l === "es" || l === "zh" || l === "en") setLocaleState(l);
-    };
-    window.addEventListener("rescuehub-locale-change", handler as EventListener);
-    return () => window.removeEventListener("rescuehub-locale-change", handler as EventListener);
-  }, []);
-
-  const tr = useCallback(
-    (key: string, vars?: Record<string, string | number>) => t(locale, key, vars),
-    [locale]
-  );
-
-  return { locale, tr };
-}
+import { useI18n } from "@/src/lib/useI18n";
 
 interface Dog {
   id: number;
@@ -375,11 +312,54 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
       </motion.div>
 
       {/* ── Triage Table ────────────────────────────────────────────── */}
+      {/* Wrapper is the horizontal-scroll container: when localized column
+          content (e.g. Spanish "Compartir para ayudar" in the Actions
+          column, or "Necesita Revisión" in the Medical column) overflows
+          the viewport, the user can scroll the table cleanly side-to-side
+          instead of the right edge being clipped.
+
+          `min-w-0` is the FINAL critical class: flex children default to
+          `min-width: auto` per the Flexbox spec, which translates
+          "minimum width = my intrinsic content width." Combined with
+          `min-w-max` on the `<table>` and `max-w-full` on the wrapper,
+          the chain `flex-wrap-tolerant content width` was overriding
+          the parent's width constraint and still chopping the right
+          edge. Forcing the flex child to `min-width: 0` lifts that
+          intrinsic-min-width constraint, so the wrapper actually
+          respects its parent's width — and the table's natural content
+          width then triggers `overflow-x-auto` instead of blowing past
+          the parent's edge.
+
+          `max-w-full` caps the wrapper at the parent's width; the
+          scrollbar inside activates when the table content exceeds it. */}
       <motion.div
         variants={rowVariant}
-        className="bg-white rounded-2xl border border-slate-200/70 overflow-hidden shadow-sm"
+        className="bg-white rounded-2xl border border-slate-200/70 shadow-sm w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden"
       >
-        <table className="w-full text-left border-collapse">
+        {/* min-w ensures the table preserves its content width under
+            localization pressure (e.g. Spanish "Compartir para ayudar" /
+            "Necesita Revisión" pills). Without it, the table would shrink
+            to fill 100% of the scroll container regardless of content
+            length, defeating the overflow-x-auto wrapper above. The
+            640px floor is well below the dashboard's expected desktop
+            width (≥ 1024px) so it never causes unnecessary scrolling on
+            English / CJK (shorter) copy. */}
+        {/* min-w-max forces the table to size itself to the exact true
+            width of its rigid (whitespace-nowrap'd) columns. Tables with
+            bare `w-full` would shrink to fill the scroll container and
+            silently truncate rigid-content columns past the right edge;
+            a flat 640px floor was wrong too because rigid columns
+            actually need *more* than 640px under locale pressure
+            (Spanish "Necesita Revisión", zh-CN "最近查看的动物" etc.).
+
+            `min-w-max` resolved the bug as follows: at @container widths
+            >= the true content width, the table renders at content-width
+            (no horizontal scroll); at narrower widths, the table renders
+            at its natural content-width regardless of container, which
+            finally flags the parent `motion.div` (overflow-x-auto) as
+            overflowing and activates the horizontal scrollbar — instead
+            of letting rigid columns silently clip off-screen. */}
+        <table className="w-full min-w-max text-left border-collapse">
           <thead>
             <tr className="bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-200">
               <th className="p-4 pl-6 text-xs font-semibold tracking-wider uppercase text-slate-500">
@@ -471,23 +451,42 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
                     </span>
                   </td>
 
-                  {/* Euthanasia Risk */}
-                  <td className="p-4">
+                  {/* Euthanasia Risk — pill must never wrap vertically.
+                      CJK translations like zh-CN "有风险" / ja "リ
+                      スクあり" can otherwise stack one character per
+                      line under compression when the table column
+                      width is constrained. whitespace-nowrap reserves
+                      the pill's natural horizontal extent. */}
+                  <td className="p-4 whitespace-nowrap">
                     <RiskBadge status={dog.euthanasia_risk_status} tr={tr} />
                   </td>
 
-                  {/* Legal Status — massive ticking LiveTimer */}
-                  <td className="p-4">
+                  {/* Legal Status — ticking LiveTimer (or Hayden-Act lock state) */}
+                  <td className="p-4 min-w-[180px] sm:min-w-[200px] align-middle">
                     <StrayHoldBadge dog={dog} tr={tr} />
                   </td>
 
-                  {/* Actions */}
-                  <td className="p-4">
+                  {/* Actions — Adopt/Transfer/Share pill row must never wrap
+                      vertically; the fixed-min-width Legal Status column
+                      next door previously squeezed these buttons into
+                      stacked strips. whitespace-nowrap keeps the inner
+                      `<div className="flex items-center gap-2">` (the
+                      ActionButtons root) at its natural horizontal width
+                      and lets the table engine reserve enough column room
+                      for all three pills (Adopt + Transfer + Share to Help)
+                      regardless of locale text length. */}
+                  <td className="p-4 whitespace-nowrap">
                     <ActionButtons dog={dog} tr={tr} />
                   </td>
 
-                  {/* Medical Status */}
-                  <td className="p-4 pr-6 text-right">
+                  {/* Medical Status — pill must never wrap vertically.
+                      Same rationale as Actions/Euth. Risk: localized
+                      "Needs Review" → "Necesita Revisión" (es) / "需要
+                      复查" (zh-CN) / "확인 필요" (ko) can otherwise
+                      stack one character per line under column width
+                      compression. whitespace-nowrap preserves the pill's
+                      natural horizontal extent. */}
+                  <td className="p-4 pr-6 text-right whitespace-nowrap">
                     <MedicalBadge status={dog.medicalStatus} tr={tr} />
                   </td>
                 </motion.tr>

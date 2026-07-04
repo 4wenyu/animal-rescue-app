@@ -6,7 +6,7 @@ kanban-plugin: basic
 
 > **Current Active Phase:** **CLOSEOUT EPIC 2 — Viral Token & Brand Sponsorship Gateway** (Phase 7)
 > **Next Active Phase:** **EPIC 3 — Autonomous Outreach Engine** (Phase 8)
-> **Last Updated:** 2026-06-20
+|> **Last Updated:** 2026-07-03
 
 | Epic | Status | Active Task |
 |---|---|---|
@@ -39,8 +39,28 @@ Mock timer band (`dogs.json`) refreshed: 2 overdue (~1h past), 2 active (60-70h 
 - [ ] **EPIC 3**: Autonomous Outreach Engine
 - [ ] **EPIC 4**: Wide-Net Search Engine
 - [ ] **Milestone M1**: Brand Sponsorship & Rewarded Ad Network — strategy framed in roadmap, build behind EPIC 3 start
-- [ ] **TODO**: Reset intake countdown timers (`LiveTimer` per-second timer needs to be cleared on component unmount to avoid orphaned intervals)
+- [x] **TODO**: Reset intake countdown timers (`LiveTimer` per-second timer needs to be cleared on component unmount to avoid orphaned intervals) — **resolved**: `LiveTimer.tsx` `useEffect` already returns `() => clearInterval(interval)` since 2026-06-17; no orphaned intervals observed. Marked complete as part of the 2026-07-03 Tech-Debt Sprint.
 - [ ] **TODO**: Sidebar "Sign Out" / "Staff Login" labels still hardcoded English (small-polish follow-up)
+
+## Tech-Debt Cleanup Sprint — 2026-07-03
+
+Continuation of the Phase-5 "Dashboard Localization Retrofit (Tech-Debt Sprint)" entry on `frontend/Project_Board.md`. This is a retrofitted-sprint-log entry, not a new epic — Epics 1-4 are not modified.
+
+**Rounds shipped (in conversation order):**
+
+1. **Modal retrofit — `SponsorshipCheckoutModal.tsx`** — added `useI18n` integration, replaced every hardcoded English string with `tr("sponsorModal.*")`, passed `tr`/`localeSponsorBody` into three sub-views (`SponsorViewFlow`, `InsufficientFundsView`, `SuccessView`). 18 keys × 7 locales added in the `sponsorModal` namespace, including NEUTRAL_ACKNOWLEDGMENT-protected Chewy brand (preserved across locales per IRC § 513(i)).
+2. **LiveTimer responsive layout** — `flex flex-col items-center text-center max-w-full` for both amber (active) and red (overdue) boxes; timer digits `text-lg tracking-tight whitespace-nowrap`; helper text `break-words w-full`. Mirrored symmetrically across both states.
+3. **Table cell hardening — `AnimalTable.tsx`** — added `whitespace-nowrap` to Actions/Euth. Risk/Medical Status `<td>`s so pills cannot crush vertically under locale pressure; added `min-w-[180px] sm:min-w-[200px] align-middle` to Legal Status `<td>` so the LiveTimer box has a guaranteed minimum.
+4. **ShareToHelpButton** — added `useI18n` wiring + 7 `tr("dashboard.share.*")` calls in button states (idle/pending/copied/error) and the toast.
+5. **Medical key path fix** — the prior `Needs_Review` rename had landed keys in the wrong JSON namespace (`top-level medical.*`); the actual lookup is `dashboard.medical.Healthy` / `dashboard.medical.Needs_Review`. Added a proper `dashboard.medical` namespace in all 7 locales (parallel to the public adoption feed's top-level `medical.*` namespace).
+6. **Locales JSON expansion** — added `dashboard.share.*` (8 keys), `dashboard.timer_format` (single key with `{h}` / `{m}` / `{s}` interpolation), and `dashboard.medical.{Healthy, Needs_Review}` — all 7 locales.
+7. **LiveTimer → useI18n migration** — removed the in-component `t()` function (duplicated dictionaries + `EN_FALLBACK`); imported the shared `useI18n` hook to enable interpolation. Refactored `formatHms` from a literal-concat string into `{ h, m, s }` digit parts, then `tr("dashboard.timer_format", parts)` formats per locale (`5h 12m 03s` en / `5时 12分 03秒` zh-CN / `5時間 12分 03秒` ja / `5시간 12분 03초` ko).
+8. **LiveTimer math clamp** — `rawRemainingMs = holdMs - (now - intakeMs)` evaluated for `isOverdue`; `remainingMs = Math.max(0, rawRemainingMs)` published to the formatter. Dropped `Math.abs()` from `formatHms`. Verified via Node simulation that overdue states hard-stop at `0h 00m 00s` instead of counting upward indefinitely through `0×86_400` ms ranges.
+9. **Table flex boundary** — `AnimalTable` `<motion.div>` wrapper now has `w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden`. The `min-w-0` is the final piece: previous `max-w-full` alone was being overridden by flex children's `min-width: auto` intrinsic-min-width. With `min-w-0`, the flex child can shrink to parent width, and `overflow-x-auto` finally activates in concert with `min-w-max` on the `<table>` itself.
+
+**Files touched:** 11 component/locale (this conversation only). Project_Board.md and CHANGELOG.md updated to mirror honestly. `token.ts`, `prisma.config.ts`, `prisma/schema.prisma` and the untracked `chat-intake/` / `radar/` / `searches/` routes are NOT included in this commit — they were orphan modifications or work-in-progress from a prior session and were deliberately staged-around.
+
+**Verification:** `npm run build` clean (`✓ Compiled successfully in ~5s` after the round-9 build; intermediate rounds also clean). `git status` reflects only the 13 files in this commit at commit-time.
 
 ## In Progress
 

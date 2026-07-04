@@ -57,7 +57,9 @@
     "active_roster": "현재 명단 · {count} 마리",
     "clear_filter": "필터 해제: {filter}",
     "add_animal": "동물 추가",
+    "find_my_pet": "🔍 우리 반려동물 찾기",
     "v3": "RescueHub · 트리아지 시스템 · v3.5",
+    "timer_format": "{h}시간 {m}분 {s}초",
     "stats": {
       "total_dogs": "전체 강아지",
       "healthy": "건강",
@@ -94,11 +96,99 @@
       "age_yr": "세",
       "age_yrs": "세"
     },
+    "share": {
+      "idle": "공유하여 돕기",
+      "idle_aria": "공유하여 돕기",
+      "idle_tooltip": "이 동물의 공유 가능한 링크 생성",
+      "pending": "공유 중…",
+      "copied": "링크 복사됨",
+      "error": "다시 시도",
+      "toast_ready": "공유 링크 준비 완료",
+      "toast_error": "링크를 생성할 수 없습니다"
+    },
+    "medical": {
+      "Healthy": "건강",
+      "Needs_Review": "확인 필요"
+    },
     "badges": {
       "safe": "안전",
       "at_risk": "위험",
       "hayden_act": "헤이든법 ⚠️",
       "hayden_tag": "헤이든"
+    },
+    "wallet": {
+      "title": "토큰 잔액",
+      "wallet_subtitle": "{name}의 지갑",
+      "tokens_unit": "토큰",
+      "earned_label": "획득",
+      "spent_label": "사용",
+      "recent_activity_title": "최근 활동",
+      "last_n_transactions": "최근 거래 {count}건",
+      "recent_activity_singular": "최근 거래 {count}건",
+      "no_activity_title": "아직 활동 없음",
+      "no_activity_body": "첫 토큰을 획득하면 TokenWallet이 자동으로 생성됩니다.",
+      "direction": {
+        "EARN": "획득",
+        "SPEND": "사용",
+        "EXPIRE": "만료",
+        "REFUND": "환불"
+      },
+      "action": {
+        "SHARE_10_GROUPS_EARN": "10개 이상의 그룹에 공유",
+        "VOLUNTEER_HOUR_EARN": "봉사 시간 확인",
+        "REFERRAL_CONVERTED_EARN": "추천 전환",
+        "ONBOARDING_BONUS_EARN": "가입 보너스",
+        "SPONSOR_VIEW_CREDIT_EARN": "후원사 확인 보상",
+        "SEARCH_FEE_WAIVE_SPEND": "검색 수수료 면제",
+        "PRIORITY_LISTING_SPEND": "우선 목록 부스트",
+        "PRINTED_FLYER_SPEND": "인쇄 전단지 서비스",
+        "SHARE_BOOST_SPEND": "공유 부스트",
+        "EXPIRE_DEDUCT": "비활성 차감",
+        "ADJUSTMENT_ADMIN": "관리자 조정",
+        "LOST_PET_SEARCH_SPEND": "실종 반려동물 수색 서비스"
+      },
+      "time": {
+        "just_now": "방금 전",
+        "minutes_ago": "{count}분 전",
+        "hours_ago": "{count}시간 전",
+        "days_ago": "{count}일 전"
+      },
+      "status": {
+        "active": "활성",
+        "frozen": "동결",
+        "closed": "종료"
+      },
+      "no_wallet_title": "지갑이 없습니다",
+      "no_wallet_body": "첫 토큰을 획득하면 TokenWallet이 자동으로 생성됩니다.",
+      "balance_after_short": "잔액",
+      "last_n_transactions_singular": "최근 거래 {count}건"
+    },
+    "premium_stat_card": {
+      "meta": {
+        "peak_prefix": "피크: {count}",
+        "healthy_pct": "전체의 {pct}%",
+        "needs_review_dropped": "↓ 지난달 대비 {count} 감소",
+        "avg_age_across": "모든 동물 대상",
+        "default_of_n": "전체 {count}건 중"
+      }
+    },
+    "ubit_sponsor": {
+      "title": "수익 컴플라이언스",
+      "irc_subtitle": "IRC § 513(i)",
+      "ubit_safe_badge": "UBIT 안전",
+      "qualified_label": "적격 후원",
+      "public_label": "공개 기부",
+      "ratio_label": "후원 수익 비율",
+      "footer": "적격 후원금(IRC § 513(i))은 UBIT 산정에서 제외됩니다. 공개 기부는 § 170에 따라 세액 공제가 계속 적용됩니다."
+    },
+    "esign": {
+      "title": "ESIGN / UETA 컴플라이언스",
+      "compliance_label": "전자 서명 기록",
+      "compliance_pct_badge": "100% 컴플라이언스",
+      "compliance_body": "모든 인입 ESIGN 면책 동의서는 암호학적으로 해시되어 위변조 불가능하게 저장됩니다. 100% 감사 가능.",
+      "active_hashes_label": "활성 SHA-256 해시",
+      "intakes_month_label": "이번 달 인입",
+      "verification_rate_label": "검증률"
     }
   },
   "sponsors": {
@@ -123,7 +213,7 @@
   },
   "medical": {
     "Healthy": "건강",
-    "Needs Review": "확인 필요",
+    "Needs_Review": "확인 필요",
     "title": "의료 기록",
     "subtitle": "ASPCA/CART에 따른 의료 섭취 검사를 보거나 업데이트하려면 동물을 선택하세요.",
     "back_to_dashboard": "대시보드로 돌아가기",
@@ -199,6 +289,26 @@
     "and": "및",
     "of": "의",
     "total": "합계"
+  },
+  "sponsorModal": {
+    "eyebrow": "스폰서 감사 표시",
+    "title": "스폰서의 한마디",
+    "body": "Chewy is acknowledged as a proud sponsor of the Lost Pet Search program. View their sponsor message to receive a 50-token search grant.",
+    "body_translated": "Chewy 는 Lost Pet Search(실종 반려동물 수색) 프로그램의 자랑스러운 스폰서로서 감사를 표합니다. 스폰서 메시지를 확인하시면 50 토큰의 수색 보조금을 받으실 수 있습니다.",
+    "value_neutral_compliance_badge": "가치 중립 감사 표시 — IRC § 513(i) 준수",
+    "countdown_viewed": "확인함",
+    "countdown_remaining": "{seconds}초 남음",
+    "acknowledge_button_idle": "확인 후 계속",
+    "processing_button_qualified": "토큰 거래 처리 중…",
+    "processing_button_default": "처리 중…",
+    "ack_disclaimer": "계속 진행하시면 위의 스폰서 메시지를 확인하신 것으로 간주됩니다. 50 토큰의 보조금을 받으시며, Lost Pet Search 서비스에 대해 100 토큰이 청구됩니다.",
+    "success_title": "스폰서 확인 완료",
+    "success_body": "50 토큰 보조금이 적용되었으며 Lost Pet Search 서비스에 대해 100 토큰이 청구되었습니다. 수색을 시작합니다…",
+    "insufficient_title": "지갑 잔액 부족",
+    "insufficient_body": "Lost Pet Search 비용은 100 토큰이며, 스폰서 보조금으로 50 토큰이 추가됩니다. 현재 {balance} 토큰을 보유하고 계셔서, 보조금을 받아도 수색 비용을 충당하기에는 부족합니다. 더 많은 토큰을 획득한 후 다시 시도하시거나, 이 대화 상자를 닫아 요청을 취소해 주세요.",
+    "insufficient_footnote": "결제 경로를 완료할 수 없어 스폰서 메시지가 적립되지 않았습니다.",
+    "close_aria_label": "스폰서 감사 표시 닫기",
+    "iframe_title": "스폰서 감사 메시지"
   },
   "about": {
     "mission": {
@@ -315,6 +425,29 @@
     "attach_label": "파일첨부",
     "send_label": "메시지 보내기",
     "error": "죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요. ({error})"
+  },
+  "chatIntake": {
+    "greeting": "반려동물을 잃어버리셔서 정말 안타깝습니다. 제가 함께 찾을 수 있도록 도와드리겠습니다. 잠시 깊게 숨을 쉬어 보세요 — 어떤 동물을 찾고 계신가요? 마지막으로 본 곳은 어디인가요?",
+    "sidebar_title": "문진 진행 상황",
+    "sidebar_help_species": "개, 고양이, 토끼, 새, 기타",
+    "sidebar_help_breed": "래브라도, 샴, 앵무새, 믹스견",
+    "sidebar_help_color": "주요 무늬, 털이나 깃털 색",
+    "sidebar_help_collar": "이름표, 마이크로칩, 하네스 색상, ID 태그",
+    "sidebar_help_last_seen": "주소, 교차로, 동네, 랜드마크",
+    "label_species": "종류",
+    "label_breed": "품종",
+    "label_color": "색상과 무늬",
+    "label_collar": "목걸이와 식별 정보",
+    "label_last_seen": "마지막 목격 장소",
+    "input_placeholder": "반려동물에 대해 알려주세요…",
+    "send_label": "메시지 보내기",
+    "ready_to_broadcast": "문진 완료 · 네트워크로 송출 준비됨",
+    "activate_button": "🚀 수색 네트워크 가동",
+    "activating_label": "가동 중…",
+    "private_note": "대화 내용은 기밀 문진 기록으로 취급됩니다. 이번 수색에 필요한 토큰은 이미 차감되었습니다.",
+    "wallet_balance_label": "지갑 잔액:",
+    "wallet_balance_unit": "토큰",
+    "stream_unavailable_title": "죄송합니다. 문진 스트림에서 오류가 발생했습니다. 잠시 후 다시 시도해 주세요. ({error})"
   },
   "document_scan": {
     "title": "AI 섭취 — 일괄 문서 업로드",

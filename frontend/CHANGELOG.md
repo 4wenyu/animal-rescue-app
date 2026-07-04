@@ -1,6 +1,68 @@
 # Changelog
 
-## 2026-06-20 — Epic 2 Closed: Viral Share Loop Live + Build Pipeline Stabilized
+## 2026-07-03 — Dashboard Tech-Debt Cleanup Sprint (Modal + Table + Timer)
+
+### Added
+- **`sponsorModal` namespace × 7 locales (`en`, `es`, `zh`, `zh-TW`, `zh-CN`, `ja`, `ko`)** — 18 keys (`eyebrow`, `title`, `body`, `body_translated`, `value_neutral_compliance_badge`, `countdown_viewed`, `countdown_remaining` [interpolates `{seconds}`], `acknowledge_button_idle`, `processing_button_qualified`, `processing_button_default`, `ack_disclaimer`, `success_title`, `success_body`, `insufficient_title`, `insufficient_body` [interpolates `{balance}`], `insufficient_footnote`, `close_aria_label`, `iframe_title`). Chewy brand noun preserved across all locales per IRC § 513(i) NEUTRAL_ACKNOWLEDGMENT — locale wrappers translate orchestration language only, brand and the "50-token search grant" factual claim stay identical.
+- **`dashboard.share.*` namespace × 7 locales** — 8 keys (`idle`, `idle_aria`, `idle_tooltip`, `pending`, `copied`, `error`, `toast_ready`, `toast_error`). Idiomatic translations: "compartir para ayudar" / "共有リンクの準備ができました" / "링크를 생성할 수 없습니다" / etc.
+- **`dashboard.timer_format` × 7 locales** — single key with `{h}` / `{m}` / `{s}` interpolation. en/es = `"{h}h {m}m {s}s"`, zh-CN/zh-TW/zh = `"{h}时 {m}分 {s}秒"` (繁体 variant "時分秒"), ja = `"{h}時間 {m}分 {s}秒"`, ko = `"{h}시간 {m}분 {s}초"`. Verified end-to-end via Node interpolation simulation.
+- **`dashboard.medical.{Healthy, Needs_Review}` namespace × 7 locales** — fixes a bug from the 2026-07-02 retrofit where the lookup path was `dashboard.medical.<status>` but the JSON storage landed at top-level `medical.<status>`. Public adoption feed (`app/page.tsx`) keeps its existing top-level `medical.Healthy` / `medical."Needs Review"` keys untouched; dashboard triage now resolves correctly through the parallel `dashboard.medical.*` namespace.
+- **14-row Spanish stress-test verification** — locale-aware layouts hold across 7 locales including Spanish's longer token strings ("Compartir para ayudar" / "Necesita Revisión") that previously broke column constraints.
+
+### Rewrote (full localization retrofit)
+- **`src/components/dashboard/SponsorshipCheckoutModal.tsx`** — wired `useI18n`, hooked `tr` + `localeSponsorBody` (NEUTRAL_ACKNOWLEDGMENT-aware CJS-fallback dispatcher) into `SponsorViewFlow` / `InsufficientFundsView` / `SuccessView`. Replaced ALL hardcoded English UI strings (eyebrow, title, sponsor body, ack button, processing buttons, ack disclaimer, success title/body, insufficient-funds title/body/footnote, aria-label, iframe title). Internal SSE ledger `notes: "Sponsor acknowledgment credit — Chewy (Lost Pet Search program)."` left as English — that's a DB-audit metadata string, not user-facing.
+- **`src/components/LiveTimer.tsx`** — fully migrated from internal `t()` (with hardcoded `EN_FALLBACK` and 7 direct dictionary imports) to the shared `useI18n.ts` hook. Refactored `formatHms(ms)` from `string` returning literal `"${h}h ${m}m ${s}s"` into `{ h, m, s }` digit parts so the locale template can render per-language suffix characters. Five JSX call sites (cleared/active/overdue states) wired up.
+- **`src/components/dashboard/ShareToHelpButton.tsx`** — added `useI18n`, replaced 7 hardcoded English strings (idle/pending/copied/error button states, idle_aria, idle_tooltip, toast titles).
+- **`src/components/dashboard/AnimalTable.tsx`** — added `whitespace-nowrap` to the Euth. Risk, Medical, and Actions `<td>` cells (so localized pills cannot crush vertically under column pressure). Added `min-w-[180px] sm:min-w-[200px] align-middle` to Legal Status `<td>` (LiveTimer box floor). Wrapper `<motion.div>` upgraded to `w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden` for stable horizontal scroll. `<table>` upgraded to `min-w-max` to surface its true content width to the wrapper's overflow detector.
+
+### Fixed
+- **LiveTimer counting-up-after-expiry bug** — `rawRemainingMs` evaluated raw for the `isOverdue` boolean; `remainingMs = Math.max(0, rawRemainingMs)` published to the formatter. Removed `Math.abs()` from `formatHms`. Verified in Node: an intake expired 300 hours ago now renders `0h 00m 00s` (was `228h 00m 00s` before this round, climbing without bound).
+- **`MedicalBadge` lookup path bug (pre-existing)** — `MedicalBadge.component` was already doing `tr("dashboard.medical.${status.replace(/ /g, "_")}")` but the keys existed in the wrong namespace. Round-9 fix: added proper `dashboard.medical.{Healthy, Needs_Review}` namespace in all 7 locales. The medical badge in the dashboard triage now localizes correctly across en/es/zh-CN/zh-TW/ja/ko.
+- **AnimalTable flexbox blowout** — `min-w-0` on the wrapper was the missing piece; `max-w-full` + `w-full` alone were being overridden by flex children's default `min-width: auto`. Combines with `min-w-max` on the table itself and `overflow-x-auto` on the wrapper to finally activate horizontal scroll when localized content overflows.
+- **CJK column crush** — `whitespace-nowrap` on the Euth. Risk / Medical / Actions `<td>`s prevents single-character vertical stacking under locale compression (the bug was visibly affecting Chinese "有风险" and Korean "확인 필요" pills).
+
+### Changed
+- **`LiveTimer.tsx` removed: 57 lines of in-component translation scaffolding** — gone: `LOCALE_DICTS`, `resolveLocale()`, `STORAGE_KEY`, `EN_FALLBACK`, internal `t()`. All seven direct dictionary imports (`en.json` etc.) deleted. The single shared `useI18n.ts` is the only translation surface (consistent with the rest of the dashboard).
+- **`formatHms` returned type changed** — `string` → `{ h: number; m: string; s: string }`. Internal-only change; the only callers are inside the same component and were migrated as part of this round.
+
+### Skills captured
+- **`bulk-i18n-locale-patches`** — procedure for adding/renaming keys across all 7 RescueHub locale JSON files safely. Captures the two distinct gotchas hit this conversation: (a) `new_string` MUST preserve trailing comma + newline of prior JSON key or patch emits a duplicate-key fragment; (b) multi-locale batches must be one-file-per-call, never trust cross-file fuzzy match.
+
+### Verified
+- `npm run build` clean after each of 9 rounds in this conversation: `✓ Compiled successfully in ~5-9s` consistent for rounds 1-9.
+- Node simulation verified `dashboard.timer_format` interpolation across all 7 locales pre-build: en `"5h 12m 03s"` ✅, es `"5h 12m 03s"` ✅, zh-CN `"5时 12分 03秒"` ✅, zh-TW `"5時 12分 03秒"` ✅, ja `"5時間 12分 03秒"` ✅, ko `"5시간 12분 03초"` ✅, zh `"5时 12分 03秒"` ✅.
+- Node simulation verified `MedicalBadge` lookup returns localized values across all 7 locales.
+- Overdue timer simulation verified hard-stop at `0h 00m 00s` for elapsed = 10h, 71.99h, 72.01h, 100h, 1000h, 5000h — no upward counting in any case.
+
+
+## 2026-07-02 — Dashboard Localization Retrofit (Tech-Debt Sprint)
+
+### Added
+- **`src/lib/useI18n` — single canonical i18n hook for client components** — promotes the localStorage + `rescuehub-locale-change` event-listener pattern that existed as an inline copy-paste inside each dashboard component into one shared module. Exports `{ locale, tr, setLocale }` and pure-function helpers `t()`, `resolveKey()`, `resolveLocale()`. The `zh` legacy alias resolves to `zh-CN` for backward-compat with pre-Phase 6 storage.
+- **11 new dashboard translation keys across all 7 locales** — `dashboard.wallet.time.just_now | minutes_ago | hours_ago | days_ago`, `wallet.status.active | frozen | closed`, `wallet.no_wallet_title`, `wallet.no_wallet_body`, `wallet.balance_after_short`, `wallet.last_n_transactions_singular`. Translations are culturally appropriate for each locale (e.g. `刚刚` / `たった今` / `방금 전`; `活躍` / `稼働中` / `활성` for status).
+- **`<LocaleSwitch>` cookie mirroring** — when the user picks a locale, the chooser now also writes a non-HTTP-only `rescuehub_locale` cookie (1-year max-age, `samesite=lax`). Server components that import `cookies()` from `next/headers` (e.g. the new server-side path in `TokenWalletCard.tsx`) can now resolve the locale on first paint instead of falling back to English until hydration.
+
+### Rewrote (full localization retrofit)
+- **`src/components/dashboard/TokenWalletCard.client.tsx`** — every hardcoded English string replaced with a `tr("dashboard.wallet.*")` lookup. Re-hooked `tr` into `BalancePanel`, `RecentRow`, `EmptyRecent`, and the no-wallet fallback. Localized relative-time formatter (`formatRelativeTime`) sourced from `dashboard.wallet.time.*`. Localized wallet-status badge (ACTIVE/FROZEN/CLOSED) sourced from `dashboard.wallet.status.*`. Localized the `bal` → `余额/残高/잔액` suffix on each row. Switched the row direction label from a reference to the (undefined) module-level `DIRECTION_LABEL` const to a `friendlyDirection()` call resolving `dashboard.wallet.direction.{EARN|SPEND|EXPIRE|REFUND}`. Removed dead `useCallback`/`useMemo` imports.
+- **`src/components/dashboard/TokenWalletCard.tsx` (server variant)** — converted to localize the same surface as the client variant via `cookies()`-resolved `serverT()`. Now reads locale from the `rescuehub_locale` cookie (falls back to `en`); every hardcoded string replaced. Adds `friendlyAction()`, `friendlyDirection()`, `relativeTime()`, and status-key map; keeps the `ACTION_LABEL` / `DIRECTION_LABEL` legacy maps as fallbacks for tooling that bypasses i18n.
+- **`src/components/dashboard/widgets/UbitSponsorWidget.tsx`** — promoted both `UbitSponsorWidget` and `EsignStatsWidget` to use `useI18n()`. Replaced "Revenue Compliance", "IRC § 513(i)", "UBIT SAFE", "Qualified Sponsorships", "Public Donations", "Sponsorship Revenue Ratio", footer paragraph, "ESIGN / UETA Compliance", "Electronic Signature Records", "100% Compliance", waiver-body paragraph, "Active SHA-256 Hashes", "Intakes This Month", "Verification Rate" with `dashboard.ubit_sponsor.*` and `dashboard.esign.*` lookups.
+- **`src/components/dashboard/PremiumStatCard.tsx`** — wired `useI18n()`. Replaced the hardcoded `Peak: N`, `X% of total`, `↓ N from last month`, `Across all animals`, `of N total` English strings with `dashboard.premium_stat_card.meta.*` lookups. Added a locale-stable `labelKey` prop so the meta line picker doesn't key off the (now-translated) label string — parent components in `app/dashboard/page.tsx` already pass `labelKey` per card.
+- **`app/dashboard/page.tsx`** — removed its inline 100-line copy of the i18n hook and now imports from `@/src/lib/useI18n`. Same behavior; same locale reactivity.
+- **`src/components/dashboard/AnimalTable.tsx`** — same cleanup: removed inline locale dictionaries + `t()` + `useI18n()`, now imports the shared hook. Removed dead `Link`, `useState`, `useEffect`, `useCallback`, `Clock` imports.
+
+### Fixed
+- **`TokenWalletCard.client.tsx` undefined-`DIRECTION_LABEL` reference** — the recent-activity `RecentRow` referenced a `DIRECTION_LABEL[tx.direction]` symbol that was declared in the sibling server variant (`TokenWalletCard.tsx`) but never existed in the client module. Surfaced as a `ReferenceError` only when a transaction row was rendered. Now resolves via `friendlyDirection()` which uses the dashboard dictionary.
+- **PremiumStatCard SSR `ReferenceError: labelKey is not defined`** — `labelKey` was added to `PremiumStatCardProps` as an optional prop and used in `getMeta()`, but the function destructuring omitted it. Caught by `next build` prerender of `/dashboard`. Added `labelKey` to the destructure list.
+
+### Changed
+- **`next/dashboard/page.tsx` stats[] entries** — each item now carries a `labelKey: "total_dogs" | "healthy" | "needs_review" | "avg_age"` discriminator so `PremiumStatCard` can pick the right localized meta line regardless of the locale of the parent's already-translated label.
+
+### Verified
+- `npm run build` clean: `✓ Compiled successfully in 104s`, all 27 routes generated (including `○ /dashboard` static, `/hold-profile/[id]` SSG with 13 prerendered IDs); no `tsc` post-pass errors (`next.config.ts` `typescript.ignoreBuildErrors: true` was already in place).
+- All 7 locale JSON files parse cleanly post-edit.
+- Lint: zero new errors from `useI18n.ts`, `AnimalTable.tsx`, `TokenWalletCard.{ts,client.tsx}`, `PremiumStatCard.tsx`, `widgets/UbitSponsorWidget.tsx`, `app/dashboard/page.tsx`. The remaining flagged errors and warnings (LocaleSwitch `set-state-in-effect` in the pre-existing `useEffect`, `react-hooks/immutability` on `document.cookie=` in the click handler gated by an `eslint-disable` comment) exist in code untouched by this change set or are intentional click-handler side-effects.
+
+
 
 ### Added
 - **`POST /api/shares`** — full ViralShareVerification generator. Accepts `{ platform, platformPostId, contentUrl?, evidenceSnapshot?, status?, relatedAnimalId? }`. Persists the row with `relatedAnimalId` folded into `evidenceSnapshot` (no schema column for it yet). Returns `{ shareId, trackingUrl: "/p/<shareId>", platformShareHint, ... }`. Platform-share hints for FB, Nextdoor, WhatsApp, Reddit are returned as one-click `?u=<url>` intents.

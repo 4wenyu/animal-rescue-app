@@ -57,7 +57,9 @@
     "active_roster": "在籍一覧 · {count} 頭",
     "clear_filter": "フィルター解除: {filter}",
     "add_animal": "動物を追加",
+    "find_my_pet": "🔍 ペットを探す",
     "v3": "RescueHub · トリアージシステム · v3.5",
+    "timer_format": "{h}時間 {m}分 {s}秒",
     "stats": {
       "total_dogs": "犬の総数",
       "healthy": "健康",
@@ -94,11 +96,99 @@
       "age_yr": "歳",
       "age_yrs": "歳"
     },
+    "share": {
+      "idle": "シェアして助ける",
+      "idle_aria": "シェアして助ける",
+      "idle_tooltip": "この動物の共有リンクを生成",
+      "pending": "共有中…",
+      "copied": "リンクをコピーしました",
+      "error": "再試行",
+      "toast_ready": "共有リンクの準備ができました",
+      "toast_error": "リンクを生成できませんでした"
+    },
+    "medical": {
+      "Healthy": "健康",
+      "Needs_Review": "要確認"
+    },
     "badges": {
       "safe": "安全",
       "at_risk": "危険",
       "hayden_act": "ヘイデン法 ⚠️",
       "hayden_tag": "ヘイデン"
+    },
+    "wallet": {
+      "title": "トークン残高",
+      "wallet_subtitle": "{name}のウォレット",
+      "tokens_unit": "トークン",
+      "earned_label": "獲得",
+      "spent_label": "使用",
+      "recent_activity_title": "最近の活動",
+      "last_n_transactions": "直近 {count} 件の取引",
+      "recent_activity_singular": "直近 {count} 件の取引",
+      "no_activity_title": "まだ活動はありません",
+      "no_activity_body": "最初のトークンを獲得すると、TokenWallet が自動的に作成されます。",
+      "direction": {
+        "EARN": "獲得",
+        "SPEND": "使用",
+        "EXPIRE": "失効",
+        "REFUND": "返金"
+      },
+      "action": {
+        "SHARE_10_GROUPS_EARN": "10 グループ以上に共有",
+        "VOLUNTEER_HOUR_EARN": "ボランティア時間の承認",
+        "REFERRAL_CONVERTED_EARN": "紹介コンバージョン",
+        "ONBOARDING_BONUS_EARN": "登録ボーナス",
+        "SPONSOR_VIEW_CREDIT_EARN": "スポンサー確認報酬",
+        "SEARCH_FEE_WAIVE_SPEND": "検索費用免除",
+        "PRIORITY_LISTING_SPEND": "優先掲載ブースト",
+        "PRINTED_FLYER_SPEND": "印刷チラシサービス",
+        "SHARE_BOOST_SPEND": "共有ブースト",
+        "EXPIRE_DEDUCT": "非活動による失効",
+        "ADJUSTMENT_ADMIN": "管理者調整",
+        "LOST_PET_SEARCH_SPEND": "迷子ペット検索サービス"
+      },
+      "time": {
+        "just_now": "たった今",
+        "minutes_ago": "{count}分前",
+        "hours_ago": "{count}時間前",
+        "days_ago": "{count}日前"
+      },
+      "status": {
+        "active": "稼働中",
+        "frozen": "停止中",
+        "closed": "閉鎖"
+      },
+      "no_wallet_title": "ウォレットがありません",
+      "no_wallet_body": "最初のトークンを獲得すると、TokenWallet が自動的に作成されます。",
+      "balance_after_short": "残高",
+      "last_n_transactions_singular": "直近 {count} 件の取引"
+    },
+    "premium_stat_card": {
+      "meta": {
+        "peak_prefix": "ピーク: {count}",
+        "healthy_pct": "全体の {pct}%",
+        "needs_review_dropped": "↓ 先月から {count} 減少",
+        "avg_age_across": "全動物対象",
+        "default_of_n": "全 {count} 件中"
+      }
+    },
+    "ubit_sponsor": {
+      "title": "収益コンプライアンス",
+      "irc_subtitle": "IRC § 513(i)",
+      "ubit_safe_badge": "UBIT セーフ",
+      "qualified_label": "適格スポンサーシップ",
+      "public_label": "一般寄付",
+      "ratio_label": "スポンサー収益比率",
+      "footer": "適格スポンサーシップ（IRC § 513(i)）は UBIT から除外されます。一般寄付は § 170 に基づき税控除対象です。"
+    },
+    "esign": {
+      "title": "ESIGN / UETA コンプライアンス",
+      "compliance_label": "電子署名記録",
+      "compliance_pct_badge": "100% コンプライアンス",
+      "compliance_body": "すべての取り込み ESIGN 同意書は暗号学的にハッシュ化され、改ざん不可で保存されます。100% 監査対応。",
+      "active_hashes_label": "有効な SHA-256 ハッシュ",
+      "intakes_month_label": "今月の取り込み",
+      "verification_rate_label": "検証率"
     }
   },
   "sponsors": {
@@ -123,7 +213,7 @@
   },
   "medical": {
     "Healthy": "健康",
-    "Needs Review": "要確認",
+    "Needs_Review": "要確認",
     "title": "医療記録",
     "subtitle": "ASPCA/CART に準拠した医療摂取検査を表示または更新する動物を選択します。",
     "back_to_dashboard": "ダッシュボードに戻る",
@@ -199,6 +289,26 @@
     "and": "および",
     "of": "の",
     "total": "合計"
+  },
+  "sponsorModal": {
+    "eyebrow": "スポンサーへの謝辞",
+    "title": "スポンサーからのお知らせ",
+    "body": "Chewy is acknowledged as a proud sponsor of the Lost Pet Search program. View their sponsor message to receive a 50-token search grant.",
+    "body_translated": "Chewy は「Lost Pet Search(迷子ペット捜索)」プログラムの誇りあるスポンサーとして、ここに謝意を表します。スポンサー情報をご覧になると、50 トークンの捜索補助を受け取ることができます。",
+    "value_neutral_compliance_badge": "価値中立の謝辞 — IRC § 513(i) 準拠",
+    "countdown_viewed": "閲覧済み",
+    "countdown_remaining": "残り {seconds} 秒",
+    "acknowledge_button_idle": "確認して続行",
+    "processing_button_qualified": "トークン取引を処理しています…",
+    "processing_button_default": "処理中…",
+    "ack_disclaimer": "続行することで、上記のスポンサー情報をご覧になったことを確認したものとみなします。50 トークンの補助を受け取り、Lost Pet Search サービスに対して 100 トークンが請求されます。",
+    "success_title": "スポンサーを確認しました",
+    "success_body": "50 トークンの補助が適用され、Lost Pet Search サービスに対して 100 トークンが請求されました。捜索を開始しています…",
+    "insufficient_title": "ウォレット残高不足",
+    "insufficient_body": "Lost Pet Search の費用は 100 トークンで、スポンサーからの補助により 50 トークンが加算されます。現在 {balance} トークンを保有していますが、補助後でも捜索費用を支払うには足りません。さらにトークンを獲得してから戻るか、このダイアログを閉じてリクエストを取り消してください。",
+    "insufficient_footnote": "支払い経路が完了しなかったため、スポンサー情報は付与されていません。",
+    "close_aria_label": "スポンサーへの謝辞を閉じる",
+    "iframe_title": "スポンサーへの謝辞メッセージ"
   },
   "about": {
     "mission": {
@@ -315,6 +425,29 @@
     "attach_label": "ファイルを添付する",
     "send_label": "メッセージを送信する",
     "error": "申し訳ありませんが、エラーが発生しました。もう一度試してください。 ({error})"
+  },
+  "chatIntake": {
+    "greeting": "大切なペットが迷子になってしまい、本当にお気の毒です。私が一緒に探しますので、安心してください。深く息を吸ってください——どんなペットを探しているのか、最後に見たのはどこか教えてください。",
+    "sidebar_title": "聞き取り進捗",
+    "sidebar_help_species": "犬、猫、うさぎ、鳥、その他",
+    "sidebar_help_breed": "ラブラドール、シャム、インコ、混血",
+    "sidebar_help_color": "主な特徴、毛色や羽色",
+    "sidebar_help_collar": "名鑑、マイクロチップ、ハーネスの色、 ID 札",
+    "sidebar_help_last_seen": "住所、交差点、近隣、目印",
+    "label_species": "種類",
+    "label_breed": "犬種・猫種など",
+    "label_color": "毛色と模様",
+    "label_collar": "首輪と識別",
+    "label_last_seen": "最後に見た場所",
+    "input_placeholder": "あなたのペットについて教えてください…",
+    "send_label": "メッセージを送信",
+    "ready_to_broadcast": "聞き取り完了 · ネットワークへ配信可能",
+    "activate_button": "🚀 検索ネットワークを作動",
+    "activating_label": "起動中…",
+    "private_note": "会話の内容は機密の聞き取り記録として扱われます。今回の検索に必要なトークンはすでに差し引かれています。",
+    "wallet_balance_label": "ウォレット残高:",
+    "wallet_balance_unit": "トークン",
+    "stream_unavailable_title": "申し訳ありませんが、聞き取りストリームでエラーが発生しました。少し経ってからお試しください。 ({error})"
   },
   "document_scan": {
     "title": "AI の取り込み — ドキュメントのバッチアップロード",
