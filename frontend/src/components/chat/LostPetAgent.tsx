@@ -398,27 +398,21 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
     });
   }
 
-  /* Paperclip button click handler.
+  /**
+   * The paperclip imperative-click uses a synchronous INLINE closure in
+   * the JSX (rather than this useCallback-shaped sibling) on purpose.
    *
-   * Diagnostic logging in dev (gated on NODE_ENV !== 'production') so you
-   * can open DevTools and confirm whether:
-   *   - the click event is firing at all
-   *   - the ref has mounted (fileInputRef.current may be null briefly
-   *     during the first paint window before refs settle)
-   *   - the imperative .click() is being called on a live input
+   * Rationale: some browsers gate `input[type=file]` programmatic `.click()`
+   * on whether the call lives inside a synchronous user-gesture handler
+   * reference (a strict ancestor of the user's click in the event chain).
+   * `useCallback` returns a stable reference that may be invoked slightly
+   * downstream of the native click event in React's synthetic event
+   * dispatch loop; an inline arrow at the JSX site is unambiguously a
+   * synchronous user-gesture closure and clears that gate on every browser.
    *
-   * Production builds have these logs stripped by the bundler's tree-shake
-   * + dead-code elimination against the literal 'production' check.
+   * The diagnostic keep-here-in-handler is folded into the JSX site so the
+   * log + `.click()` invariant always travel together.
    */
-  const handlePaperclipClick = useCallback(() => {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[LostPetAgent] Paperclip clicked", {
-        refAttached: fileInputRef.current !== null,
-        refType: fileInputRef.current?.constructor?.name ?? null,
-      });
-    }
-    fileInputRef.current?.click();
-  }, []);
 
   /**
    * File-selected handler. Bound to the hidden <input type="file">'s
@@ -803,25 +797,42 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
 
           {/* Hidden file input — driven by the paperclip button.
               ──────────────────────────────────────────────────────
-              WHY `hidden` AND NOT `sr-only`:
-              Tailwind 4's `sr-only` produces `clip-path: inset(50%);
-              width: 1px; height: 1px; position: absolute;` — fine for
-              most inputs, but <input type="file"> historically has
-              inconsistent programmatic-click() behavior in some
-              browsers (older Safari versions, certain kiosk modes)
-              when the input is positioned-off-screen rather than
-              display:none. `hidden` (= `display: none`) removes the
-              input from BOTH the layout tree AND the accessibility
-              tree, so screen readers skip it but the click() always
-              fires reliably.
-              PRD: accept="image/png,image/jpeg,image/webp,image/gif"
-              mirrors the JS allowlist re-check downstream. */}
+              Defensive visibility strategy (multiple layers, all
+              cumulative; none of them is the textbook solution on its
+              own):
+
+              (a) `className="absolute w-[1px] h-[1px]..."` positions the
+                  input at 1 pixel with `overflow:hidden clip:rect(0,0,0,0)`
+                  so it cannot be seen even if zoomed into the page.
+
+              (b) `opacity-0` removes any rendering artifacts but keeps
+                  the input painted into the layout tree (display: none
+                  does NOT paint — for some browsers/some configurations
+                  that distinction matters for programmatic click()).
+
+              (c) `pointer-events-none` ensures the input itself can
+                  never intercept clicks meant for the visible button
+                  below it; the paperclip's own button is the interaction
+                  surface.
+
+              (d) `aria-hidden="true"` + `tabIndex={-1}` removes it from
+                  the accessibility tree AND tab order; the visible
+                  paperclip button is the canonical a11y entry point.
+
+              All four together give the strongest cross-browser guarantee
+              that the input (1) exists in the DOM, (2) is invisible but
+              clickable by JS, (3) cannot interfere with click events on
+              the paperclip button.
+
+              accept="image/png,image/jpeg,image/webp,image/gif" mirrors
+              the JS allowlist re-check downstream. */}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
             onChange={handleFileSelected}
-            className="hidden"
+            className="pointer-events-none absolute h-[1px] w-[1px] overflow-hidden whitespace-nowrap border-0 p-0 opacity-0"
+            style={{ clip: "rect(0, 0, 0, 0)", clipPath: "inset(50%)" }}
             aria-hidden="true"
             tabIndex={-1}
           />
@@ -837,10 +848,47 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
             />
             <button
               type="button"
-              onClick={handlePaperclipClick}
+              onClick={() => {
+                // SYNCHRONOUS paperclip handler — runs directly inside the
+                // user's click event, no useCallback closure capture, no
+                // scheduling. Some browsers gate programmatic
+                // <input type="file">.click() on whether the call lives
+                // synchronously inside the user-gesture handler
+                // reference; an inline arrow at the JSX site is the
+                // strict synchronous ancestor of the click event in
+                // every browser, which clears the user-gesture gate.
+                //
+                // The try/catch is redundant for HTMLInputElement.click()
+                // (the spec does not define it to throw on activation
+                // failure — silent no-op is the spec'd behavior), but it
+                // costs nothing and surfaces genuine JS exceptions
+                // raised upstream (e.g., the ref-resolve throwing under
+                // a polyfilled environment).
+                if (process.env.NODE_ENV !== "production") {
+                  console.log("[LostPetAgent] Paperclip clicked", {
+                    refAttached: fileInputRef.current !== null,
+                    refType:
+                      fileInputRef.current?.constructor?.name ?? null,
+                  });
+                }
+                try {
+                  fileInputRef.current?.click();
+                } catch (err) {
+                  if (process.env.NODE_ENV !== "production") {
+                    console.error(
+                      "[LostPetAgent] paperclip click() threw:",
+                      err,
+                    );
+                  }
+                }
+              }}
               disabled={isLoading}
               aria-label="Attach an image"
-              className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60"
+              // relative + z-50: cheap insurance against any future
+              // sibling absolute positioning overlap on the input row.
+              // cursor-pointer: explicit so the button is unambiguously
+              // an interactive target even before hover state fires.
+              className="relative z-50 inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Paperclip className="h-5 w-5" />
             </button>
