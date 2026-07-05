@@ -334,16 +334,146 @@ function buildMockStream(
 /* POST handler                                                               */
 /* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
+/* Multi-modal content typing & validation                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Server-side mirror of the AI SDK's UserContent array shape — only the
+ * fields we accept from the wire. We re-validate the part shape here so
+ * a hostile client can't smuggle arbitrary payloads past the JSON parser
+ * into `streamText()` (which otherwise would forward whatever is in the
+ * messages[] array directly to Gemini).
+ *
+ * Image payload limit: 5 MB. The frontend already caps at the same
+ * number, but a malicious or buggy client could bypass the cap; this
+ * server check is the authoritative gate before the bytes ever leave
+ * the Next.js worker.
+ */
+type WirePart =
+  | { type: "text"; text: string }
+  | { type: "image"; image: string; mediaType?: string };
+
+const ALLOWED_PART_MIME = new Set<string>([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/gif",
+]);
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_TEXT_BYTES = 32 * 1024; // 32 KB
+
+function decodeDataUrl(dataUrl: string): { mime: string; base64Bytes: number } | null {
+  // Format: data:<mime>;base64,<payload>
+  if (typeof dataUrl !== "string") return null;
+  const match = /^data:([^;,]+);base64,(.*)$/.exec(dataUrl);
+  if (!match) return null;
+  const mime = match[1] || "";
+  // Approximate the decoded byte length from the base64 length —
+  // base64 inflates by ~4/3, so decoded = (b64_len * 3) / 4, ignoring padding.
+  const b64 = match[2] || "";
+  const decodedBytes = Math.floor((b64.length * 3) / 4);
+  return { mime, base64Bytes: decodedBytes };
+}
+
+function normalizePart(raw: unknown): WirePart | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  const type = obj["type"];
+  if (type === "text") {
+    const text = obj["text"];
+    if (typeof text !== "string") return null;
+    if (Buffer.byteLength(text, "utf8") > MAX_TEXT_BYTES) return null;
+    return { type: "text", text };
+  }
+  if (type === "image") {
+    const image = obj["image"];
+    const mediaType = obj["mediaType"];
+    if (typeof image !== "string") return null;
+    const decoded = decodeDataUrl(image);
+    if (!decoded) return null;
+    const mime =
+      typeof mediaType === "string" && mediaType.length > 0
+        ? mediaType
+        : decoded.mime;
+    if (!ALLOWED_PART_MIME.has(mime.toLowerCase())) return null;
+    if (decoded.base64Bytes > MAX_IMAGE_BYTES) return null;
+    return { type: "image", image, mediaType: mime };
+  }
+  return null;
+}
+
+function normalizeWireContent(raw: unknown):
+  | string
+  | WirePart[]
+  | null {
+  if (typeof raw === "string") {
+    if (Buffer.byteLength(raw, "utf8") > MAX_TEXT_BYTES) return null;
+    return raw;
+  }
+  if (Array.isArray(raw)) {
+    const out: WirePart[] = [];
+    for (const item of raw) {
+      const norm = normalizePart(item);
+      if (!norm) return null;
+      out.push(norm);
+    }
+    if (out.length === 0) return null;
+    return out;
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
       messages: { role: string; content: unknown }[];
       locale?: string;
     };
-    const messages = (body.messages ?? []).map((m) => ({
-      role: m.role as "user" | "assistant" | "system",
-      content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
-    }));
+    if (!Array.isArray(body.messages)) {
+      return new Response(
+        JSON.stringify({ error: "messages must be an array" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+    // Each entry may carry `string` content (text-only turn) or a parts
+    // array (multimodal turn). Reject any entry whose shape fails the
+    // allowlist — fail-closed so a hostile client can't slip a payload
+    // to streamText that bypasses the UserContent contract.
+    const messages: Array<{
+      role: "user" | "assistant" | "system";
+      content: string | WirePart[];
+    }> = [];
+    for (const m of body.messages) {
+      const role = m.role as "user" | "assistant" | "system";
+      if (role !== "user" && role !== "assistant" && role !== "system") {
+        return new Response(
+          JSON.stringify({ error: `invalid role: ${String(m.role)}` }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+      const content = normalizeWireContent(m.content);
+      if (content == null) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "invalid message content (expected string or parts[] of text/image)",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+      messages.push({ role, content });
+    }
     // Sanitize locale against the allowlist before injecting into the
     // system prompt — defense against prompt-injection attempts.
     const locale = coerceLocale(body.locale);

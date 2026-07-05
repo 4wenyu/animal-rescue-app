@@ -36,6 +36,7 @@ import {
   Heart,
   Loader2,
   MapPin,
+  Paperclip,
   PawPrint,
   Rocket,
   Send,
@@ -349,7 +350,96 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   const [isActivating, setIsActivating] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
 
+  /* ── Vision attachment for the intake flow. If the user attaches a photo,
+        we read it as a base64 data URL on submit and forward it to Gemini
+        as an ImagePart alongside the text prompt. No upload to our own
+        blob store — Gemini sees the bytes inline as multimodal context.
+        Size + mime-type caps enforced here so the wire-side validator and
+        the schema-side validator stay minimal. ─ */
+  const [pendingImage, setPendingImage] = useState<{
+    dataUrl: string;
+    mimeType: string;
+    filename: string;
+    sizeBytes: number;
+  } | null>(null);
+  const [imageInputError, setImageInputError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * MIME allowlist + size cap for intake images. Wired to mirror what
+   * the AI SDK `InputFile | InputImage` providers can ingest — anything
+   * outside this allowlist gets rejected client-side with a transient
+   * toast, never reaches the wire. 5 MB cap matches the typical
+   * "phone photo" upper bound without covering 4K scan dumps.
+   */
+  const ALLOWED_IMAGE_MIME = new Set<string>([
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+    "image/gif",
+  ]);
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+  function readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error ?? new Error("FileReader failed"));
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === "string") {
+          resolve(result);
+        } else {
+          reject(new Error("FileReader returned a non-string result"));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const handleFileSelected = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      setImageInputError(null);
+      const file = e.target.files?.[0];
+      // Reset the input so the same file can be re-selected after a reject.
+      e.target.value = "";
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_MIME.has(file.type)) {
+        setImageInputError(
+          `Unsupported file type (${file.type || "unknown"}). Allowed: png, jpg, webp, gif.`,
+        );
+        return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        const mb = (file.size / (1024 * 1024)).toFixed(1);
+        setImageInputError(
+          `Image is too large (${mb} MB). Max is 5 MB — try a smaller photo.`,
+        );
+        return;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        setPendingImage({
+          dataUrl,
+          mimeType: file.type,
+          filename: file.name,
+          sizeBytes: file.size,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Could not read the file";
+        setImageInputError(`Could not attach the image: ${msg}`);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const clearPendingImage = useCallback(() => {
+    setPendingImage(null);
+    setImageInputError(null);
+  }, []);
 
   /* ── Greeting resolution: replace the opening-hook sentinel with the   ─ */
   /*    translated greeting whenever the locale resolves or changes.     ─ */
@@ -440,16 +530,27 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   const captured = captureFromObject(liveMerged);
   const completed = fieldProgress(captured);
 
-  /* ── Submit handler ─ */
+  /* ── Submit handler ── Bound to /api/chat-intake. Schema reference ── */
+  /*    is required by the hook typedef (it passes the schema through to   */
+  /*    validate the streamed object).                                     */
+  /*                                                                       */
+  /*    Last user message is shipped as AI-SDK `parts[]` when a pending   */
+  /*    image is staged — it's converted from the locally-cached dataURL   */
+  /*    into the AI SDK's image-part shape, alongside the text part.       */
+  /*    Earlier turns stay as plain `{role,content:string}` because       */
+  /*    multipart history bloat is wasteful; only the most recent upload  */
+  /*    matters to Gemini's intake assistant for THIS turn.               */
   const handleSubmit = useCallback(
     (e?: React.FormEvent) => {
       e?.preventDefault();
       const trimmed = input.trim();
-      if (!trimmed || isLoading) return;
+      if ((!trimmed && !pendingImage) || isLoading) return;
 
       const userMsg: ChatMessage = {
         id: nextMsgId(),
         role: "user",
+        // Bubble copy shows the text portion only; the image is rendered
+        // as a chip beneath the bubble at render time.
         content: trimmed,
       };
       const transcript: ChatMessage[] = [...messages, userMsg];
@@ -457,12 +558,38 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
       setMessages(transcript);
       setInput("");
       setLiveAssistantText("");
+      const stagedImage = pendingImage;
+      setPendingImage(null);
 
       // Build the AI SDK messages payload. The `locale` field tells the
-      // /api/chat-intake route which language to converse in.
+      // /api/chat-intake route which language to converse in. If a staged
+      // image is attached, the LAST user message is upgraded to a parts
+      // array — `{type:'text', text} + {type:'image', image: dataUrl,
+      // mediaType}` — matching the AI SDK's UserContent array contract.
+      const baseMessages = transcript.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })) as Array<{ role: "user" | "assistant" | "system"; content: string }>;
+      const messagesPayload = stagedImage
+        ? [
+            ...baseMessages.slice(0, -1),
+            {
+              role: "user" as const,
+              content: [
+                { type: "text" as const, text: trimmed },
+                {
+                  type: "image" as const,
+                  image: stagedImage.dataUrl,
+                  mediaType: stagedImage.mimeType,
+                },
+              ],
+            },
+          ]
+        : baseMessages;
+
       const payload = {
         locale,
-        messages: transcript.map((m) => ({ role: m.role, content: m.content })),
+        messages: messagesPayload,
       };
 
       try {
@@ -485,7 +612,7 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
     // that read from them. We accept the dependency churn — the closure
     // only re-binds on language switch, never mid-stream.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [input, isLoading, messages, submit, locale]
+    [input, isLoading, messages, submit, locale, pendingImage]
   );
 
   /* ── Activation callback: persisted when all 5 fields are captured. ─ */
@@ -593,6 +720,66 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
           onSubmit={handleSubmit}
           className="border-t border-slate-200 bg-white px-6 py-4"
         >
+          {/* ── Image preview chip — appears directly above the input row when
+              a pending image is staged. Click ✕ to remove BEFORE sending. ─ */}
+          {pendingImage && (
+            <div className="mb-3 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pendingImage.dataUrl}
+                alt={pendingImage.filename}
+                className="h-12 w-12 shrink-0 rounded-lg border border-emerald-200 object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-emerald-900">
+                  {pendingImage.filename}
+                </p>
+                <p className="text-[10px] font-medium text-emerald-700">
+                  {(pendingImage.sizeBytes / 1024).toFixed(0)} KB · {pendingImage.mimeType}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={clearPendingImage}
+                aria-label="Remove attached image"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 transition hover:bg-emerald-200 hover:text-emerald-900"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* ── Inline error chip — appears when an uploaded file is rejected. ─ */}
+          {imageInputError && (
+            <div className="mb-3 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50/70 px-3 py-2 text-xs text-rose-800">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1">{imageInputError}</span>
+              <button
+                type="button"
+                onClick={() => setImageInputError(null)}
+                aria-label="Dismiss image error"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-rose-700 hover:bg-rose-100"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Hidden file input — driven by the paperclip button. Visually
+              hidden but accessible to screen readers via the paperclip's
+              own aria-label. accept="image/*" is paired with a stricter
+              allowlist re-check in `handleFileSelected` so the OS picker
+              stays user-friendly while the JS path enforces the canonical
+              5 mime types. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={handleFileSelected}
+            className="sr-only"
+            aria-hidden
+            tabIndex={-1}
+          />
           <div className="flex items-end gap-3">
             <input
               type="text"
@@ -604,8 +791,17 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
               aria-label="Message the assistant"
             />
             <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              aria-label="Attach an image"
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Paperclip className="h-5 w-5" />
+            </button>
+            <button
               type="submit"
-              disabled={!input.trim() || isLoading}
+              disabled={(!input.trim() && !pendingImage) || isLoading}
               className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-500 active:scale-[0.95] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               aria-label={t("chatIntake.send_label")}
             >
