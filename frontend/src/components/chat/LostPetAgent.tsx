@@ -398,13 +398,42 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
     });
   }
 
+  /* Paperclip button click handler.
+   *
+   * Diagnostic logging in dev (gated on NODE_ENV !== 'production') so you
+   * can open DevTools and confirm whether:
+   *   - the click event is firing at all
+   *   - the ref has mounted (fileInputRef.current may be null briefly
+   *     during the first paint window before refs settle)
+   *   - the imperative .click() is being called on a live input
+   *
+   * Production builds have these logs stripped by the bundler's tree-shake
+   * + dead-code elimination against the literal 'production' check.
+   */
+  const handlePaperclipClick = useCallback(() => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[LostPetAgent] Paperclip clicked", {
+        refAttached: fileInputRef.current !== null,
+        refType: fileInputRef.current?.constructor?.name ?? null,
+      });
+    }
+    fileInputRef.current?.click();
+  }, []);
+
+  /**
+   * File-selected handler. Bound to the hidden <input type="file">'s
+   * `onChange`. Validates against the mime allowlist + the 5 MB byte cap,
+   * reads the file as a data URL via FileReader, and stages the result in
+   * `pendingImage` for the next submit. Resets the input value so the
+   * same file can be re-selected after a rejection.
+   */
   const handleFileSelected = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       setImageInputError(null);
       const file = e.target.files?.[0];
+      if (!file) return;
       // Reset the input so the same file can be re-selected after a reject.
       e.target.value = "";
-      if (!file) return;
 
       if (!ALLOWED_IMAGE_MIME.has(file.type)) {
         setImageInputError(
@@ -418,6 +447,13 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
           `Image is too large (${mb} MB). Max is 5 MB — try a smaller photo.`,
         );
         return;
+      }
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[LostPetAgent] file selected", {
+          name: file.name,
+          mime: file.type,
+          bytes: file.size,
+        });
       }
       try {
         const dataUrl = await readFileAsDataUrl(file);
@@ -765,19 +801,28 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
             </div>
           )}
 
-          {/* Hidden file input — driven by the paperclip button. Visually
-              hidden but accessible to screen readers via the paperclip's
-              own aria-label. accept="image/*" is paired with a stricter
-              allowlist re-check in `handleFileSelected` so the OS picker
-              stays user-friendly while the JS path enforces the canonical
-              5 mime types. */}
+          {/* Hidden file input — driven by the paperclip button.
+              ──────────────────────────────────────────────────────
+              WHY `hidden` AND NOT `sr-only`:
+              Tailwind 4's `sr-only` produces `clip-path: inset(50%);
+              width: 1px; height: 1px; position: absolute;` — fine for
+              most inputs, but <input type="file"> historically has
+              inconsistent programmatic-click() behavior in some
+              browsers (older Safari versions, certain kiosk modes)
+              when the input is positioned-off-screen rather than
+              display:none. `hidden` (= `display: none`) removes the
+              input from BOTH the layout tree AND the accessibility
+              tree, so screen readers skip it but the click() always
+              fires reliably.
+              PRD: accept="image/png,image/jpeg,image/webp,image/gif"
+              mirrors the JS allowlist re-check downstream. */}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
             onChange={handleFileSelected}
-            className="sr-only"
-            aria-hidden
+            className="hidden"
+            aria-hidden="true"
             tabIndex={-1}
           />
           <div className="flex items-end gap-3">
@@ -792,10 +837,10 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
             />
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handlePaperclipClick}
               disabled={isLoading}
               aria-label="Attach an image"
-              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Paperclip className="h-5 w-5" />
             </button>
