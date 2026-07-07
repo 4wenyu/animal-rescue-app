@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, Paperclip } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -82,6 +83,26 @@ function nextId(): string {
 }
 
 export default function FloatingChatbot() {
+  /* ── Route suppression ──────────────────────────────────────────────
+   * The /lost-pet-intake page renders a FULL-PAGE intake chat surface
+   * (LostPetAgent). Mounting the global FloatingChatbot FAB AND its
+   * chatbot panel on the same route is redundant — and worse, the
+   * bottom-right fixed FAB at `fixed bottom-6 right-6 z-[9999]` is
+   * sitting on top of the LostPetAgent's paperclip button at the
+   * visible bottom-right of the form area. The FAB's onClick
+   * (toggle chatbot open) intercepts every pointer event in that
+   * region, which is why the paperclip button click has been
+   * silently failing in the browser — the click is reaching the FAB
+   * (z-[9999]) before it ever reaches our paperclip button (z-50).
+   *
+   * Suppress the entire component (FAB + chat panel) on the
+   * /lost-pet-intake route. This is deterministic regardless of
+   * viewport size or scroll position; the LostPetAgent surface on
+   * that route is the dedicated intake UI, not a folio of the global
+   * chatbot.                                                        ─ */
+  const pathname = usePathname();
+  if (pathname === "/lost-pet-intake") return null;
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
