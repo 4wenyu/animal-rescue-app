@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Paperclip } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { AlertTriangle, MessageCircle, X, Send, Paperclip } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Synchronous i18n: import locale JSONs statically — same pattern as
@@ -82,6 +83,26 @@ function nextId(): string {
 }
 
 export default function FloatingChatbot() {
+  /* ── Route suppression ──────────────────────────────────────────────
+   * The /lost-pet-intake page renders a FULL-PAGE intake chat surface
+   * (LostPetAgent). Mounting the global FloatingChatbot FAB AND its
+   * chatbot panel on the same route is redundant — and worse, the
+   * bottom-right fixed FAB at `fixed bottom-6 right-6 z-[9999]` is
+   * sitting on top of the LostPetAgent's paperclip button at the
+   * visible bottom-right of the form area. The FAB's onClick
+   * (toggle chatbot open) intercepts every pointer event in that
+   * region, which is why the paperclip button click has been
+   * silently failing in the browser — the click is reaching the FAB
+   * (z-[9999]) before it ever reaches our paperclip button (z-50).
+   *
+   * Suppress the entire component (FAB + chat panel) on the
+   * /lost-pet-intake route. This is deterministic regardless of
+   * viewport size or scroll position; the LostPetAgent surface on
+   * that route is the dedicated intake UI, not a folio of the global
+   * chatbot.                                                        ─ */
+  const pathname = usePathname();
+  if (pathname === "/lost-pet-intake") return null;
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -89,6 +110,111 @@ export default function FloatingChatbot() {
   const [locale, setLocale] = useState("en");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  /* ── Vision attachment for the FloatingChatbot FAB chat. Mirrors the ──
+   * same flow we shipped in LostPetAgent.tsx: hidden <input type=file>,
+   * 4-layer visibility stack, ref-driven click, mime + size allowlist,
+   * dataURL staging, optional parts[] forwarding on submit.
+   *                                                                ─ */
+  const [pendingImage, setPendingImage] = useState<{
+    dataUrl: string;
+    mimeType: string;
+    filename: string;
+    sizeBytes: number;
+  } | null>(null);
+  const [imageInputError, setImageInputError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  /** MIME allowlist + size cap. Same numbers as LostPetAgent: 5 MB and
+   *  the canonical 5 image formats ai-sdk/google accepts. */
+  const ALLOWED_IMAGE_MIME = new Set<string>([
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+    "image/gif",
+  ]);
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  function readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () =>
+        reject(reader.error ?? new Error("FileReader failed"));
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === "string") {
+          resolve(result);
+        } else {
+          reject(new Error("FileReader returned a non-string result"));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const handleFileSelected = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      setImageInputError(null);
+      const file = e.target.files?.[0];
+      // Reset selection so the same file can be re-picked after a reject.
+      e.target.value = "";
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_MIME.has(file.type)) {
+        setImageInputError(
+          `Unsupported file type (${file.type || "unknown"}). Allowed: png, jpg, webp, gif.`,
+        );
+        return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        const mb = (file.size / (1024 * 1024)).toFixed(1);
+        setImageInputError(
+          `Image is too large (${mb} MB). Max is 5 MB — try a smaller photo.`,
+        );
+        return;
+      }
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[FloatingChatbot] file selected", {
+          name: file.name,
+          mime: file.type,
+          bytes: file.size,
+        });
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        setPendingImage({
+          dataUrl,
+          mimeType: file.type,
+          filename: file.name,
+          sizeBytes: file.size,
+        });
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Could not read the file";
+        setImageInputError(`Could not attach the image: ${msg}`);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const clearPendingImage = useCallback(() => {
+    setPendingImage(null);
+    setImageInputError(null);
+  }, []);
+
+  // Auto-clear stale images because the FAB chat is short-lived
+  // conversational state; if the user closes the panel (via isOpen flip,
+  // route change, or unmount), any staged file should not survive. This
+  // makes the UX resilient — picking an image then closing the panel
+  // won't retain a ghost image into the next session.
+  useEffect(() => {
+    if (!isOpen && pendingImage) {
+      setPendingImage(null);
+      setImageInputError(null);
+    }
+  }, [isOpen, pendingImage]);
 
   // ── Locale bootstrap + listener ──────────────────────────────────────
   useEffect(() => {
@@ -154,7 +280,12 @@ export default function FloatingChatbot() {
   }, [messages]);
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, stagedImage?: {
+      dataUrl: string;
+      mimeType: string;
+      filename: string;
+      sizeBytes: number;
+    } | null) => {
       const userMsg: Message = { id: nextId(), role: "user", content: text };
       const assistantId = nextId();
 
@@ -163,12 +294,36 @@ export default function FloatingChatbot() {
       setIsLoading(true);
 
       try {
+        // Build the messages[] payload. When a staged image is attached
+        // the LAST user message is upgraded to AI SDK `parts[]` carrying
+        // both a text part and an image part inline (DataURL + mediaType).
+        // Earlier turns stay as plain strings — multipart history would
+        // bloat every turn's payload under repeated photo exchanges.
+        // Pattern mirrors LostPetAgent.handleSubmit byte-for-byte.
         const conversation = [...messages, userMsg];
+        const messagesPayload = stagedImage
+          ? [
+              ...conversation
+                .slice(0, -1)
+                .map((m) => ({ role: m.role, content: m.content })),
+              {
+                role: "user" as const,
+                content: [
+                  { type: "text" as const, text },
+                  {
+                    type: "image" as const,
+                    image: stagedImage.dataUrl,
+                    mediaType: stagedImage.mimeType,
+                  },
+                ],
+              },
+            ]
+          : conversation.map((m) => ({ role: m.role, content: m.content }));
 
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: conversation }),
+          body: JSON.stringify({ messages: messagesPayload }),
         });
 
         if (!res.ok) {
@@ -223,10 +378,18 @@ export default function FloatingChatbot() {
     (e?: React.FormEvent) => {
       e?.preventDefault();
       const text = input.trim();
-      if (!text || isLoading) return;
-      sendMessage(text);
+      // Empty-text guard: allow pure image submissions (image-only is
+      // valid), but block if there's nothing to send at all. Mirrors the
+      // guard we shipped in LostPetAgent.handleSubmit.
+      if ((!text && !pendingImage) || isLoading) return;
+      const staged = pendingImage;
+      // Clear staged image synchronously before async work — even if the
+      // request rejects, the UI shows a non-image-only state on retry.
+      setPendingImage(null);
+      setImageInputError(null);
+      sendMessage(text, staged);
     },
-    [input, isLoading, sendMessage],
+    [input, isLoading, sendMessage, pendingImage],
   );
 
   return (
@@ -298,11 +461,94 @@ export default function FloatingChatbot() {
           </div>
 
           <div className="border-t border-slate-700 p-3">
+            {/* Image preview chip — appears above the input row when
+                the user has staged a file via the paperclip. */}
+            {pendingImage && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800/80 px-2.5 py-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={pendingImage.dataUrl}
+                  alt={pendingImage.filename}
+                  className="h-7 w-7 shrink-0 rounded-md border border-slate-600 object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-medium text-slate-200">
+                    {pendingImage.filename}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {(pendingImage.sizeBytes / 1024).toFixed(0)} KB · {pendingImage.mimeType}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearPendingImage}
+                  aria-label="Remove attached image"
+                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-700 hover:text-slate-200"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            {/* Image-input error chip — rendered when upload validation rejects. */}
+            {imageInputError && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl border border-rose-700/60 bg-rose-950/70 px-2.5 py-1.5 text-[11px] text-rose-200">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                <span className="flex-1 truncate">{imageInputError}</span>
+                <button
+                  type="button"
+                  onClick={() => setImageInputError(null)}
+                  aria-label="Dismiss image error"
+                  className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-rose-300 hover:bg-rose-900/40"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Hidden file input — driven by the paperclip. Painted into
+                the DOM with a 4-layer visibility stack so the imperative
+                .click() opens the OS picker reliably across browsers.
+                Mirrors LostPetAgent's <input> rendering byte-for-byte. */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleFileSelected}
+              className="pointer-events-none absolute h-[1px] w-[1px] overflow-hidden whitespace-nowrap border-0 p-0 opacity-0"
+              style={{ clip: "rect(0, 0, 0, 0)", clipPath: "inset(50%)" }}
+              aria-hidden="true"
+              tabIndex={-1}
+            />
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => {
+                  // SYNCHRONOUS paperclip handler. Inline arrow guarantees
+                  // the .click() lives inside the user-gesture handler
+                  // reference, which clears the browser-gesture gate for
+                  // <input type="file"> imperative activation.
+                  if (process.env.NODE_ENV !== "production") {
+                    console.log("[FloatingChatbot] Paperclip clicked", {
+                      refAttached: fileInputRef.current !== null,
+                      refType:
+                        fileInputRef.current?.constructor?.name ?? null,
+                    });
+                  }
+                  try {
+                    fileInputRef.current?.click();
+                  } catch (err) {
+                    if (process.env.NODE_ENV !== "production") {
+                      console.error(
+                        "[FloatingChatbot] paperclip click() threw:",
+                        err,
+                      );
+                    }
+                  }
+                }}
+                disabled={isLoading}
                 aria-label={t("chatbot.attach_label")}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:text-white"
+                className="relative z-50 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-400 transition hover:border-emerald-500 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Paperclip className="h-4 w-4" />
               </button>
@@ -316,7 +562,7 @@ export default function FloatingChatbot() {
               <button
                 type="submit"
                 aria-label={t("chatbot.send_label")}
-                disabled={!input.trim() || isLoading}
+                disabled={(!input.trim() && !pendingImage) || isLoading}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-500 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Send className="h-4 w-4" />

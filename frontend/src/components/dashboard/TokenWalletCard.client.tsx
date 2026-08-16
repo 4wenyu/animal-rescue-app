@@ -62,9 +62,13 @@ export interface TokenWalletCardClientProps {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Display helpers — duplicated from Server variant, intentionally           */
+/* Display helpers — tr-aware lookups (fallback to legacy English when the  */
+/* locale file has no entry for a given action/direction)                  */
 /* ---------------------------------------------------------------------- */
 
+// Legacy English fallbacks — kept as a belt-and-suspenders fallback for
+// action types / directions that exist in the ledger but are missing from
+// some locale dictionaries.
 const DIRECTION_LABEL: Record<RecentTxnDto["direction"], string> = {
   EARN: "Earned",
   SPEND: "Spent",
@@ -85,8 +89,31 @@ const ACTION_LABEL: Record<string, string> = {
   ADJUSTMENT_ADMIN: "Admin adjustment",
 };
 
-function friendlyAction(actionType: string): string {
+/**
+ * Look up `dashboard.wallet.action.<ACTION>` in the current locale.
+ * If not present, fall back to the legacy English dictionary, then to a
+ * neutral prettified form of the actionType identifier. This preserves
+ * graceful degradation for action types we haven't localized yet.
+ */
+function friendlyAction(actionType: string, tr: (k: string) => string): string {
+  const key = `dashboard.wallet.action.${actionType}`;
+  const localized = tr(key);
+  if (localized !== key) return localized;
   return ACTION_LABEL[actionType] ?? actionType.replace(/_/g, " ").toLowerCase();
+}
+
+/**
+ * Look up `dashboard.wallet.direction.<DIR>` in the current locale.
+ * Falls back to the legacy English label if missing.
+ */
+function friendlyDirection(
+  direction: RecentTxnDto["direction"],
+  tr: (k: string) => string,
+): string {
+  const key = `dashboard.wallet.direction.${direction}`;
+  const localized = tr(key);
+  if (localized !== key) return localized;
+  return DIRECTION_LABEL[direction];
 }
 
 function formatRelativeTime(iso: string): string {
@@ -137,12 +164,14 @@ function BalancePanel({
   earned,
   spent,
   status,
+  tr,
 }: {
   balance: number;
   displayName: string | null;
   earned: number;
   spent: number;
   status: string;
+  tr: (k: string) => string;
 }) {
   const badge = STATUS_BADGE[status] ?? STATUS_BADGE.ACTIVE;
 
@@ -157,17 +186,19 @@ function BalancePanel({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Token Balance
+                {tr("dashboard.wallet.title")}
               </p>
               {displayName && (
-                <p className="text-sm text-slate-500">{displayName}&rsquo;s wallet</p>
+                <p className="text-sm text-slate-500">
+                  {tr("dashboard.wallet.wallet_subtitle", { name: displayName })}
+                </p>
               )}
             </div>
           </div>
           <p className="mt-5 text-5xl font-bold tracking-tight text-slate-900">
             {balance.toLocaleString()}
             <span className="ml-2 align-top text-base font-medium text-slate-400">
-              tokens
+              {tr("dashboard.wallet.tokens_unit")}
             </span>
           </p>
         </div>
@@ -179,8 +210,12 @@ function BalancePanel({
             {status}
           </span>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-right">
-            <p className="text-[10px] uppercase tracking-wider text-slate-400">Earned</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400">Spent</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-400">
+              {tr("dashboard.wallet.earned_label")}
+            </p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-400">
+              {tr("dashboard.wallet.spent_label")}
+            </p>
             <p className="text-sm font-semibold text-emerald-600">+{earned.toLocaleString()}</p>
             <p className="text-sm font-semibold text-rose-600">−{spent.toLocaleString()}</p>
           </div>
@@ -190,7 +225,7 @@ function BalancePanel({
   );
 }
 
-function RecentRow({ tx }: { tx: RecentTxnDto }) {
+function RecentRow({ tx, tr }: { tx: RecentTxnDto; tr: (k: string) => string }) {
   const isPositive =
     tx.direction === "EARN" || tx.direction === "REFUND" || tx.direction === "EXPIRE";
   const badge = DIRECTION_BADGE[tx.direction];
@@ -207,14 +242,14 @@ function RecentRow({ tx }: { tx: RecentTxnDto }) {
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-slate-900">
-            {friendlyAction(tx.actionType)}
+            {friendlyAction(tx.actionType, tr)}
           </p>
           <p className="flex items-center gap-1 text-[11px] text-slate-500">
             <Clock className="h-3 w-3" />
             {formatRelativeTime(tx.createdAt)}
             <span className="mx-1 text-slate-300">&middot;</span>
             <span className="font-mono uppercase tracking-wider">
-              {DIRECTION_LABEL[tx.direction]}
+              {friendlyDirection(tx.direction, tr)}
             </span>
           </p>
         </div>
@@ -236,15 +271,17 @@ function RecentRow({ tx }: { tx: RecentTxnDto }) {
   );
 }
 
-function EmptyRecent() {
+function EmptyRecent({ tr }: { tr: (k: string) => string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
         <ShieldCheck className="h-5 w-5 text-slate-400" />
       </div>
-      <p className="text-sm font-medium text-slate-700">No activity yet</p>
+      <p className="text-sm font-medium text-slate-700">
+        {tr("dashboard.wallet.no_activity_title")}
+      </p>
       <p className="text-xs text-slate-500 max-w-[260px]">
-        Share an animal on social media or refer a friend to start earning tokens.
+        {tr("dashboard.wallet.no_activity_body")}
       </p>
     </div>
   );
@@ -296,6 +333,7 @@ export function TokenWalletCardClient({
   initialData = null,
   refreshMs = 0,
 }: TokenWalletCardClientProps) {
+  const { tr } = useI18n();
   const [data, setData] = useState(initialData);
 
   const reload = () => {
@@ -349,9 +387,11 @@ export function TokenWalletCardClient({
         <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
           <Coins className="h-5 w-5 text-slate-400" />
         </div>
-        <p className="mt-3 text-sm font-semibold text-slate-700">No wallet yet</p>
+        <p className="mt-3 text-sm font-semibold text-slate-700">
+          {tr("dashboard.wallet.no_activity_title")}
+        </p>
         <p className="mt-1 text-xs text-slate-500">
-          Your TokenWallet will be created automatically when you earn your first token.
+          {tr("dashboard.wallet.no_activity_body")}
         </p>
       </section>
     );
@@ -366,6 +406,7 @@ export function TokenWalletCardClient({
           earned={data.wallet.lifetimeEarned}
           spent={data.wallet.lifetimeSpent}
           status={data.wallet.status}
+          tr={tr}
         />
       </div>
       <div className="lg:col-span-3">
@@ -373,19 +414,25 @@ export function TokenWalletCardClient({
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-slate-400" />
-              <h3 className="text-sm font-semibold text-slate-900">Recent activity</h3>
+              <h3 className="text-sm font-semibold text-slate-900">
+                {tr("dashboard.wallet.recent_activity_title")}
+              </h3>
             </div>
             <p className="text-[11px] text-slate-400">
-              Last {data.recent.length}{" "}
-              {data.recent.length === 1 ? "transaction" : "transactions"}
+              {tr(
+                data.recent.length === 1
+                  ? "dashboard.wallet.recent_activity_singular"
+                  : "dashboard.wallet.last_n_transactions",
+                { count: data.recent.length },
+              )}
             </p>
           </div>
           {data.recent.length === 0 ? (
-            <EmptyRecent />
+            <EmptyRecent tr={tr} />
           ) : (
             <ul role="list" className="divide-y divide-slate-100">
               {data.recent.map((tx) => (
-                <RecentRow key={tx.txnId} tx={tx} />
+                <RecentRow key={tx.txnId} tx={tx} tr={tr} />
               ))}
             </ul>
           )}
