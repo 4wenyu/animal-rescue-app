@@ -17,4 +17,5 @@ out/
 .DS_Store
 Thumbs.db
 
-# Obsidian editor state (personal, churns constantly).obsidian/
+# Obsidian editor state (personal, churns constantly)
+.obsidian/
