@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-07 — EPIC 3 Closed Loop: real delivery on approve (Tier 1.7)
+
+### Fixed
+- **"SENT" was a lie — now it delivers.** Approving a draft in `/outreach/review` previously only stamped `status=SENT, sentAt` in the DB; nothing was ever delivered anywhere. New `lib/services/outreachDelivery.ts` closes the loop: on approve, the draft is claimed via a transactional conditional update (`updateMany where status="DRAFT"` — race-safe against double-approve/double-click), then delivered through Telegram (`sendTelegramMessage` with the autonomous-agent disclosure and approving-shelter attribution) when `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` are set.
+- **Graceful, honest degradation without Telegram config** — the SENT stamp stands (the human decision is real), and `sourceNote` records `delivered: none (channel not configured)` / `delivered: telegram` / `delivered: telegram-attempt-failed`, visible to reviewers in the queue.
+- **`src/lib/telegram.ts`** — `sendTelegramMessage` now returns `Promise<boolean>` (send success) instead of always-void; existing callers are unaffected (await-and-ignore).
+- **`outreachService.reviewOutreachDraft`** — approve path delegates to `deliverApprovedDraft`; reviewer note is appended before delivery so the delivered copy carries it. Skip path unchanged (SKIPPED stamp).
+
+### Added
+- **`scripts/e2e_outreach_check.py`** — 10-step end-to-end verification against a running dev server (`AUTH_ALLOW_MOCK_USERS=true`): citizen register → login → opt-in → staff login → agent generate → review queue renders → draft approve → SENT → one-click unsubscribe. **Current result: 10/10 PASS** (verified live against Neon).
+
 ## 2026-08-30 — Tier 0 Hardening + Tier 1 True-MVP Centerpiece (aligned to Idea.md)
 
 ### Tier 0 — Security / correctness hardening

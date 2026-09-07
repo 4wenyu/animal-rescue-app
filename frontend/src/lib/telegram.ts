@@ -43,7 +43,7 @@ export type ParseMode = "HTML" | "MarkdownV2" | "Markdown";
 export async function sendTelegramMessage(
   text: string,
   parse?: ParseMode,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const { token, chatId } = getConfig();
 
@@ -67,10 +67,13 @@ export async function sendTelegramMessage(
       console.error(
         `[telegram] API returned ${response.status}: ${errorBody}`,
       );
+      return false;
     }
+    return true;
   } catch (err) {
     // Fail gracefully — never let a notification break the primary flow.
     console.error("[telegram] Failed to send notification:", err);
+    return false;
   }
 }
 

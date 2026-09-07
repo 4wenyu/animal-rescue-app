@@ -20,6 +20,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { deliverApprovedDraft } from "@/lib/services/outreachDelivery";
 
 export type HelpArea =
   | "DONATE"
@@ -169,7 +170,15 @@ export async function generateOutreachDrafts(limit = 5): Promise<number> {
   return created;
 }
 
-/** Approve (→ SENT) or skip (→ SKIPPED) a draft. Human-gated delivery. */
+/**
+ * Approve (→ SENT + deliver) or skip (→ SKIPPED) a draft. Human-gated.
+ *
+ * On approve, delivery is delegated to `deliverApprovedDraft`, which
+ * performs the transactional DRAFT → SENT claim (race-safe against
+ * concurrent reviewers) and then actually delivers through the
+ * configured channel (Telegram) — or honestly records that no channel
+ * is configured. On skip, the draft is stamped SKIPPED directly.
+ */
 export async function reviewOutreachDraft(
   draftId: string,
   reviewerUserId: string,
@@ -182,16 +191,27 @@ export async function reviewOutreachDraft(
     throw new Error("Only DRAFT outreach can be reviewed");
   }
 
-  const next: "SENT" | "SKIPPED" = approve ? "SENT" : "SKIPPED";
+  if (approve) {
+    // Append the reviewer's note BEFORE delivery so the Telegram copy
+    // and the delivered sourceNote include it.
+    if (note) {
+      await prisma.outreachDraft.update({
+        where: { draftId },
+        data: { sourceNote: `${draft.sourceNote} — review: ${note}` },
+      });
+    }
+    await deliverApprovedDraft(draftId, reviewerUserId);
+    return "SENT";
+  }
+
   await prisma.outreachDraft.update({
     where: { draftId },
     data: {
-      status: next,
+      status: "SKIPPED",
       reviewedByUserId: reviewerUserId,
       reviewedAt: new Date(),
-      ...(approve ? { sentAt: new Date() } : {}),
       ...(note ? { sourceNote: `${draft.sourceNote} — review: ${note}` } : {}),
     },
   });
-  return next;
+  return "SKIPPED";
 }
