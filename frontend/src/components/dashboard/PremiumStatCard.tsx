@@ -31,6 +31,14 @@ interface PremiumStatCardProps {
   /** Optional trend percentage — positive = up (green), negative = down (red) */
   trend?: number;
   totalDogs: number;
+  /**
+   * Honest secondary line passed from the data source. Previously this card
+   * hardcoded "79% of total" (271/342), "Peak: 13" (totalDogs * 1.12), and
+   * "↓ 12 from last month" (48 * 0.25) — fabricated denominators that don't
+   * match the 12-animal roster (review §4.2 #175). Meta is now the caller's
+   * responsibility so it can only state what the data actually is.
+   */
+  meta?: string;
   /** Stagger delay in seconds (default 0) */
   delay?: number;
 }
@@ -51,21 +59,13 @@ export function PremiumStatCard({
   accentColor,
   trend,
   totalDogs,
+  meta,
   delay = 0,
 }: PremiumStatCardProps) {
   // Soft tinted background for the icon circle (~8% alpha)
   const iconBg = accentColor + "14";
 
-  // Per-card secondary data lines
-  function getMeta() {
-    const meta: Record<string, string> = {
-      "Total Dogs": `Peak: ${Math.round(totalDogs * 1.12)}`,
-      Healthy: `${Math.round((271 / 342) * 100)}% of total`,
-      "Needs Review": `↓ ${Math.round(48 * 0.25)} from last month`,
-      "Avg. Age": "Across all animals",
-    };
-    return meta[label] || `of ${totalDogs} total`;
-  }
+  const metaText = meta ?? `${totalDogs}`;
 
   const restingShadow = pillowyShadow(30);
   const hoverShadow = pillowyShadow(50);
@@ -216,7 +216,7 @@ export function PremiumStatCard({
             color: "#6b7c93",
           }}
         >
-          {getMeta()}
+          {metaText}
         </span>
         {trend !== undefined && (
           <span

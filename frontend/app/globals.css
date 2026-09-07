@@ -38,3 +38,29 @@ body {
 .animate-shake {
   animation: shake 0.4s ease-in-out;
 }
+
+/* ── Global visible focus ring (WCAG 2.4.11 Focus Appearance) ──────────
+   A consistent 2px emerald ring that appears only on keyboard/touch
+   focus. Tailwind v4 ships `outline-hidden`-style defaults; this gives
+   every focusable control a strong, 3:1-contrast-against-white ring. */
+:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Reduced motion (WCAG 2.3.3 Animation from Interactions) ──────────
+   Disable pulse/spin/shake and smooth-scroll for users who prefer reduced
+   motion. Components using `animate-pulse` / `animate-spin` /
+   `.animate-shake` / smooth scroll all stop here without per-component
+   guards. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -40,9 +40,9 @@ async function runTest() {
     console.log('\n✅ AI Extraction Successful! Structured Data Received:\n');
     console.log(JSON.stringify(result, null, 2));
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('\n❌ Test execution failed:');
-    console.error(error.message || error);
+    console.error(error instanceof Error ? error.message : error);
   }
 }
 

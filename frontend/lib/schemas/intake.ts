@@ -41,6 +41,11 @@ export const Species = z.enum([
   "dog",
   "cat",
   "rabbit",
+  "turtle",
+  "bird",
+  "small_mammal",
+  "reptile",
+  "fish",
   "other",
 ]);
 
@@ -153,6 +158,15 @@ export const PetIntakeBatchSchema = z
       .describe(
         "Zero or more animal records extracted from this uploaded image. Zero is valid (blank or unreadable card); many is valid (multi-cage row)."
       ),
+    // Tier 0.4: server decides stray-hold semantics from the submission type.
+    // PUBLIC_STRAY (default) = found animal → hold computed from intake time;
+    // OWNER_SURRENDER = legal owner surrenders custody → no stray hold applies.
+    // A client-supplied per-animal `statutoryHoldCleared` boolean is NEVER
+    // trusted — it would let anyone clear a legal hold.
+    intakeType: z
+      .enum(["PUBLIC_STRAY", "OWNER_SURRENDER"])
+      .optional()
+      .default("PUBLIC_STRAY"),
   })
   .describe(
     "AI extraction response wrapper: a single batch of PetIntake records corresponding to one uploaded image."

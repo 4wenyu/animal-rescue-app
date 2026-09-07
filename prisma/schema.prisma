@@ -3,6 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Sprint A — point generated client at the package the Next.js app
+  // actually resolves (`frontend/node_modules/@prisma/client`). The repo
+  // previously generated to the monorepo root, leaving the frontend copy
+  // stale (missing new fields) after every schema change.
+  output = "../frontend/node_modules/.prisma/client"
 }
 
 datasource db {
@@ -76,14 +81,26 @@ enum TokenAction {
   VOLUNTEER_HOUR_EARN
   REFERRAL_CONVERTED_EARN
   ONBOARDING_BONUS_EARN
+  // Phase 3: Corporate-funded sponsor acknowledgment grant.
+  // Value flows sponsor -> user. NOT ad-remuneration. UBIT IRC § 513(i)
+  // attribution handled via the sponsorOrgId FK on TokenTransaction.
+  SPONSOR_VIEW_CREDIT_EARN
   // Spend reasons
   SEARCH_FEE_WAIVE_SPEND
   PRIORITY_LISTING_SPEND
   PRINTED_FLYER_SPEND
   SHARE_BOOST_SPEND
+  // Phase 3: Lost Pet Search service redemption (post-grant SPEND).
+  LOST_PET_SEARCH_SPEND
   // Lifecycle
   EXPIRE_DEDUCT
   ADJUSTMENT_ADMIN
+}
+
+enum LostPetSearchStatus {
+  SEARCHING
+  FOUND
+  CANCELLED
 }
 
 enum TokenDirection {
@@ -104,6 +121,15 @@ enum TokenWalletStatus {
   ACTIVE
   FROZEN
   CLOSED
+}
+
+// Sprint A — Authorization. Tracks the role attached to the session JWT.
+// CITIZEN = the public actor the rescue mission serves (lost-pet owners,
+// adopters, fosters). STAFF / ADMIN gate the internal shelter surface.
+enum UserRole {
+  CITIZEN
+  STAFF
+  ADMIN
 }
 
 // ============================================================
@@ -226,6 +252,11 @@ model User {
   userId         String    @id @default(uuid())
   email          String    @unique
   displayName    String
+  // Sprint A — auth. scrypt-salted hash (never stored in plaintext); the
+  // legacy MOCK_USERS table is retained only behind an explicit opt-in env
+  // in non-production. `null` hash = not-yet-registered via credential flow.
+  passwordHash   String?
+  role           UserRole  @default(CITIZEN)
   marketingOptIn Boolean   @default(false)
   createdAt      DateTime  @default(now())
   deletedAt      DateTime?
@@ -234,6 +265,11 @@ model User {
   tokenTransactions   TokenTransaction[]
   viralShares         ViralShareVerification[]
   contributionsAsUser SponsorshipContribution[]
+  lostPetSearches     LostPetSearch[]
+
+  // ── EPIC 3 (Tier 1.7): staged autonomous outreach, opt-in only ──
+  outreachProfile OutreachProfile?
+  outreachDrafts  OutreachDraft[]
 
   @@map("users")
 }
@@ -360,6 +396,10 @@ model TokenTransaction {
   reverseOf      TokenTransaction? @relation("Reversal", fields: [reverseOfTxnId], references: [txnId])
   reversal       TokenTransaction? @relation("Reversal")
 
+  // Epic 3: a LOST_PET_SEARCH_SPEND row may back exactly one LostPetSearch
+  // (1:1 nullable); the inverse relation is declared on LostPetSearch.
+  lostPetSearch LostPetSearch?
+
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
@@ -395,4 +435,150 @@ model SponsorshipContribution {
 
   @@index([sponsorOrgId, type])
   @@map("sponsorship_contributions")
+}
+
+// 8) AdoptionInterest — Sprint B adoption funnel lead row.
+// One row per adopter application submitted from the public /adopt/[id]
+// profile ("Adopt" / "Foster"). Public submission — no session required,
+// so the lead can be captured before an adopter creates an account.
+// animalId is stored as a plain string (matches dogs.json numeric ids) —
+// intentionally NOT an FK so the public funnel works against the mock
+// roster without coupling to the internal Animal table.
+model AdoptionInterest {
+  interestId String   @id @default(uuid())
+  animalId   String
+  animalName String
+  interestType  String // "ADOPT" | "FOSTER"
+  fullName      String
+  email         String
+  phone         String?
+  message       String?
+  status        String   @default("NEW")
+  createdAt     DateTime @default(now())
+
+  @@index([animalId])
+  @@index([status, createdAt])
+  @@map("adoption_interests")
+}
+
+// 7) LostPetSearch — Epic 3 autonomous-outreach persistence.
+// One row per activated Lost Pet Search network broadcast, owned by the
+// authenticated user who started it. Optional FK back to the originating
+// LOST_PET_SEARCH_SPEND ledger row so /radar/[searchId] can trace the
+// search to its token accounting.
+model LostPetSearch {
+  searchId String @id @default(uuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [userId])
+
+  // Captured intake fields — verbatim from /api/chat-intake.
+  species       String?
+  breed         String?
+  colorMarkings String?
+  collarId      String?
+  lastSeen      String?
+
+  // Lifecycle — default SEARCHING means "the network just got pinged".
+  status LostPetSearchStatus @default(SEARCHING)
+
+  // Optional FK back to the originating LOST_PET_SEARCH_SPEND ledger
+  // row, so radar views can trace the search back to its token
+  // accounting. Nullable because the FK can be absent (e.g. internal
+  // tests, future promo-grants).
+  debitTxnId String?           @unique
+  debitTxn   TokenTransaction? @relation(fields: [debitTxnId], references: [txnId])
+
+  activatedAt DateTime  @default(now())
+  closedAt    DateTime?
+  notes       String?
+
+  @@index([userId, activatedAt])
+  @@index([status, activatedAt])
+  @@map("lost_pet_searches")
+}
+
+// ============================================================
+// EPIC 3 (Tier 1.7) — Staged autonomous outreach (opt-in only)
+// ============================================================
+//
+// The Idea's core: an autonomous agent that finds animal lovers and
+// proactively reaches out with a nearby at-risk animal, asking them to
+// donate / foster / adopt / share. The true-MVP hardening:
+//   - OPT-IN ONLY: the agent NEVER cold-contacts. A citizen opts in with a
+//     clear "I can help" commitment (helpAreas) + an explicit consent flag.
+//   - HONEST & STAGED: outreach is generated as DRAFTs, gated by STAFF/ADMIN
+//     human review, and only then marked SENT. Every row is labeled as an
+//     autonomous-agent first stage — nothing pretends to be human mail.
+//   - UNSUBSCRIBABLE: each profile carries a one-click unsubscribe token.
+
+enum OutreachStatus {
+  ACTIVE
+  PAUSED
+  UNSUBSCRIBED
+}
+
+enum OutreachDraftStatus {
+  DRAFT // generated by the agent, awaiting human review
+  APPROVED // staff/admin reviewed, approved for delivery
+  SENT // delivered via the notification channel
+  SKIPPED // reviewed and declined (no delivery)
+}
+
+enum OutreachHelpArea {
+  DONATE
+  FOSTER
+  ADOPT
+  VOLUNTEER
+  SHARE
+  TRANSPORT
+}
+
+model OutreachProfile {
+  profileId String @id @default(uuid())
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [userId])
+
+  status       OutreachStatus @default(ACTIVE)
+  helpAreas    OutreachHelpArea[]
+  // The citizen's neighborhood/region, used by the agent to match nearby
+  // at-risk animals. Stored as free text (city/zip) — no geocoding yet.
+  regionLabel  String?
+  consentGiven DateTime @default(now()) // explicit opt-in timestamp
+  unsubscribeToken String  @unique @default(uuid())
+  unsubscribedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  drafts OutreachDraft[]
+
+  @@index([status, updatedAt])
+  @@map("outreach_profiles")
+}
+
+model OutreachDraft {
+  draftId   String @id @default(uuid())
+  profileId String
+  profile   OutreachProfile @relation(fields: [profileId], references: [profileId])
+  userId    String
+  user      User   @relation(fields: [userId], references: [userId])
+
+  status OutreachDraftStatus @default(DRAFT)
+
+  // The nearby at-risk animal the agent surfaced (nullable: the agent may
+  // surface a shelter-wide urgent call, not a single animal).
+  animalId String?
+
+  // Honest, generated copy — never written by a human pretending otherwise.
+  subject    String
+  body       String
+  helpAsk    OutreachHelpArea
+  sourceNote String // e.g. "autonomous agent — stage 1, matched by region"
+
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  sentAt           DateTime?
+  createdAt        DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@map("outreach_drafts")
 }

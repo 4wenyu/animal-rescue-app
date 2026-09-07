@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-08-30 — Tier 0 Hardening + Tier 1 True-MVP Centerpiece (aligned to Idea.md)
+
+### Tier 0 — Security / correctness hardening
+- **`lib/services/tokenService.ts`** — fixed the **EXPIRE sign bug**: `DIRECTION_SIGN.EXPIRE` is now `-1` (burns tokens), not `+1` (was minting). Added `REVERSE_LIFETIME_FIELD` so reversals **decrement the same lifetime field** the original transaction incremented (no lifetime double-count). Added atomic SPEND balance floor: `tokenWallet.updateMany` with `cachedBalance: { gte: amount }` inside the transaction — zero TOCTOU double-spend; SPEND with no wallet is rejected; throws new `InsufficientBalanceError`.
+- **`app/api/tokens/transaction/route.ts`** — P2002 now detected via `err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"` (not message sniffing). Catches `InsufficientBalanceError` → 400 `TOKEN_INSUFFICIENT_BALANCE`. **Client surface restricted to SPEND-only**: server-side allowlist of SPEND actionTypes, per-action amount caps, and a per-request spend cap; EARN/REFUND/EXPIRE are server-only.
+- **`app/api/shares/route.ts`** — share status is now **always forced to PENDING server-side**; a client-supplied `status` is never trusted (self-verification closed). Added **`app/api/shares/[shareId]/route.ts`** — STAFF/ADMIN-only review endpoint (`PATCH`) that is the only path to VERIFIED/REJECTED/EXPIRED.
+- **`app/api/animals/intake/route.ts`** — rewritten: **anonymous citizen submissions allowed with NO token mint**; stray-hold semantics computed **server-side only** from `intakeType` (never trusts a client `statutoryHoldCleared` boolean — legal holds can't be cleared by a request flag); batch capped at 50; authenticated callers require STAFF/ADMIN.
+- **`frontend/proxy.ts`** — `/intake/public` is now **public** (excluded from the auth gate) so anonymous citizens can report strays/surrenders.
+- **`lib/schemas/intake.ts`** — `PetIntakeBatchSchema` gains server-driven `intakeType` (`PUBLIC_STRAY` | `OWNER_SURRENDER`).
+- **`app/(main)/intake/public/page.tsx`** — sends `intakeType`; reward badge only shows for authenticated grants (anonymous = honest "no token grant" note).
+
+### Tier 1 — True-MVP economy + autonomous outreach centerpiece
+- **Share-with-10 → free search (Idea III.4) enforced.** `grantFreeSearchMilestone(searchId)` in `tokenService.ts` mints `SHARE_10_GROUPS_EARN` (+100, covers the search fee) only after **10 VERIFIED** shares on a search (never PENDING), idempotent via `share-milestone:${searchId}`. Wired into the admin review endpoint (auto-evaluates on VERIFIED) and a new `POST /api/shares/milestone-grant`. Radar `ShareToEarnWidget` now shows an honest **Claim free search** action and only celebrates after the grant actually lands.
+- **Opt-in "I can help" autonomous outreach (Idea II + STRATEGY §5.2).** New Prisma models `OutreachProfile` + `OutreachDraft` (pushed to Neon). The agent generates **honest, labeled drafts** (`buildOutreachCopy` — "autonomous agent — stage 1", matched by region) that **never impersonate a human**; delivery requires STAFF/ADMIN review (`OutreachDraftReviewQueue` → APPROVED/SENT or SKIPPED). One-click unsubscribe via per-profile token. Citizen page `/outreach` (opt-in form, consent-gated) + staff queue `/outreach/review`.
+- **i18n** — new `radar.share_claim*` + `outreach` namespaces synced across all 7 locales (node scripts, no BOM).
+
+### Docs
+- `PRODUCT.md` — filled the empty template from Idea.md + STRATEGY_REPORT.md: true-MVP loop definition, four user types, brand personality, anti-references, design principles (humans gate the agent; the ledger is truth), WCAG/A11y + i18n.
+
+---
+
+## 2026-08-23 — Docs-Compliance Review & EPIC 3 Foundation Hardening
+
+### Fixed
+- **`TokenWalletCard.client.tsx`** — added the missing `import { useI18n } from "@/src/lib/useI18n";`. The component called `useI18n()` at line 336 without importing it, causing `ReferenceError: useI18n is not defined` → `npm run build` failed on `/dashboard` prerender and the dashboard returned 500 at runtime after login.
+- **`app/api/chat-intake/route.ts`** — `INTAKE_SYSTEM_PROMPT` is built via `.join("\n")` (a string); line 507 called `.join(" ")` on it → `TypeError`. Now concatenates with `"\n"` + locale directive. `/api/chat-intake` no longer 500s.
+- **`app/hold-profile/[id]/page.tsx`** — Next 16 `params` is a `Promise`; page now `await`s it (`params: Promise<{ id: string }>`).
+
+### Added
+- **`SponsorshipCheckoutModal` mounted into `/dashboard`** — new "Find My Pet" button opens the sponsor-gateway modal; on success it issues `SPONSOR_VIEW_CREDIT_EARN` (+50) and `LOST_PET_SEARCH_SPEND` (-100), refreshes the wallet card, and navigates to `/lost-pet-intake`.
+- **`lib/schemas/token.ts` `TokenActionSchema`** — added `SPONSOR_VIEW_CREDIT_EARN` and `LOST_PET_SEARCH_SPEND` (mirror of `prisma/schema.prisma`). `/api/tokens/transaction` previously rejected both with a 400 Zod error.
+
+### Docs
+- `ROADMAP.md` — EPIC 3 foundation-merged status; i18n key count 283 → 391; this entry.
+
+---
+
 ## 2026-07-03 — Dashboard Tech-Debt Cleanup Sprint (Modal + Table + Timer)
 
 ### Added

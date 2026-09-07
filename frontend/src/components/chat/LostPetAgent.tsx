@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Locale JSON — mirrors the project pattern from FloatingChatbot.tsx.
@@ -107,6 +108,15 @@ const EN_FALLBACK: Record<string, string> = {
   "chatIntake.label_color": "Color & markings",
   "chatIntake.label_collar": "Collar & ID",
   "chatIntake.label_last_seen": "Last seen",
+  "chatIntake.optional_badge": "optional",
+  "chatIntake.mobile_progress": "Start: {count}/2",
+  "chatIntake.not_sure_note":
+    "Not sure about a detail? That's okay — you can start searching with just the essentials, and say \"not sure\" whenever you need to.",
+  "chatIntake.signin_title": "Create a free account to activate",
+  "chatIntake.signin_body":
+    "Your search details are ready. A free account lets you save, share, and track your lost-pet search.",
+  "chatIntake.signin_create": "Create account",
+  "chatIntake.signin_login": "I already have an account",
   "chatIntake.input_placeholder": "Tell me about your pet…",
   "chatIntake.send_label": "Send message",
   "chatIntake.ready_to_broadcast": "Intake complete · ready to broadcast",
@@ -233,12 +243,33 @@ function fieldProgress(captured: Record<CaptureField, string | undefined>) {
 }
 
 /**
- * Returns TRUE when every required field is captured. Used to gate the
- * activation CTA in the sidebar.
+ * Sprint B — relaxed "not sure / skip" gate.
+ *
+ * Previously activation required 5/5 captured fields (including collarId),
+ * which contradicted the system prompt's "never pressure" promise and
+ * could strand an owner with no collar/microchip/breed. Now the MINIMUM
+ * to start searching is species + lastSeen; breed / color / collar are
+ * optional ("not sure" / "skip" is fine) and stored as null.
  */
-function isFiveOfFive(captured: Record<CaptureField, string | undefined>): boolean {
-  return fieldProgress(captured) === FIELD_ORDER.length;
+function canActivate(captured: Record<CaptureField, string | undefined>): boolean {
+  const species = captured.species;
+  const lastSeen = captured.lastSeen;
+  return (
+    species !== undefined &&
+    species !== null &&
+    String(species).trim().length > 0 &&
+    lastSeen !== undefined &&
+    lastSeen !== null &&
+    String(lastSeen).trim().length > 0
+  );
 }
+
+/** Fields that are nice-to-have but NOT required to start a search. */
+const OPTIONAL_FIELDS: ReadonlySet<CaptureField> = new Set([
+  "breed",
+  "colorMarkings",
+  "collarId",
+]);
 
 function fieldLabel(field: CaptureField, t: (k: string) => string): string {
   switch (field) {
@@ -346,9 +377,11 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   /* ── Latest live assistant message mid-stream (overlaps the hook's object.assistantText) ─ */
   const [liveAssistantText, setLiveAssistantText] = useState<string>("");
 
-  /* ── Activation flow: 5/5 → "Activate Search Network" → POST + radar redirect ─ */
+  /* ── Activation flow: species + lastSeen → "Activate Search Network" → POST + radar redirect ─ */
   const [isActivating, setIsActivating] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
+  /** TRUE when activation failed because the visitor is not signed in. */
+  const [needsSignIn, setNeedsSignIn] = useState(false);
 
   /* ── Vision attachment for the intake flow. If the user attaches a photo,
         we read it as a base64 data URL on submit and forward it to Gemini
@@ -645,11 +678,12 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
     [input, isLoading, messages, submit, locale, pendingImage]
   );
 
-  /* ── Activation callback: persisted when all 5 fields are captured. ─ */
+  /* ── Activation callback: persisted when species + lastSeen are captured. ─ */
   const activateSearchNetwork = useCallback(async () => {
     if (isActivating) return;
     setIsActivating(true);
     setActivationError(null);
+    setNeedsSignIn(false);
 
     // captured.lastSeen is already a flattened "address · locality · time ·
     // freeText" string from captureFromObject(); we send that to /api/searches.
@@ -673,6 +707,13 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
         | { ok: boolean; search?: { searchId: string }; error?: string; message?: string }
         | null;
       if (!res.ok || !json?.search?.searchId) {
+        // A public visitor with no session gets 401 — prompt to sign in
+        // (create a free account) so they can activate their search.
+        if (res.status === 401) {
+          setNeedsSignIn(true);
+          setIsActivating(false);
+          return;
+        }
         const msg = json?.message ?? json?.error ?? `HTTP ${res.status}`;
         setActivationError(`Could not activate search: ${msg}`);
         setIsActivating(false);
@@ -909,6 +950,63 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
             {t("chatIntake.private_note")}
           </p>
         </form>
+
+        {/* ── Mobile activation bar — sticky bottom, below lg ──────────────
+            The right-hand intake sidebar is hidden on small screens
+            (`hidden lg:flex`), which previously made the Activate CTA
+            unreachable on mobile. This bar mirrors the sidebar CTA for
+            phones/tablets: progress + Activate once species + lastSeen
+            are captured. */}
+        <div className="border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
+          {canActivate(captured) ? (
+            <button
+              type="button"
+              onClick={() => void activateSearchNetwork()}
+              disabled={isActivating}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:from-emerald-500 hover:via-emerald-500 hover:to-amber-400 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isActivating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("chatIntake.activating_label")}
+                </>
+              ) : (
+                <>
+                  <Rocket className="h-4 w-4" />
+                  {t("chatIntake.activate_button")}
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        (fieldProgress(captured) / 2) * 100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+              <span className="text-xs font-semibold tabular-nums text-slate-500">
+                {t("chatIntake.mobile_progress", {
+                  count: String(
+                    Math.min(2, fieldProgress(captured)),
+                  ),
+                })}
+              </span>
+            </div>
+          )}
+          {activationError && (
+            <p className="mt-2 text-[11px] font-medium text-rose-600">
+              {activationError}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* ── Right: Intake progress sidebar ──────────────────────────────── */}
@@ -959,6 +1057,11 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">
                     {fieldLabel(field, t)}
+                    {OPTIONAL_FIELDS.has(field) && (
+                      <span className="ml-1.5 font-normal normal-case tracking-normal text-slate-400">
+                        · {t("chatIntake.optional_badge")}
+                      </span>
+                    )}
                   </p>
                 </div>
                 {isCaptured ? (
@@ -990,8 +1093,8 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
           </div>
         )}
 
-        {/* ── Activation CTA — fades in when the intake hits 5/5 ──────── */}
-        {isFiveOfFive(captured) && (
+        {/* ── Activation CTA — fades in when species + lastSeen are captured ─ */}
+        {canActivate(captured) && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1034,6 +1137,37 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
                 {activationError}
               </p>
             )}
+            {needsSignIn && (
+              <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-900">
+                  {t("chatIntake.signin_title")}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                  {t("chatIntake.signin_body")}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Link
+                    href={`/register?callbackUrl=${encodeURIComponent(
+                      "/lost-pet-intake",
+                    )}`}
+                    className="inline-flex flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500"
+                  >
+                    {t("chatIntake.signin_create")}
+                  </Link>
+                  <Link
+                    href={`/login?callbackUrl=${encodeURIComponent(
+                      "/lost-pet-intake",
+                    )}`}
+                    className="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    {t("chatIntake.signin_login")}
+                  </Link>
+                </div>
+              </div>
+            )}
+            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+              {t("chatIntake.not_sure_note")}
+            </p>
           </motion.div>
         )}
       </aside>

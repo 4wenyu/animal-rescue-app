@@ -33,7 +33,7 @@
  */
 
 import { google } from "@ai-sdk/google";
-import { Output, streamText } from "ai";
+import { Output, streamText, type ModelMessage, type UserContent } from "ai";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -63,8 +63,9 @@ const lostPetIntakeSchema = z.object({
       "dog",
       "cat",
       "rabbit",
+      "turtle",
       "bird",
-      "ferret",
+      "small_mammal",
       "reptile",
       "fish",
       "other",
@@ -200,14 +201,21 @@ const INTAKE_SYSTEM_PROMPT = [
   "are not yet known. After each user message, ask exactly ONE clarifying",
   "question for the next missing field in this priority order:",
   "  1. species (if null)",
-  "  2. breed (if null and species !== 'other' / 'fish' / 'reptile')",
-  "  3. colorMarkings (if null)",
-  "  4. collarId (if null)",
-  "  5. lastSeen.address → lastSeen.locality → lastSeen.timeOfDay → lastSeen.freeText",
+  "  2. lastSeen.address → lastSeen.locality → lastSeen.timeOfDay → lastSeen.freeText",
+  "  3. breed (if null and species !== 'other' / 'fish' / 'reptile')",
+  "  4. colorMarkings (if null)",
+  "  5. collarId (if null)",
   "",
-  "Once every field is filled (no remaining nulls), set assistantText to a",
-  "warm summary of what you've recorded and ask the user to confirm before",
-  "you broadcast the search across the partner network.",
+  "Only species and lastSeen are REQUIRED to start a search. breed, colorMarkings",
+  "and collarId are OPTIONAL — an owner who doesn't know them is not locked out.",
+  "If the user says they don't know a detail (or says 'not sure' / 'skip'), stop",
+  "asking about it, leave it null, and move on without making them feel guilty.",
+  "",
+  "Once species and lastSeen are filled (the minimum), tell the user they now",
+  "have enough to start the search and ask them to confirm. You may still ask",
+  "about the optional details if the user seems willing, but never pressure",
+  "them. Set assistantText to a warm summary of what you've recorded and let",
+  "them confirm before you broadcast the search across the partner network.",
   "",
   "Style rules:",
   "  - Never make promises about finding the pet.",
@@ -291,10 +299,16 @@ function readMockTurn(text: string): Partial<LostPetIntakeObject> {
 }
 
 function buildMockStream(
-  history: { role: string; content: string }[]
+  history: ModelMessage[]
 ): Response {
+  const lastUser = history.filter((m) => m.role === "user").slice(-1)[0];
   const last =
-    history.filter((m) => m.role === "user").slice(-1)[0]?.content ?? "";
+    typeof lastUser?.content === "string"
+      ? lastUser.content
+      : (lastUser?.content ?? [])
+          .filter((p): p is { type: "text"; text: string } => p.type === "text")
+          .map((p) => p.text)
+          .join("\n");
   const partial = readMockTurn(last);
 
   // Build a JSON-lines stream carrying the partial object on a single
@@ -425,6 +439,14 @@ function normalizeWireContent(raw: unknown):
   return null;
 }
 
+/** Join the text parts of a validated WirePart[] into a single string. */
+function wirePartsToText(parts: WirePart[]): string {
+  return parts
+    .filter((p): p is { type: "text"; text: string } => p.type === "text")
+    .map((p) => p.text)
+    .join("\n");
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
@@ -444,10 +466,7 @@ export async function POST(req: Request) {
     // array (multimodal turn). Reject any entry whose shape fails the
     // allowlist — fail-closed so a hostile client can't slip a payload
     // to streamText that bypasses the UserContent contract.
-    const messages: Array<{
-      role: "user" | "assistant" | "system";
-      content: string | WirePart[];
-    }> = [];
+    const messages: ModelMessage[] = [];
     for (const m of body.messages) {
       const role = m.role as "user" | "assistant" | "system";
       if (role !== "user" && role !== "assistant" && role !== "system") {
@@ -472,7 +491,28 @@ export async function POST(req: Request) {
           },
         );
       }
-      messages.push({ role, content });
+      // normalizeWireContent returns `string | WirePart[]`, where WirePart
+      // is a stricter server-side mirror of the SDK's TextPart/ImagePart.
+      // Once validated, the part shapes are structurally identical to what
+      // streamText expects. Branch per role so the discriminated ModelMessage
+      // union narrows correctly — and fail-closed: image parts only belong on
+      // user messages; system/assistant turns are coerced to their text.
+      if (role === "system") {
+        messages.push({
+          role: "system",
+          content: typeof content === "string" ? content : wirePartsToText(content),
+        });
+      } else if (role === "assistant") {
+        messages.push({
+          role: "assistant",
+          content: typeof content === "string" ? content : wirePartsToText(content),
+        });
+      } else {
+        messages.push({
+          role: "user",
+          content: content as UserContent,
+        });
+      }
     }
     // Sanitize locale against the allowlist before injecting into the
     // system prompt — defense against prompt-injection attempts.
@@ -504,7 +544,8 @@ export async function POST(req: Request) {
     }
 
     const localizedSystemPrompt =
-      INTAKE_SYSTEM_PROMPT.join(" ") +
+      INTAKE_SYSTEM_PROMPT +
+      "\n" +
       LOCALE_DIRECTIVE_TEMPLATE.replace("{locale}", locale);
 
     const result = streamText({

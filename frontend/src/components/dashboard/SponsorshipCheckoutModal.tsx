@@ -53,9 +53,13 @@ import { useI18n } from "@/src/lib/useI18n";
 /** Duration the user must view the sponsor message before Step 1 can fire. */
 const SPONSOR_VIEW_SECONDS = 5;
 
-/** Generic, animate-kingdom-safe YouTube placeholder (no Chewy creative). */
-const SPONSOR_VIDEO_SRC =
-  "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ" /* Big Buck Bunny */;
+/**
+ * The sponsor message is rendered as a static, value-neutral acknowledgment
+ * panel (no embedded video). An unrelated placeholder cartoon previously
+ * read as a fake "sponsor video" under a real brand name (review §4.2 #159);
+ * the neutral acknowledgment text itself is the message the user views for
+ * the mandated countdown, with no CTA and no external asset.
+ */
 
 /**
  * sponsorOrgId is intentionally LEFT NULL on the SPONSOR_VIEW_CREDIT_EARN
@@ -68,7 +72,19 @@ const SPONSOR_VIDEO_SRC =
  * brand context later from the idempotencyKey/notes trace.
  */
 
-const SPONSOR_CREDIT_AMOUNT = 50;
+/**
+ * Sprint B — 0-balance start.
+ *
+ * Previously the sponsor grant was 50 tokens against a 100-token search
+ * fee, and the pre-flight `currentBalance + 50 >= 100` blocked anyone who
+ * held fewer than 50 tokens — a brand-new owner with an empty wallet
+ * could not start a search. The sponsor acknowledgment now GRANTS the
+ * full search fee (100 = SEARCH_FEE_AMOUNT), so a 0-balance user goes
+ * 0 → +100 → −100 → 0 and the search is sponsor-funded. The pre-flight
+ * (`balance + grant >= fee`) therefore passes for any non-negative
+ * balance.
+ */
+const SPONSOR_CREDIT_AMOUNT = 100; // == SEARCH_FEE_AMOUNT (sponsor funds the search)
 const SEARCH_FEE_AMOUNT = 100;
 
 /**
@@ -198,12 +214,18 @@ export function SponsorshipCheckoutModal({
   const [error, setError] = useState<string | null>(null);
 
   /* ---- Stable idempotency keys for this mount --------------------------- */
+  // Initialized in an effect (not during render): refs must not be written
+  // during render under the React Compiler rules. Effects run before any
+  // user interaction, so the keys are guaranteed present by the time the
+  // confirm handler reads them.
   const creditKeyRef = useRef<string>("");
   const spendKeyRef = useRef<string>("");
-  if (open && !creditKeyRef.current) {
-    creditKeyRef.current = makeIdempotencyKey("sponsorship-credit");
-    spendKeyRef.current = makeIdempotencyKey("lost-pet-search-spend");
-  }
+  useEffect(() => {
+    if (open && !creditKeyRef.current) {
+      creditKeyRef.current = makeIdempotencyKey("sponsorship-credit");
+      spendKeyRef.current = makeIdempotencyKey("lost-pet-search-spend");
+    }
+  }, [open]);
 
   /* ---- Pre-flight: client-side Insufficient Funds gate ----------------- */
   // Strict rule from requirements: currentBalance + 50 < 100 ⇒ block.
@@ -316,6 +338,60 @@ export function SponsorshipCheckoutModal({
     onClose();
   }, [onClose]);
 
+  /* ---- Accessibility: focus management (WCAG 2.1.1 / 2.4.3) -------------
+     - Focus the dialog panel when it opens.
+     - Restore focus to the trigger element when it closes.
+     - Trap Tab/Shift+Tab inside the panel (no tabbing into the page behind
+       the modal while it is open).
+     - Close on Escape.
+     All refs are only touched inside effects/handlers (never during render)
+     so the react-hooks/refs rule stays satisfied. */
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    // Remember the element that opened the modal so we can restore focus.
+    const previousActive = document.activeElement as HTMLElement | null;
+    // Move focus into the dialog (close button is the first tab stop).
+    closeButtonRef.current?.focus();
+    return () => {
+      previousActive?.focus?.();
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        handleClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        ),
+      ).filter((el) => el.offsetParent !== null);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, handleClose]);
+
   /* ---- Compose ------------------------------------------------------- */
   return (
     <AnimatePresence>
@@ -332,6 +408,7 @@ export function SponsorshipCheckoutModal({
         >
           <motion.div
             key="sponsorship-modal-panel"
+            ref={panelRef}
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -344,6 +421,7 @@ export function SponsorshipCheckoutModal({
           >
             {/* ── Close button ─────────────────────────────────────────── */}
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={handleClose}
               className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -391,6 +469,7 @@ export function SponsorshipCheckoutModal({
                   phase === "issuing_credit" || phase === "spending"
                 }
                 error={error}
+                sponsorBody={localeSponsorBody}
                 onAcknowledge={handleAcknowledgeAndContinue}
                 tr={tr}
               />
@@ -411,6 +490,7 @@ function SponsorViewFlow({
   countdownComplete,
   isBusy,
   error,
+  sponsorBody,
   onAcknowledge,
   tr,
 }: {
@@ -418,22 +498,29 @@ function SponsorViewFlow({
   countdownComplete: boolean;
   isBusy: boolean;
   error: string | null;
+  sponsorBody: string;
   onAcknowledge: () => void;
   tr: (key: string, vars?: Record<string, string | number>) => string;
 }) {
   return (
     <>
       <div className="px-6 pt-5">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
-          <div className="aspect-video w-full">
-            <iframe
-              src={SPONSOR_VIDEO_SRC}
-              title={tr("sponsorModal.iframe_title")}
-              loading="lazy"
-              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
-              className="h-full w-full"
-            />
+        {/* Honest sponsor acknowledgment — a static, value-neutral notice.
+            No embedded video (a placeholder cartoon read as deceptive, review
+            §4.2/#159). The acknowledgment text itself is the message the user
+            views during the countdown; no CTA, no external asset. */}
+        <div className="overflow-hidden rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+          <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+              <HeartHandshake className="h-6 w-6" />
+            </div>
+            <p className="max-w-md text-sm leading-relaxed text-slate-700">
+              {sponsorBody}
+            </p>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 shadow-sm">
+              <ShieldCheck className="h-3 w-3 text-emerald-500" />
+              {tr("sponsorModal.static_ack_badge")}
+            </span>
           </div>
         </div>
       </div>
@@ -514,6 +601,13 @@ function InsufficientFundsView({
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600">
         {tr("sponsorModal.insufficient_body", { balance: formattedBalance })}
       </p>
+      <a
+        href="/dashboard"
+        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:bg-emerald-500 active:scale-[0.98]"
+      >
+        <Search className="h-4 w-4" />
+        {tr("sponsorModal.earn_path_cta")}
+      </a>
       <p className="mx-auto mt-4 max-w-md text-xs text-slate-400">
         {tr("sponsorModal.insufficient_footnote")}
       </p>

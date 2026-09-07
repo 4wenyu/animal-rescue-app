@@ -69,10 +69,16 @@ interface AboutNavProps {
 
 const ABOUT_ROUTES = [
   { slug: "mission", labelKey: "nav.about.mission" },
-  { slug: "legal", labelKey: "nav.about.legal" },
   { slug: "process", labelKey: "nav.about.process" },
   { slug: "story", labelKey: "nav.about.story" },
+  { slug: "team", labelKey: "nav.about.team" },
+  { slug: "partners", labelKey: "nav.about.partners" },
+  { slug: "faq", labelKey: "nav.about.faq" },
   { slug: "about-us", labelKey: "nav.about.about_us" },
+  { slug: "privacy", labelKey: "nav.about.privacy" },
+  { slug: "terms", labelKey: "nav.about.terms" },
+  { slug: "careers", labelKey: "nav.about.careers" },
+  { slug: "legal", labelKey: "nav.about.legal" },
   { slug: "contact", labelKey: "nav.about.contact" },
 ] as const;
 

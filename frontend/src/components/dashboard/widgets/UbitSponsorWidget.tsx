@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { DollarSign, ShieldCheck, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign, ShieldCheck, TrendingUp } from "lucide-react";
 
 /**
  * Revenue Compliance (IRC § 513(i)) widget.
@@ -9,6 +9,9 @@ import { DollarSign, ShieldCheck, TrendingUp, TrendingDown } from "lucide-react"
  * to demonstrate UBIT-safe revenue separation.
  */
 export function UbitSponsorWidget() {
+  // Sample/demo figures only — no live ledger wiring yet (review §4.2 #176).
+  // Kept as visible placeholders with an explicit banner so the numbers are
+  // never presented as real revenue.
   const qualified = 42500;
   const donations = 18200;
 
@@ -23,6 +26,12 @@ export function UbitSponsorWidget() {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     >
+      {/* Honest demo banner — these figures are illustrative, not real. */}
+      <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+        Sample data — demo
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -38,9 +47,9 @@ export function UbitSponsorWidget() {
             </p>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
           <ShieldCheck className="h-2.5 w-2.5" />
-          UBIT SAFE
+          Demo
         </span>
       </div>
 
@@ -100,6 +109,12 @@ export function EsignStatsWidget() {
       transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
       className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     >
+      {/* Honest demo banner — no live ESIGN ledger yet (review §4.2 #176). */}
+      <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+        Sample data — demo
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -117,36 +132,37 @@ export function EsignStatsWidget() {
         </div>
       </div>
 
-      {/* Status indicator */}
-      <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 mb-4">
+      {/* Status indicator — reframed as a demo placeholder, not a real audit. */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-300">
             <ShieldCheck className="h-3.5 w-3.5 text-white" />
           </div>
-          <span className="font-bold text-emerald-800 text-sm">
-            100% Compliance
+          <span className="font-bold text-slate-700 text-sm">
+            Compliance tracking — demo
           </span>
         </div>
-        <p className="mt-2 text-[11px] text-emerald-600 leading-relaxed">
-          All intake ESIGN waivers are cryptographically hashed and stored
-          immutably. 100% audit-ready.
+        <p className="mt-2 text-[11px] text-slate-500 leading-relaxed">
+          Live signature-hash counts will appear here once the intake ESIGN
+          ledger is wired to this widget. No audit claim is made from demo
+          data.
         </p>
       </div>
 
-      {/* Active hashes */}
+      {/* Placeholder metrics — clearly illustrative. */}
       <div className="flex items-center justify-between py-2 border-b border-slate-100">
         <span className="text-xs text-slate-600">Active SHA-256 Hashes</span>
-        <span className="text-lg font-bold text-slate-900">342</span>
+        <span className="text-lg font-bold text-slate-400">—</span>
       </div>
       <div className="flex items-center justify-between py-2 border-b border-slate-100">
         <span className="text-xs text-slate-600">Intakes This Month</span>
-        <span className="text-lg font-bold text-slate-900">47</span>
+        <span className="text-lg font-bold text-slate-400">—</span>
       </div>
       <div className="flex items-center justify-between pt-2">
         <span className="text-xs text-slate-600">Verification Rate</span>
-        <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-600">
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-400">
           <TrendingUp className="h-3.5 w-3.5" />
-          100%
+          —
         </span>
       </div>
     </motion.div>

@@ -54,10 +54,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ animals: extractedAnimals });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("🔥 INTAKE ROUTE CRASHED:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Internal Server Error", details: error.message },
+      { error: "Internal Server Error", details: message },
       { status: 500 }
     );
   }

@@ -7,8 +7,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-14T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=1"
+    "intakeTimestamp": "2026-08-21T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=1",
+    "strayHoldExpiresAt": "2026-08-24T16:31:40.929Z",
+    "sex": "Male",
+    "personality": "A gentle, people-loving companion who brightens every room."
   },
   {
     "id": 2,
@@ -18,8 +21,11 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "IMMEDIATE_BEHAVIORAL",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-14T21:20:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=2"
+    "intakeTimestamp": "2026-08-20T16:01:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=2",
+    "strayHoldExpiresAt": "2026-08-23T16:01:40.929Z",
+    "sex": "Male",
+    "personality": "Loyal and attentive — bonds deeply once he knows he can trust you."
   },
   {
     "id": 3,
@@ -29,8 +35,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-12T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=3"
+    "intakeTimestamp": "2026-08-18T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=3",
+    "strayHoldExpiresAt": "2026-08-21T16:31:40.929Z",
+    "sex": "Female",
+    "personality": "A social butterfly who adores playtime and cuddles in equal measure."
   },
   {
     "id": 4,
@@ -40,8 +49,11 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "AT_RISK",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-17T09:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=4"
+    "intakeTimestamp": "2026-08-23T04:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=4",
+    "strayHoldExpiresAt": "2026-08-26T04:31:40.929Z",
+    "sex": "Female",
+    "personality": "Curious and energetic, always up for the next adventure."
   },
   {
     "id": 5,
@@ -51,8 +63,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-10T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=5"
+    "intakeTimestamp": "2026-08-14T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=5",
+    "strayHoldExpiresAt": "2026-08-17T16:31:40.929Z",
+    "sex": "Male",
+    "personality": "Easygoing and food-motivated — a cheerful sidekick for any home."
   },
   {
     "id": 6,
@@ -62,8 +77,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-15T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=6"
+    "intakeTimestamp": "2026-08-22T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=6",
+    "strayHoldExpiresAt": "2026-08-25T16:31:40.929Z",
+    "sex": "Female",
+    "personality": "Sweet-natured and calm, happiest with a cozy spot and a kind word."
   },
   {
     "id": 7,
@@ -73,8 +91,11 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "AT_RISK",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-17T19:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=7"
+    "intakeTimestamp": "2026-08-23T14:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=7",
+    "strayHoldExpiresAt": "2026-08-26T14:31:40.929Z",
+    "sex": "Male",
+    "personality": "A goofy, affectionate boy with a big heart and a bigger smile."
   },
   {
     "id": 8,
@@ -84,8 +105,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-03T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=8"
+    "intakeTimestamp": "2026-08-09T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=8",
+    "strayHoldExpiresAt": "2026-08-12T16:31:40.929Z",
+    "sex": "Male",
+    "personality": "Quiet and gentle, a steady companion who warms up beautifully."
   },
   {
     "id": 9,
@@ -95,8 +119,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-13T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=9"
+    "intakeTimestamp": "2026-08-16T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=9",
+    "strayHoldExpiresAt": "2026-08-19T16:31:40.929Z",
+    "sex": "Female",
+    "personality": "Bright and eager to please, with a soft spot for snuggles."
   },
   {
     "id": 10,
@@ -106,8 +133,11 @@
     "medicalStatus": "Needs Review",
     "euthanasia_risk_status": "IMMEDIATE_BEHAVIORAL",
     "statutoryHoldCleared": false,
-    "intakeTimestamp": "2026-06-14T20:20:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=10"
+    "intakeTimestamp": "2026-08-20T15:01:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=10",
+    "strayHoldExpiresAt": "2026-08-23T15:01:40.929Z",
+    "sex": "Male",
+    "personality": "Confident and protective, looking for an experienced, loving home."
   },
   {
     "id": 11,
@@ -117,8 +147,11 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-16T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=11"
+    "intakeTimestamp": "2026-08-20T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=11",
+    "strayHoldExpiresAt": "2026-08-23T16:31:40.929Z",
+    "sex": "Male",
+    "personality": "A curious little explorer with a playful, fearless streak."
   },
   {
     "id": 12,
@@ -128,7 +161,10 @@
     "medicalStatus": "Healthy",
     "euthanasia_risk_status": "SAFE",
     "statutoryHoldCleared": true,
-    "intakeTimestamp": "2026-06-11T21:50:47Z",
-    "imageUrl": "https://placedog.net/400/400?id=12"
+    "intakeTimestamp": "2026-08-12T16:31:40.929Z",
+    "imageUrl": "https://placedog.net/400/400?id=12",
+    "strayHoldExpiresAt": "2026-08-15T16:31:40.929Z",
+    "sex": "Female",
+    "personality": "A calm senior lady who loves slow walks and warm laps."
   }
 ]

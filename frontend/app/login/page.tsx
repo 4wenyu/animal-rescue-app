@@ -2,6 +2,7 @@
 
 import { Suspense, useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PawPrint, Eye, EyeOff } from "lucide-react";
 
@@ -9,6 +10,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const registered = searchParams.get("registered") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +48,11 @@ function LoginForm() {
             Sign In
           </h1>
           <p className="mt-1 text-sm text-slate-500">RescueHub Staff Portal</p>
+          {registered && (
+            <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+              Account created — sign in to continue.
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,6 +121,16 @@ function LoginForm() {
 
         <p className="mt-4 text-center text-[11px] text-slate-400">
           Demo: admin@rescuehub.org / admin123
+        </p>
+
+        <p className="mt-3 text-center text-sm text-slate-500">
+          New to RescueHub?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-emerald-600 hover:text-emerald-500"
+          >
+            Create an account
+          </Link>
         </p>
       </div>
     </div>

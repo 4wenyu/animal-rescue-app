@@ -31,10 +31,14 @@ import {
   Radio,
   ShieldCheck,
   Tag,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { useI18n } from "@/src/lib/useI18n";
+import { ShareToEarnWidget } from "./ShareToEarnWidget";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -66,74 +70,50 @@ interface FeedEntry {
   icon: typeof ShieldCheck;
 }
 
-const SHELTERS = [
-  "Eastvale Municipal Shelter",
-  "Cedarbrook Animal Services",
-  "Northside Rescue Center",
-  "Riverbend Humane Society",
-  "Pinecrest Animal Hospital",
-];
-const VOLUNTEER_CITIES = [
-  "Eastvale",
-  "Northside",
-  "Cedarbrook",
-  "Riverbend",
-  "Pinecrest",
-  "Hillview",
-  "Brookside",
-];
-
-const FEED_BANK: { icon: typeof ShieldCheck; text: () => string }[] = [
+/**
+ * HONEST SIMULATED FEED (Sprint C — review §4.3 High "Radar is obviously
+ * mock — and dangerously so").
+ *
+ * Previously the ticker fabricated real-world claims from a fixed bank
+ * ("Three community members reported possible sightings", "Notifying 8–30
+ * registered volunteers", "Alerting municipal shelters within a 5-mile
+ * radius") with a "· live" label and NO simulation disclaimer. The partner
+ * network does not exist yet, so those were fabricated promises to a
+ * distressed owner.
+ *
+ * Now the feed only ever states what is true about the demo:
+ *   - the broadcast is QUEUED (not dispatched to real partners),
+ *   - the feed is a simulated demo preview,
+ *   - concrete next steps the owner can actually take (share, watch).
+ * No counts, no cities, no shelter names, no sightings.
+ */
+const FEED_BANK: {
+  icon: typeof ShieldCheck;
+  text: (tr: (k: string, vars?: Record<string, string>) => string) => string;
+}[] = [
   {
     icon: Radio,
-    text: () => `Search broadcast dispatched across the RescueHub partner network.`,
+    text: (tr) => tr("radar.feed_queued"),
   },
   {
     icon: ShieldCheck,
-    text: () => `Alerting municipal shelters within a 5-mile radius…`,
-  },
-  {
-    icon: ShieldCheck,
-    text: () => {
-      const count = 8 + Math.floor(Math.random() * 22);
-      return `Notifying ${count} registered volunteers in ${
-        VOLUNTEER_CITIES[Math.floor(Math.random() * VOLUNTEER_CITIES.length)]
-      }…`;
-    },
+    text: (tr) => tr("radar.feed_demo"),
   },
   {
     icon: MapPin,
-    text: () =>
-      `Send-loop engaged for ${
-        SHELTERS[Math.floor(Math.random() * SHELTERS.length)]
-      } — intake queueing started.`,
+    text: (tr) => tr("radar.feed_network"),
   },
   {
     icon: PawPrint,
-    text: () =>
-      `${pick([
-        "Tick-tock patrols",
-        "Volunteer foot sweeps",
-        "Neighborhood canvassers",
-      ])} dispatched in the ${Math.ceil(1 + Math.random() * 12)}-mile radius.`,
+    text: (tr) => tr("radar.feed_validated"),
   },
   {
     icon: Heart,
-    text: () =>
-      `${pick([
-        "Three community members reported possible sightings.",
-        "A local foster has marked themselves available.",
-        "Two volunteers have RSVPed to coordinate canvassing.",
-      ])}`,
+    text: (tr) => tr("radar.feed_share_hint"),
   },
   {
     icon: Radio,
-    text: () =>
-      `Live presence mirrored to ${pick([
-        "Nextdoor Eastvale",
-        "Lost-Pets of Eastvale (Facebook)",
-        "Cedarbrook Cares (Facebook)",
-      ])}.`,
+    text: (tr) => tr("radar.feed_no_sightings"),
   },
 ];
 
@@ -147,23 +127,27 @@ function nextFeedId() {
   return `feed-${_feedCounter}-${Date.now()}`;
 }
 
-function buildInitialFeed(): FeedEntry[] {
+function buildInitialFeed(
+  tr: (k: string, vars?: Record<string, string>) => string,
+): FeedEntry[] {
   const now = new Date();
   return [
     {
       id: nextFeedId(),
-      text: `Search id received. Validating capture against network rules…`,
+      text: tr("radar.feed_initial"),
       createdAtLabel: now.toLocaleTimeString(undefined, { timeStyle: "short" }),
       icon: ShieldCheck,
     },
   ];
 }
 
-function buildNextFeed(): FeedEntry {
+function buildNextFeed(
+  tr: (k: string, vars?: Record<string, string>) => string,
+): FeedEntry {
   const bank = pick(FEED_BANK);
   return {
     id: nextFeedId(),
-    text: bank.text(),
+    text: bank.text(tr),
     createdAtLabel: new Date().toLocaleTimeString(undefined, { timeStyle: "short" }),
     icon: bank.icon,
   };
@@ -176,11 +160,14 @@ function buildNextFeed(): FeedEntry {
 export default function RadarView() {
   const params = useParams<{ searchId: string }>();
   const router = useRouter();
+  const { tr } = useI18n();
   const searchId = (params?.searchId ?? "").toString();
 
   const [search, setSearch] = useState<SearchDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [feed, setFeed] = useState<FeedEntry[]>(() => buildInitialFeed());
+  const [patchError, setPatchError] = useState<string | null>(null);
+  const [patching, setPatching] = useState(false);
+  const [feed, setFeed] = useState<FeedEntry[]>(() => buildInitialFeed(tr));
   const feedScrollRef = useRef<HTMLDivElement>(null);
   const streamTimerRef = useRef<number | null>(null);
 
@@ -215,12 +202,16 @@ export default function RadarView() {
     };
   }, [searchId]);
 
-  /* ── Activity Feed ticker — append a new line every 2.6–3.4s. ──────── */
+  /* ── Activity Feed ticker — append a new line every 2.6–3.4s. Stop once
+     the search reaches a terminal status (FOUND/CANCELLED): a closed
+     search must not keep manufacturing "live" alerts. ─────────────── */
+  const isSearching = search?.status === "SEARCHING";
   useEffect(() => {
+    if (!isSearching) return; // terminal — frozen
     const schedule = () => {
       const delay = 2600 + Math.random() * 800;
       streamTimerRef.current = window.setTimeout(() => {
-        setFeed((prev) => [...prev.slice(-12), buildNextFeed()]);
+        setFeed((prev) => [...prev.slice(-12), buildNextFeed(tr)]);
         schedule();
       }, delay);
     };
@@ -231,13 +222,62 @@ export default function RadarView() {
         streamTimerRef.current = null;
       }
     };
-  }, []);
+    // `tr` restarts the ticker on locale change so new lines are localized.
+  }, [isSearching, tr]);
 
   useEffect(() => {
     feedScrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [feed]);
 
   const handleCloseSearch = useCallback(() => router.push("/dashboard"), [router]);
+
+  const handleSetStatus = useCallback(
+    async (status: "FOUND" | "CANCELLED") => {
+      if (!search || patching) return;
+      setPatching(true);
+      setPatchError(null);
+      try {
+        const res = await fetch(
+          `/api/searches/${encodeURIComponent(search.searchId)}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ status }),
+          },
+        );
+        const json = (await res.json().catch(() => null)) as
+          | { ok: boolean; search?: SearchDto; message?: string }
+          | null;
+        if (!res.ok || !json?.ok || !json.search) {
+          setPatchError(
+            json?.message ?? `Could not update search (HTTP ${res.status}).`,
+          );
+          return;
+        }
+        setSearch(json.search);
+        setFeed((prev) => [
+          ...prev,
+          {
+            id: nextFeedId(),
+            text:
+              status === "FOUND"
+                ? tr("radar.closed_found")
+                : tr("radar.closed_cancelled"),
+            createdAtLabel: new Date().toLocaleTimeString(undefined, {
+              timeStyle: "short",
+            }),
+            icon: status === "FOUND" ? CheckCircle2 : X,
+          },
+        ]);
+      } catch (err) {
+        setPatchError(err instanceof Error ? err.message : "Unknown update error");
+      } finally {
+        setPatching(false);
+      }
+    },
+    [search, patching, tr],
+  );
 
   if (loadError) {
     return (
@@ -247,11 +287,11 @@ export default function RadarView() {
           className="mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to dashboard
+          {tr("radar.back_to_dashboard")}
         </Link>
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center">
           <p className="text-base font-semibold text-rose-700">
-            Couldn&rsquo;t load search
+            {tr("radar.load_error_title")}
           </p>
           <p className="mt-2 text-sm text-rose-600">{loadError}</p>
         </div>
@@ -265,7 +305,7 @@ export default function RadarView() {
         <div className="flex h-[60vh] items-center justify-center rounded-3xl border border-slate-200 bg-white shadow-xl">
           <div className="flex items-center gap-3 text-slate-400">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <p className="text-sm font-medium">Loading radar…</p>
+            <p className="text-sm font-medium">{tr("radar.loading")}</p>
           </div>
         </div>
       </div>
@@ -281,46 +321,76 @@ export default function RadarView() {
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
+            {tr("radar.back_to_dashboard")}
           </Link>
-          <p className="text-[11px] font-medium uppercase tracking-widest text-slate-400">
-            Epic 3 · Live Rescue Radar
+          <p className="text-[11px] font-medium uppercase tracking-widest text-slate-500">
+            {tr("radar.eyebrow")}
           </p>
         </div>
 
-        <HeroHeader search={search} onClose={handleCloseSearch} />
+        <HeroHeader
+          search={search}
+          patching={patching}
+          onClose={handleCloseSearch}
+          onSetStatus={handleSetStatus}
+        />
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        {patchError && (
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+            {patchError}
+          </div>
+        )}
+
+        <SearchStatusStepper status={search.status} />
+
+        <ShareToEarnWidget searchId={search.searchId} />
+
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
           <section className="lg:col-span-2">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                   <ShieldCheck className="h-4 w-4" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">Captured intake</h3>
+                <h3 className="text-sm font-bold text-slate-900">
+                  {tr("radar.captured_intake")}
+                </h3>
               </div>
               <dl className="space-y-3">
-                <SummaryRow icon={PawPrint} label="Species" value={search.species} />
-                <SummaryRow icon={Tag} label="Breed" value={search.breed} />
+                <SummaryRow
+                  icon={PawPrint}
+                  label={tr("radar.species")}
+                  value={search.species}
+                  tr={tr}
+                />
+                <SummaryRow
+                  icon={Tag}
+                  label={tr("radar.breed")}
+                  value={search.breed}
+                  tr={tr}
+                />
                 <SummaryRow
                   icon={Heart}
-                  label="Color & markings"
+                  label={tr("radar.color_markings")}
                   value={search.colorMarkings}
+                  tr={tr}
                 />
                 <SummaryRow
                   icon={ShieldCheck}
-                  label="Collar & ID"
+                  label={tr("radar.collar_id")}
                   value={search.collarId}
+                  tr={tr}
                 />
                 <SummaryRow
                   icon={MapPin}
-                  label="Last seen"
+                  label={tr("radar.last_seen")}
                   value={search.lastSeen}
+                  tr={tr}
                 />
               </dl>
               <div className="mt-5 border-t border-slate-100 pt-4">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-                  search id
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  {tr("radar.search_id")}
                 </p>
                 <p className="mt-1 break-all font-mono text-[11px] text-slate-600">
                   {search.searchId}
@@ -333,19 +403,25 @@ export default function RadarView() {
             <div className="flex h-[36rem] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 text-slate-100 shadow-md">
               <div className="flex items-center justify-between border-b border-slate-700 px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                  </span>
+                  {search.status === "SEARCHING" ? (
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
+                  ) : (
+                    <span className="relative flex h-2 w-2">
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-500" />
+                    </span>
+                  )}
                   <h3 className="text-sm font-bold tracking-wide text-white">
-                    Activity Feed
+                    {tr("radar.activity_feed")}
                   </h3>
                   <p className="text-[10px] uppercase tracking-widest text-slate-400">
-                    · live
+                    · {search.status === "SEARCHING" ? tr("radar.feed_live") : tr("radar.feed_closed")}
                   </p>
                 </div>
                 <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
-                  {feed.length} events
+                  {tr("radar.events", { count: String(feed.length) })}
                 </span>
               </div>
               <div
@@ -371,11 +447,16 @@ export default function RadarView() {
 
 function HeroHeader({
   search,
+  patching,
   onClose,
+  onSetStatus,
 }: {
   search: SearchDto;
+  patching: boolean;
   onClose: () => void;
+  onSetStatus: (status: "FOUND" | "CANCELLED") => void;
 }) {
+  const { tr } = useI18n();
   const activatedAtFormatted = useMemo(() => {
     const d = new Date(search.activatedAt);
     return d.toLocaleString(undefined, {
@@ -386,30 +467,67 @@ function HeroHeader({
     });
   }, [search.activatedAt]);
 
+  const terminal = search.status !== "SEARCHING";
+  const headline = terminal
+    ? search.status === "FOUND"
+      ? tr("radar.headline_found")
+      : tr("radar.headline_cancelled")
+    : tr("radar.headline_active");
+  const subline = terminal
+    ? search.status === "FOUND"
+      ? tr("radar.subline_found")
+      : tr("radar.subline_cancelled")
+    : tr("radar.subline_active", { date: activatedAtFormatted });
+
   return (
     <div className="relative mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-emerald-600 via-emerald-500 to-amber-500 p-8 text-white shadow-lg">
       <div className="relative z-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-50">
             <Radio className="h-3 w-3" />
-            Live Rescue Radar
+            {tr("radar.hero_eyebrow")}
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Your search network is active
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-emerald-50/90">
-            Activated {activatedAtFormatted}. We&rsquo;re pinging shelters, volunteers,
-            and partner networks within range of the last seen location.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{headline}</h1>
+          <p className="mt-2 max-w-2xl text-sm text-emerald-50/90">{subline}</p>
+          {!terminal && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 text-[11px] font-semibold text-emerald-50">
+              <Circle className="h-2 w-2" />
+              {tr("radar.demo_pill")}
+            </p>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center gap-2 rounded-xl bg-white/95 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-white active:scale-[0.97]"
-        >
-          <CheckCircle2 className="h-4 w-4" />
-          Mark as complete
-        </button>
+
+        {terminal ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 rounded-xl bg-white/95 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-white active:scale-[0.97]"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {tr("radar.back_to_dashboard")}
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={patching}
+              onClick={() => onSetStatus("FOUND")}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/95 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-white active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {patching ? tr("radar.updating") : tr("radar.mark_as_found")}
+            </button>
+            <button
+              type="button"
+              disabled={patching}
+              onClick={() => onSetStatus("CANCELLED")}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-white/20 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <X className="h-4 w-4" />
+              {tr("radar.cancel_search")}
+            </button>
+          </div>
+        )}
       </div>
       <div
         className="pointer-events-none absolute inset-0 opacity-30"
@@ -423,14 +541,83 @@ function HeroHeader({
   );
 }
 
+function SearchStatusStepper({
+  status,
+}: {
+  status: "SEARCHING" | "FOUND" | "CANCELLED";
+}) {
+  const { tr } = useI18n();
+  const steps: {
+    key: "SEARCHING" | "FOUND" | "CANCELLED";
+    label: string;
+    reached: boolean;
+  }[] = [
+    {
+      key: "SEARCHING",
+      label: tr("radar.step_activated"),
+      reached: true,
+    },
+    {
+      key: "FOUND",
+      label: status === "CANCELLED" ? tr("radar.step_not_found") : tr("radar.step_found"),
+      reached: status === "FOUND",
+    },
+    {
+      key: "CANCELLED",
+      label: tr("radar.step_closed"),
+      reached: status === "FOUND" || status === "CANCELLED",
+    },
+  ];
+
+  return (
+    <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        {steps.map((step, i) => (
+          <div key={step.key} className="flex flex-1 items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                  step.reached
+                    ? step.key === "CANCELLED" && status === "CANCELLED"
+                      ? "bg-slate-400 text-white"
+                      : "bg-emerald-500 text-white"
+                    : "bg-slate-100 text-slate-400"
+                }`}
+              >
+                {step.reached ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              </div>
+              <span
+                className={`text-xs font-semibold ${
+                  step.reached ? "text-slate-900" : "text-slate-400"
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className={`h-px flex-1 ${
+                  steps[i + 1].reached ? "bg-emerald-400" : "bg-slate-200"
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SummaryRow({
   icon: Icon,
   label,
   value,
+  tr,
 }: {
   icon: typeof PawPrint;
   label: string;
   value: string | null;
+  tr: (k: string, vars?: Record<string, string | number>) => string;
 }) {
   const present = typeof value === "string" && value.trim().length > 0;
   return (
@@ -443,7 +630,7 @@ function SummaryRow({
         {present ? <Icon className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           {label}
         </p>
         <p
@@ -451,7 +638,7 @@ function SummaryRow({
             present ? "font-medium text-slate-900" : "italic text-slate-400"
           }`}
         >
-          {present ? value : "(missing)"}
+          {present ? value : tr("radar.missing")}
         </p>
       </div>
     </div>

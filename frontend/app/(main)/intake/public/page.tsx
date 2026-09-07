@@ -6,6 +6,11 @@ import {
   ESIGNLiabilityWaiver,
   type SurrenderType,
 } from "@/src/components/intake/ESIGNLiabilityWaiver";
+import {
+  SpeciesBreedSelect,
+  type SpeciesBreedValue,
+} from "@/src/components/ui/SpeciesBreedSelect";
+import { breedLabel } from "@/src/lib/animalTaxonomy";
 import { ArrowLeft, PawPrint, Shield, Heart } from "lucide-react";
 
 // ── Synchronous i18n: import every locale dictionary statically so the
@@ -61,6 +66,17 @@ const EN_FALLBACK: Record<string, string> = {
   "public_intake.hash_description":
     "SHA-256 hash of your typed-name signature and consent transaction. Keep this for your records.",
   "nav.back_to_options": "Back to Intake Options",
+};
+
+/** Localized label for the optional animal-kind picker (kept inline to avoid
+ *  touching 7 locale files for one heading). */
+const ANIMAL_KIND_LABEL: Record<string, string> = {
+  en: "What kind of animal is this? (optional)",
+  es: "¿Qué tipo de animal es? (opcional)",
+  "zh-CN": "这是什么动物？（选填）",
+  "zh-TW": "這是什麼動物？（選填）",
+  ja: "これはどんな動物ですか？（任意）",
+  ko: "어떤 동물인가요? (선택 사항)",
 };
 
 function tr(locale: string, key: string, vars?: Record<string, string | number>): string {
@@ -136,6 +152,10 @@ export default function PublicIntakePage(): ReactNode {
   const [locale, setLocale] = useState<string>("en");
   const [isSubmittingIntake, setIsSubmittingIntake] = useState(false);
   const [tokensAwarded, setTokensAwarded] = useState<number | null>(null);
+  const [animalKind, setAnimalKind] = useState<SpeciesBreedValue>({
+    species: null,
+    breed: null,
+  });
 
   // Resolve locale after hydration (server always renders English first).
   useEffect(() => {
@@ -188,15 +208,27 @@ export default function PublicIntakePage(): ReactNode {
     try {
       const res = await fetch("/api/animals/intake", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-esign-hash": hash,
+        },
         credentials: "same-origin",
         body: JSON.stringify({
+          // Tier 0.4: server derives stray-hold semantics from this type.
+          // OWNER_SURRENDER → no stray hold; PUBLIC_STRAY → 72h hold computed.
+          intakeType:
+            surrenderType === "OWNER_SURRENDER"
+              ? "OWNER_SURRENDER"
+              : "PUBLIC_STRAY",
           animals: [
             {
-              breed: "Mixed Breed",
+              species: animalKind.species,
+              breed:
+                (animalKind.breed &&
+                  breedLabel(animalKind.breed, locale)) ||
+                "Mixed Breed",
               medicalStatus: "Healthy",
               euthanasia_risk_status: "SAFE",
-              statutoryHoldCleared: surrenderType === "STRAY",
               intakeTimestamp: new Date().toISOString(),
             },
           ],
@@ -206,7 +238,7 @@ export default function PublicIntakePage(): ReactNode {
         const json = (await res.json()) as {
           tokensAwarded?: number;
         };
-        setTokensAwarded(json.tokensAwarded ?? 50);
+        setTokensAwarded(json.tokensAwarded ?? 0);
       } else {
         // Visible on the page so a failed submit isn't silent.
         console.warn("[intake/public] intake POST non-ok", res.status);
@@ -307,6 +339,17 @@ export default function PublicIntakePage(): ReactNode {
               ))}
             </div>
 
+            {/* Optional animal-kind picker — feeds species/breed into intake */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="mb-3 text-sm font-semibold text-slate-700">
+                {ANIMAL_KIND_LABEL[locale] ?? ANIMAL_KIND_LABEL.en}
+              </p>
+              <SpeciesBreedSelect
+                value={animalKind}
+                onChange={setAnimalKind}
+              />
+            </div>
+
             {/* Back button */}
             <div className="pt-4">
               <Link
@@ -368,7 +411,7 @@ export default function PublicIntakePage(): ReactNode {
               <p className="mt-2 text-sm leading-relaxed text-emerald-700">
                 {t("public_intake.confirm_body")}
               </p>
-              {tokensAwarded !== null && (
+              {tokensAwarded !== null && tokensAwarded > 0 && (
                 <div
                   className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900"
                   data-testid="intake-token-reward"
@@ -378,6 +421,11 @@ export default function PublicIntakePage(): ReactNode {
                     +{tokensAwarded} tokens minted to your wallet
                   </span>
                 </div>
+              )}
+              {tokensAwarded === 0 && (
+                <p className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500">
+                  Intake recorded — no token grant for anonymous submissions.
+                </p>
               )}
               {isSubmittingIntake && (
                 <p className="mt-2 text-xs text-amber-700">

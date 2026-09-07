@@ -1,18 +1,17 @@
 /**
- * /lost-pet-intake — Suspense wrapper
- * ===================================
- * Mounted after a successful LOST_PET_SEARCH_SPEND (handled by the
- * SponsorshipCheckoutModal's parent dashboard).
+ * /lost-pet-intake — public route (Sprint B)
+ * ==========================================
+ * Moved OUT of the (main) route group: this is a public landing for
+ * pet owners who lost an animal. It renders standalone (no staff
+ * sidebar) so a first-time visitor is not greeted by the staff shell.
  *
- * Structure:
- *   - This file is the App Router route entry. Keeping it as a thin
- *     server component that wraps the client view in a Suspense
- *     boundary, as Next 16 requires when child components call
- *     `useSearchParams` (which `LostPetIntakeView` does).
- *   - The actual UI lives in `LostPetIntakeView.tsx` (client component).
- *   - Lit-up fallback during static prerender is intentionally minimal:
- *     a soft typewriter placeholder so the route pre-renders without
- *     bailing out.
+ * Reached from:
+ *   - Public hero / nav CTA ("I lost a pet")
+ *   - Dashboard sponsor-grant redirect (?credit=&spend=&newBalance=)
+ *
+ * Structure: thin server component wrapping the client view in a
+ * Suspense boundary (Next 16 requires it because the view reads
+ * `useSearchParams`).
  */
 
 import { Suspense } from "react";
@@ -35,9 +34,7 @@ export default function LostPetIntakePage() {
                   className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
                   style={{ animationDelay: "300ms" }}
                 />
-                <p className="ml-2 text-sm font-medium">
-                  Loading intake assistant…
-                </p>
+                <p className="ml-2 text-sm font-medium">Loading intake assistant…</p>
               </div>
             </div>
           </div>

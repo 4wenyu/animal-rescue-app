@@ -26,6 +26,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { useI18n } from "@/src/lib/useI18n";
+
 /* ---------------------------------------------------------------------- */
 /* Types                                                                    */
 /* ---------------------------------------------------------------------- */
@@ -171,7 +173,7 @@ function BalancePanel({
   earned: number;
   spent: number;
   status: string;
-  tr: (k: string) => string;
+  tr: (k: string, vars?: Record<string, string | number>) => string;
 }) {
   const badge = STATUS_BADGE[status] ?? STATUS_BADGE.ACTIVE;
 

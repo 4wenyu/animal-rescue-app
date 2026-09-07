@@ -17,6 +17,7 @@ import {
 import { LiveTimer } from "@/src/components/LiveTimer";
 import { ShareToHelpButton } from "@/src/components/dashboard/ShareToHelpButton";
 import { useI18n } from "@/src/lib/useI18n";
+import { AnimalPhoto } from "@/src/components/ui/AnimalPhoto";
 
 interface Dog {
   id: number;
@@ -59,24 +60,23 @@ function getDisplayBreed(dog: Dog, tr: (k: string, v?: Record<string, string | n
 
 // ── Thematic avatar by breed/context ──────────────────────────────────────
 function AnimalAvatar({ dog, size = 28 }: { dog: Dog; size?: number }) {
-  if (dog.imageUrl) {
-    return (
-      <img
-        src={dog.imageUrl}
-        alt={dog.name}
-        className="object-cover rounded-full border border-slate-200 shrink-0"
-        style={{ width: size, height: size }}
-        loading="lazy"
-      />
-    );
-  }
   const Icon = isBSLRestricted(dog.breed) ? ShieldCheck : PawPrint;
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-slate-100 text-slate-400 shrink-0"
+      className="relative shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100"
       style={{ width: size, height: size }}
     >
-      <Icon className="h-3.5 w-3.5" />
+      <AnimalPhoto
+        src={dog.imageUrl}
+        alt={dog.name}
+        roundedClassName="rounded-full"
+        sizes={`${size}px`}
+      />
+      {!dog.imageUrl && (
+        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+      )}
     </div>
   );
 }

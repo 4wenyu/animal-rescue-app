@@ -1,16 +1,14 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
+import { prisma } from "@/lib/prisma";
+import { verifyPassword } from "@/lib/auth/password";
 
-// ── Mock Users ───────────────────────────────────────────────────────────
-// Note: aligned with the demo credentials advertised on /login page:
-//   admin@rescuehub.org / admin123
-//   staff@rescuehub.org / staff123
-// IDs are valid v4 UUIDs. Crypto-grade random (not zero-padded).
-// Several strcmp-strict ID validators — including Prisma's `userId: @id @default(uuid())`
-// and any consumer running its own RFC4122 v4 variant/version check —
-// reject `00000000-...` form because char 12 (version nibble) must be
-// `4` and char 16 (variant nibble) must be `8|9|a|b`. Real v4s only.
+// ── Development-only demo credentials ──────────────────────────────────────
+// Retained so a fresh checkout can log in before a real user is seeded. They
+// are REFUSED in production and in any environment that has not explicitly
+// opted in via AUTH_ALLOW_MOCK_USERS=true. Production must always resolve
+// against `users.passwordHash` in the database.
 const MOCK_USERS = [
   {
     id: "d290f1ee-6c54-4b01-90e6-d701748f0851",
@@ -28,30 +26,57 @@ const MOCK_USERS = [
   },
 ];
 
+async function authorizeAgainstDatabase(
+  email: string,
+  password: string,
+): Promise<{ id: string; email: string; name: string; role: string } | null> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return null;
+
+  const ok = await verifyPassword(password, user.passwordHash);
+  if (!ok) return null;
+
+  return {
+    id: user.userId,
+    email: user.email,
+    name: user.displayName,
+    role: user.role,
+  };
+}
+
 export const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "admin@rescuehub.org" },
+        email: { label: "Email", type: "email", placeholder: "you@rescuehub.org" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const email = credentials?.email as string | undefined;
+        const email = (credentials?.email as string | undefined)?.trim().toLowerCase();
         const password = credentials?.password as string | undefined;
 
         if (!email || !password) return null;
 
-        const user = MOCK_USERS.find(
+        // Primary path: real user with a scrypt-hashed credential in Postgres.
+        const realUser = await authorizeAgainstDatabase(email, password);
+        if (realUser) return realUser;
+
+        // Secondary path: demo credentials, forbidden outside explicit dev opt-in.
+        const mockAllowed =
+          process.env.NODE_ENV !== "production" &&
+          process.env.AUTH_ALLOW_MOCK_USERS === "true";
+        if (!mockAllowed) return null;
+
+        const mock = MOCK_USERS.find(
           (u) => u.email === email && u.password === password,
         );
-
-        if (!user) return null;
+        if (!mock) return null;
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
+          id: mock.id,
+          email: mock.email,
+          name: mock.name,
+          role: mock.role,
         };
       },
     }),
@@ -95,6 +120,12 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
   },
   session: { strategy: "jwt" },
+  // NextAuth v5 refuses to serve /api/auth/* unless it trusts the request
+  // host. `next dev` trusts localhost automatically, but `next start` and
+  // reverse-proxy deployments do not — which surfaced as "UntrustedHost" on
+  // every sign-in attempt in production builds. Trusting the host is the
+  // documented deployment default; combine with AUTH_URL for a pinned origin.
+  trustHost: true,
 };
 
 export const { auth, handlers, signIn, signOut } = NextAuth(authConfig);

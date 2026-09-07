@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { PawPrint, ArrowLeft, ShieldCheck } from "lucide-react";
-
-// ── Static dog data (same source) ─────────────────────────────────────
 import dogs from "../../../data/dogs.json";
+import { AnimalPhoto } from "@/src/components/ui/AnimalPhoto";
 
+// ── Static dog data (same source) ─────────────────
 type Dog = {
   id: number;
   name: string;
@@ -21,17 +21,19 @@ export function generateStaticParams() {
   return (dogs as Dog[]).map((d) => ({ id: String(d.id) }));
 }
 
-export default function HoldProfilePage({ params }: { params: { id: string } }) {
+export default async function HoldProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const dogsTyped = dogs as Dog[];
-  const animal = dogsTyped.find((d) => d.id === Number(params.id));
-
+  const animal = dogsTyped.find((d) => d.id === Number(id));
   if (!animal) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-b from-slate-50 to-white px-6">
         <PawPrint className="h-12 w-12 text-slate-300" />
-        <h1 className="text-2xl font-bold text-slate-800">Animal Not Found</h1>
+        <h1 className="text-2xl font-bold text-slate-900">
+          Animal Not Found
+        </h1>
         <p className="text-sm text-slate-500">
-          No animal with ID {params.id} exists in the roster.
+          No animal with ID {id} exists in the roster.
         </p>
         <Link
           href="/dashboard"
@@ -47,7 +49,7 @@ export default function HoldProfilePage({ params }: { params: { id: string } }) 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <div className="mx-auto max-w-3xl px-6 pb-20 pt-12">
-        {/* ── Back link ──────────────────────────────────── */}
+        {/* ── Back link ──────────────────────────────── */}
         <Link
           href="/dashboard"
           className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-slate-800"
@@ -56,7 +58,7 @@ export default function HoldProfilePage({ params }: { params: { id: string } }) 
           Back to Dashboard
         </Link>
 
-        {/* ── Header card ────────────────────────────────── */}
+        {/* ── Header card ──────────────────────────────── */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div
             className={`h-2 ${
@@ -71,17 +73,14 @@ export default function HoldProfilePage({ params }: { params: { id: string } }) 
           <div className="p-8">
             {/* Animal info */}
             <div className="flex items-start gap-6">
-              {animal.imageUrl ? (
-                <img
+              <div className="relative h-24 w-24">
+                <AnimalPhoto
                   src={animal.imageUrl}
                   alt={animal.name}
-                  className="h-24 w-24 shrink-0 rounded-2xl border border-slate-200 object-cover shadow-sm"
+                  roundedClassName="rounded-2xl"
+                  className="border border-slate-200 shadow-sm"
                 />
-              ) : (
-                <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
-                  <PawPrint className="h-8 w-8 text-slate-400" />
-                </div>
-              )}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-3xl font-bold tracking-tight text-slate-900">
@@ -119,12 +118,6 @@ export default function HoldProfilePage({ params }: { params: { id: string } }) 
                       }`}
                     >
                       {animal.medicalStatus}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold tracking-wide text-slate-400">RISK</span>
-                    <p className="mt-0.5 font-medium capitalize">
-                      {animal.euthanasia_risk_status.replace(/_/g, " ").toLowerCase()}
                     </p>
                   </div>
                 </div>
@@ -191,14 +184,14 @@ export default function HoldProfilePage({ params }: { params: { id: string } }) 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.97]"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
           >
+            <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Link>
           <Link
             href="/intake/public"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]"
-          >
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]">
             Public Surrender Portal
           </Link>
         </div>

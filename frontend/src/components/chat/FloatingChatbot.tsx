@@ -101,7 +101,14 @@ export default function FloatingChatbot() {
    * that route is the dedicated intake UI, not a folio of the global
    * chatbot.                                                        ─ */
   const pathname = usePathname();
-  if (pathname === "/lost-pet-intake") return null;
+  /* ── Hooks-order safety ─────────────────────────────────────────────
+   * Every hook below must run on EVERY render, even when this route
+   * suppresses the FAB. The early return therefore happens AFTER all
+   * hooks, with `suppressed` gating only the JSX output. Returning
+   * null BEFORE the hooks (the previous shape) violated the Rules of
+   * Hooks: navigating between /lost-pet-intake and any other route
+   * changed the number of hooks mounted, which crashes React.       ─ */
+  const suppressed = pathname === "/lost-pet-intake";
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -391,6 +398,9 @@ export default function FloatingChatbot() {
     },
     [input, isLoading, sendMessage, pendingImage],
   );
+
+  /* ── Route suppression (post-hooks, see comment above) ── */
+  if (suppressed) return null;
 
   return (
     <>

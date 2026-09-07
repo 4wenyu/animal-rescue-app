@@ -3,14 +3,15 @@
 /**
  * /lost-pet-intake (Suspense-wrapped inner view)
  * ============================================
- * The page-level default export must be wrapped in a Suspense boundary
- * because we read URL search params with `useSearchParams` (Next 16
- * requirement — without it, static prerender bails).
+ * Public intake for pet owners. Reads URL search params (credit/spend/
+ * newBalance) which are set when the user arrives from the dashboard
+ * sponsor-grant flow; otherwise it is a standalone public page.
  *
- * This file is the inner view. `page.tsx` is the Suspense wrapper.
+ * Back-link is context-aware: a user who arrived from the dashboard
+ * sponsor flow goes back to the dashboard; a public visitor goes home.
  */
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
@@ -33,25 +34,29 @@ export default function LostPetIntakeView() {
     };
   }, [params]);
 
+  // Came from the dashboard sponsor-grant flow → back to dashboard.
+  const cameFromDashboard = Boolean(context.creditTxnId || context.spendTxnId);
+
   return (
     <>
       <div className="mx-auto mb-6 flex max-w-6xl items-center justify-between">
         <Link
-          href="/dashboard"
+          href={cameFromDashboard ? "/dashboard" : "/"}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.97]"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to dashboard
+          {cameFromDashboard ? "Back to dashboard" : "Back to home"}
         </Link>
-        <p className="text-[11px] font-medium uppercase tracking-widest text-slate-400">
-          Epic 3 · AI Agent Outreach Engine
+        <p className="hidden items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-slate-400 sm:inline-flex">
+          <Heart className="h-3 w-3 text-emerald-500" />
+          Find My Pet · Secure intake
         </p>
       </div>
 
       <div className="mx-auto max-w-6xl">
         <LostPetAgent
           context={context}
-          onExit={() => router.push("/dashboard")}
+          onExit={() => router.push(cameFromDashboard ? "/dashboard" : "/")}
         />
       </div>
     </>

@@ -1,40 +1,20 @@
 # Changelog
-## v3.1.0 — EPIC 1 Pass 2: UI Polish & Global Localization (2026-06-17)
+## v3.2.0 — Docs-Compliance Review & EPIC 3 Foundation Hardening (2026-08-23)
+
+### Fixed
+- **`npm run build` / `/dashboard` runtime 500** — `ReferenceError: useI18n is not defined` in `src/components/dashboard/TokenWalletCard.client.tsx`: the component called `useI18n()` but never imported it. Added `import { useI18n } from "@/src/lib/useI18n";`. Build is green again and the dashboard renders after login.
+- **`POST /api/chat-intake` 500** — `TypeError: INTAKE_SYSTEM_PROMPT.join is not a function`: `INTAKE_SYSTEM_PROMPT` is built with `.join("\n")` (a string), then `.join(" ")` was called on it at line 507. Now concatenated with `"\n"` + the locale directive.
+- **Next 16 `params` contract** — `app/hold-profile/[id]/page.tsx` read `params.id` synchronously; `params` is now a `Promise` and is awaited (`params: Promise<{ id: string }>`).
 
 ### Added
-- **`scripts/auto_sync_locales.py`** — Lightweight (~95 lines) parity translator. Reads `locales/en.json`, diffs each other 6 locales, translates missing keys via `deep-translator` (Google) on the fly. Guards `{interpolation}` tokens against translation rejection. Idempotent.
-- **283 i18n keys** spanning 7 locales (`en`, `es`, `zh`, `zh-TW`, `zh-CN`, `ja`, `ko`) at **100% parity**. Every `{count}`, `{id}`, `{name}`, `{pct}`, `{kb}`, `{error}`, etc. token preserved across all languages.
-- **Per-surface translations** (all 6 locales + SSR-safe English fallbacks):
-  - `/intake`, `/intake/public`, `/intake/document-scan` (Public Surrender Portal + Electronic Waiver + AI Document Scan)
-  - `/medical` (Records hub) + `/medical/[animalId]` (ASPCA/CART-aligned Intake Checksheet, including 10 emergency-sign medical terms)
-  - `/fundraising` (Campaign list) + `/fundraising/[animalId]` (animal ledger w/ donation form, allocation toggle, transaction history, restriction warning)
-  - `ESIGNLiabilityWaiver` (Owner Surrender + Found Stray variants, consent label, signature flow, both error messages)
-  - `BatchUpload` (AI Document Scan drag-drop, file staging, submit, results, empty-state banner, full AnimalCard subcomponent)
-  - `FloatingChatbot` (Lost Pet Intake — title, labels, greeting, error message with `{error}` token)
-  - `LiveTimer` upgraded from 3-locale to 6-locale
-  - `AnimalTable` `MedicalBadge` now resolves localized status
+- **`SponsorshipCheckoutModal` (Epic 2 sponsor-gateway) mounted into `/dashboard`** — previously dead code. A "Find My Pet" header button opens the IRC § 513(i) neutral-acknowledgment modal; on grant it issues `SPONSOR_VIEW_CREDIT_EARN` (+50) + `LOST_PET_SEARCH_SPEND` (-100) and routes to `/lost-pet-intake?credit=…&spend=…&newBalance=…`.
+- **Prisma schema reconciled with the deployed Neon DB** — added `LostPetSearch` model (`LostPetSearchStatus` enum) + `SPONSOR_VIEW_CREDIT_EARN` / `LOST_PET_SEARCH_SPEND` `TokenAction` values to `prisma/schema.prisma` (and mirror them in `lib/schemas/token.ts` `TokenActionSchema`). Previously the checked-in schema lacked these while the generated client and Neon DB already had them — `prisma generate` would have silently broken `/api/searches` and the sponsorship flow.
 
-### Changed
-- **`dogs.json` Mock Timer band refreshed** — 12 `intakeTimestamp` values rewritten relative to today (UTC). Distribution: 2 overdue (Max 0.5h, Rex 1.5h past 72h limit), 2 actively ticking (Luna 60h, Rocky 70h remaining), 8 cleared (1–14d ago). Compliance async-band rendering verified.
-- **`app/page.tsx`** — fixed About dropdown ghosting (was rendering English even with Chinese selected) by converting the hardcoded `HAMBURGER_LINKS` array to `labelKey`-driven `tr()` lookups. Hamburger menu + hero CTAs also localized.
-
-### Removed
-- **Stale locale files** — Deleted orphan `frontend/ja.json` and `frontend/ko.json` (leftover from earlier i18n architecture). Authoritative files at `frontend/locales/{ja,ko}.json`.
-
-### Verification
-- `npx tsc --noEmit --skipLibCheck` filtered to `^(app|src|lib|test-)/`: **0 errors** in any touched file.
-- Locale parity check: all 7 locales at 283/283 keys matching. Token drift: 0 mismatches.
-- Compliance sentences (IRC § 513(i), ESIGN/UETA, Hayden Act, GDPR/CCPA, SOC 2, Charleston Principles, ASPCA/CART) preserved verbatim across all 7 languages.
-
-### Carry-over
-- Sidebar Sign-In / Sign-Out labels still hardcoded English (deferred UI polish).
-- `requirements.txt` for `deep-translator` dep — follow-up.
-
-### Next Sprint
-- **EPIC 2 — The Viral Token & Brand Sponsorship Gateway** (Phase 7): Stripe integration, social-share viral loop verification, token consumption logic.
+### Docs
+- `ROADMAP.md` — EPIC 3 marked foundation-merged (2026-08-16); i18n key count corrected 283 → 391; fixed duplicated `v3.0.0` section in this changelog; added this entry.
 
 ---
-## v3.0.0 — Phase 6: Conversational UI & Lost Pet Chatbot (2026-06-15)
+## v3.1.0 — EPIC 1 Pass 2: UI Polish & Global Localization (2026-06-17)
 
 ### Added
 - **`scripts/auto_sync_locales.py`** — Lightweight (~95 lines) parity translator. Reads `locales/en.json`, diffs each other 6 locales, translates missing keys via `deep-translator` (Google) on the fly. Guards `{interpolation}` tokens against translation rejection. Idempotent.

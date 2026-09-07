@@ -64,11 +64,18 @@ export async function POST(request: Request) {
     typeof rawBody.relatedAnimalId === "string"
       ? rawBody.relatedAnimalId
       : null;
+  // Sprint C — search-scoped shares ("Share my search" on the radar).
+  // The share carries which LostPetSearch it belongs to so the radar can
+  // show honest free-search progress (X verified / 10) for that search.
+  const relatedSearchId =
+    typeof rawBody.relatedSearchId === "string"
+      ? rawBody.relatedSearchId
+      : null;
 
   let parsed;
   try {
     parsed = ViralShareVerificationCreateSchema.parse({
-      ...body,
+      ...rawBody,
       userId, // server-side override; never trust body
       // Strip the optional relatedAnimalId field before schema validation
       // (it's not on the canonical schema) but keep it in evidenceSnapshot.
@@ -98,6 +105,7 @@ export async function POST(request: Request) {
     const evidenceSnapshot = {
       ...(parsed.evidenceSnapshot ?? {}),
       ...(relatedAnimalId ? { relatedAnimalId } : {}),
+      ...(relatedSearchId ? { relatedSearchId } : {}),
     };
 
     const share = await prisma.viralShareVerification.create({
@@ -107,7 +115,11 @@ export async function POST(request: Request) {
         contentUrl: parsed.contentUrl,
         platformPostId: parsed.platformPostId,
         evidenceSnapshot: evidenceSnapshot as object,
-        status: parsed.status,
+        // Tier 0.3: ALWAYS start PENDING. A client-supplied `status` (the
+        // schema allows VERIFIED/REJECTED/EXPIRED) is NEVER trusted here —
+        // self-verification was a review finding. VERIFIED can only be set
+        // via the ADMIN review endpoint (PATCH /api/shares/[shareId]).
+        status: "PENDING",
       },
     });
 
@@ -152,6 +164,74 @@ export async function POST(request: Request) {
     console.error("[api/shares] failed:", err);
     return NextResponse.json(
       { error: "Internal Server Error", message: "Could not create share." },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * GET /api/shares?searchId=<uuid>
+ * ===============================
+ * Sprint C — honest free-search progress. Returns how many of the signed-in
+ * user's shares are linked to a specific LostPetSearch (via
+ * evidenceSnapshot.relatedSearchId), split PENDING vs VERIFIED, so the radar
+ * widget can show "X of 10 verified shares → free search" truthfully.
+ *
+ * Auth: session required (the radar is a signed-in owner surface).
+ * No side effects — this is a pure read.
+ */
+export async function GET(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: "Unauthorized", message: "Valid session required." },
+      { status: 401 },
+    );
+  }
+  const userId = session.user.id as string;
+
+  const url = new URL(request.url);
+  const searchId = url.searchParams.get("searchId");
+  if (!searchId) {
+    return NextResponse.json(
+      { error: "Bad Request", message: "searchId query param is required." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const shares = await prisma.viralShareVerification.findMany({
+      where: {
+        userId,
+        evidenceSnapshot: {
+          path: ["relatedSearchId"],
+          equals: searchId,
+        },
+      },
+      select: {
+        shareId: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const verified = shares.filter((s) => s.status === "VERIFIED").length;
+    const pending = shares.filter((s) => s.status === "PENDING").length;
+
+    return NextResponse.json({
+      ok: true,
+      searchId,
+      total: shares.length,
+      verified,
+      pending,
+      // Milestone for the widget (10 verified shares → search is free).
+      milestone: 10,
+    });
+  } catch (err) {
+    console.error("[api/shares] GET failed:", err);
+    return NextResponse.json(
+      { error: "Internal Server Error", message: "Could not read shares." },
       { status: 500 },
     );
   }

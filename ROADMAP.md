@@ -4,20 +4,20 @@ kanban-plugin: basic
 
 # RescueHub — Roadmap & Epic Status Board
 
-> **Current Active Phase:** **CLOSEOUT EPIC 2 — Viral Token & Brand Sponsorship Gateway** (Phase 7)
-> **Next Active Phase:** **EPIC 3 — Autonomous Outreach Engine** (Phase 8)
-|> **Last Updated:** 2026-07-03
+> **Current Active Phase:** **EPIC 3 — Autonomous Outreach Engine** (Phase 8) — chat-intake agent + radar payoff surface merged 2026-08-16, foundation wired
+> **Next Active Phase:** **EPIC 4 — Wide-Net Search Engine** (Phase 9)
+|> **Last Updated:** 2026-08-23
 
 | Epic | Status | Active Task |
 |---|---|---|
-| EPIC 1 — UI Polish & Global Localization | ✅ **COMPLETE** (2026-06-17) | All sub-tasks closed; 283 i18n keys at 100% parity across 7 locales |
-| EPIC 2 — Viral Token & Brand Sponsorship Gateway | ✅ **CLOSING** (2026-06-20) | Closed: viral-share loop live, intake path mints +50, rate-limited landing rewards +5 |
-| EPIC 3 — Autonomous Outreach Engine | ⚪ Ready | Geolocation & SMS radius alerts |
+| EPIC 1 — UI Polish & Global Localization | ✅ **COMPLETE** (2026-06-17) | All sub-tasks closed; 391 i18n keys at 100% parity across 7 locales |
+| EPIC 2 — Viral Token & Brand Sponsorship Gateway | ✅ **CLOSED** (2026-06-20) | Viral-share loop live, intake path mints +50, rate-limited landing rewards +5, sponsor-gateway modal wired into dashboard 2026-08-23 |
+| EPIC 3 — Autonomous Outreach Engine | 🔵 **FOUNDATION MERGED** (2026-08-16) | Chat-intake agent (`/api/chat-intake`), `/lost-pet-intake`, `/radar/[searchId]`, `/api/searches` (LostPetSearch persistence). Geolocation & SMS radius alerts still open. |
 | EPIC 4 — Wide-Net Search Engine | ⚪ Ready | Live shelter API/scraping crawler |
 
 ## ✅ Done — EPIC 1: UI Polish & Global Localization (2026-06-17, complete)
 
-283 unique i18n keys across 7 locales (`en`, `es`, `zh`, `zh-TW`, `zh-CN`, `ja`, `ko`) at 100% parity. All `{interpolation}` tokens preserved across rounds. New `scripts/auto_sync_locales.py` (~95 lines, deep-translator-powered) replaces the older stub. `tsc --noEmit` clean across all touched files.
+391 unique i18n keys across 7 locales (`en`, `es`, `zh`, `zh-TW`, `zh-CN`, `ja`, `ko`) at 100% parity (0 missing keys; `sponsorModal.body_translated` is intentionally EN-excluded — EN falls back to the canonical `body`). All `{interpolation}` tokens preserved across rounds. New `scripts/auto_sync_locales.py` (~95 lines, deep-translator-powered) replaces the older stub. `tsc --noEmit` clean across all touched files.
 
 Routing surfaces wired in this sprint:
 - `LiveTimer.tsx` — 6 locales + SSR-safe fallbacks.
@@ -35,12 +35,31 @@ Mock timer band (`dogs.json`) refreshed: 2 overdue (~1h past), 2 active (60-70h 
 
 ## Ready
 
-- [x] **EPIC 2**: Viral Growth & Token Gateway · closed 2026-06-20 — viral-share loop live, intake award live
-- [ ] **EPIC 3**: Autonomous Outreach Engine
+- [x] **EPIC 2**: Viral Growth & Token Gateway · closed 2026-06-20 — viral-share loop live, intake award live; sponsor-gateway modal wired into `/dashboard` 2026-08-23
+- [x] **EPIC 3 foundation**: Autonomous Outreach Engine · merged 2026-08-16 — see "EPIC 3 — Autonomous Outreach Engine (foundation merged)" below
+- [ ] **EPIC 3 backlog**: Geolocation & SMS/Telegram radius alerts
 - [ ] **EPIC 4**: Wide-Net Search Engine
 - [ ] **Milestone M1**: Brand Sponsorship & Rewarded Ad Network — strategy framed in roadmap, build behind EPIC 3 start
 - [x] **TODO**: Reset intake countdown timers (`LiveTimer` per-second timer needs to be cleared on component unmount to avoid orphaned intervals) — **resolved**: `LiveTimer.tsx` `useEffect` already returns `() => clearInterval(interval)` since 2026-06-17; no orphaned intervals observed. Marked complete as part of the 2026-07-03 Tech-Debt Sprint.
 - [ ] **TODO**: Sidebar "Sign Out" / "Staff Login" labels still hardcoded English (small-polish follow-up)
+
+## ✅ EPIC 3 — Autonomous Outreach Engine: Foundation Merged (2026-08-16, verified 2026-08-23)
+
+`feature/autonomous-intake` was merged into `main` on 2026-08-16, bringing the conversational lost-pet intake agent and its radar payoff surface:
+
+- **`/api/chat-intake`** — structured-object streaming endpoint (Vercel AI SDK `streamObject` + Gemini `gemini-3.5-flash`, strict Zod schema). Client consumes via `experimental_useObject` in `LostPetAgent.tsx`. Mock mode via `CHAT_INTAKE_USE_MOCK=true`; 503 when the Gemini key is absent and mock is off.
+- **`/lost-pet-intake`** — Suspense-wrapped route hosting `LostPetAgent` (1103-line client chat agent). Reached from `/dashboard` after the sponsor-gateway grants the 50-token credit + 100-token search spend.
+- **`/radar/[searchId]`** — `RadarView` activity-feed payoff surface (mock partner-network ticker + persistent `LostPetSearch` summary card).
+- **`/api/searches`** — persists a `LostPetSearch` row (status `SEARCHING`) owned by the authenticated user; GET returns the row with an ownership boundary.
+- **Data layer** — `LostPetSearch` model + `SPONSOR_VIEW_CREDIT_EARN` / `LOST_PET_SEARCH_SPEND` `TokenAction` values added to `prisma/schema.prisma` (2026-08-23) to match the deployed Neon DB and generated client.
+- **`SponsorshipCheckoutModal`** (Epic 2 sponsor-gateway) was previously dead code; wired into `/dashboard` 2026-08-23 with a "Find My Pet" trigger that runs the +50 credit / -100 spend and routes to `/lost-pet-intake`.
+
+**2026-08-23 hardening (from the docs-compliance review):**
+- Fixed `ReferenceError: useI18n is not defined` in `TokenWalletCard.client.tsx` (missing import) — unblocked `npm run build` and `/dashboard` runtime.
+- Fixed `INTAKE_SYSTEM_PROMPT.join is not a function` in `/api/chat-intake` (string built with `.join("\n")` then `.join(" ")` called again).
+- Fixed Next 16 `params` Promise handling in `app/hold-profile/[id]/page.tsx`.
+
+**Remaining backlog (open):** Geolocation & radius computation, SMS/Telegram radius alerts, shelter-feed ingestion (Epic 4).
 
 ## Tech-Debt Cleanup Sprint — 2026-07-03
 

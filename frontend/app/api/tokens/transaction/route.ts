@@ -1,17 +1,22 @@
 /**
  * POST /api/tokens/transaction
  * =============================
- * Atomically process a token transaction (earn, spend, expire, refund).
+ * Atomically process a token transaction.
  *
  * Auth: session required (JWT via NextAuth v5 beta).
  * Body:  TokenTransactionData (validated with Zod).
  *
  * Flow:
- *   1. Authenticate via auth() — extract session.user.id as userId.
+ *   1. Authenticate via auth() — extract session.user.id + role.
  *   2. Parse + validate JSON body against TokenTransactionDataSchema.
- *   3. SPEND guard — reject if wallet.cachedBalance < amount.
- *   4. Delegate to processTokenTransaction() (handles its own $transaction).
- *   5. Return { ok, wallet } with the updated cachedBalance.
+ *   3. Enforce server-side policy:
+ *      - Clients may ONLY send SPEND direction.
+ *      - actionType must be on the allowed SPEND list.
+ *      - amount must be within allowed caps for that actionType.
+ *      - EARN/REFUND/EXPIRE are server-only (issued by internal jobs/handlers).
+ *   4. SPEND guard — reject if wallet.cachedBalance < amount.
+ *   5. Delegate to processTokenTransaction() (handles its own $transaction).
+ *   6. Return { ok, wallet } with the updated cachedBalance.
  *
  * Idempotency: callers MUST supply a unique idempotencyKey per logical
  * operation. Retries with the same key return the already-committed result
@@ -20,11 +25,44 @@
 
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { Prisma } from "@prisma/client";
 
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
-import { processTokenTransaction } from "@/lib/services/tokenService";
+import { processTokenTransaction, InsufficientBalanceError } from "@/lib/services/tokenService";
 import { prisma } from "@/lib/prisma";
 import { TokenTransactionDataSchema } from "@/lib/schemas/token";
+
+/* ---------------------------------------------------------------------- */
+/* Server-side token policy (Tier 0.2 hardening)                          */
+/* ---------------------------------------------------------------------- */
+
+/** Allowed actionTypes for each direction when called from a client. */
+const CLIENT_ALLOWED_ACTIONS: Record<string, readonly string[]> = {
+  SPEND: [
+    "LOST_PET_SEARCH_SPEND",
+    "PRIORITY_LISTING_SPEND",
+    "PRINTED_FLYER_SPEND",
+    "SHARE_BOOST_SPEND",
+    "SEARCH_FEE_WAIVE_SPEND",
+  ],
+  // EARN / REFUND / EXPIRE are NEVER allowed from client requests.
+  // They are issued ONLY by server-internal handlers:
+  //   - EARN: intake bonus, share reward, referral, sponsor credit, onboarding
+  //   - REFUND: reversal of a spent transaction
+  //   - EXPIRE: background expiry cron
+} as const;
+
+/** Maximum allowed amounts per actionType for client SPEND requests. */
+const SPEND_AMOUNT_CAPS: Record<string, number> = {
+  LOST_PET_SEARCH_SPEND: 100,
+  PRIORITY_LISTING_SPEND: 50,
+  PRINTED_FLYER_SPEND: 20,
+  SHARE_BOOST_SPEND: 30,
+  SEARCH_FEE_WAIVE_SPEND: 100,
+} as const;
+
+/** Maximum total tokens a single client request may SPEND. */
+const MAX_CLIENT_SPEND_PER_REQUEST = 100;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,7 +130,62 @@ export async function POST(request: Request) {
     );
   }
 
-  /* ── 3. SPEND guard ────────────────────────────────────────────── */
+  /* ── Server-side policy enforcement (Tier 0.2) ───────────────────── */
+  // Clients may ONLY send SPEND. EARN/REFUND/EXPIRE are server-only.
+  if (data.direction !== "SPEND") {
+    return NextResponse.json(
+      {
+        error: "Forbidden",
+        message: "Client requests may only use direction=SPEND. EARN/REFUND/EXPIRE are server-only.",
+      },
+      { status: 403 }
+    );
+  }
+
+  // actionType must be on the allowed SPEND list.
+  const allowedActions = CLIENT_ALLOWED_ACTIONS.SPEND;
+  if (!allowedActions.includes(data.actionType)) {
+    return NextResponse.json(
+      {
+        error: "Forbidden",
+        message: `actionType "${data.actionType}" is not allowed for client SPEND requests.`,
+      },
+      { status: 403 }
+    );
+  }
+
+  // Amount cap per actionType.
+  const cap = SPEND_AMOUNT_CAPS[data.actionType];
+  if (cap !== undefined && data.amount > cap) {
+    return NextResponse.json(
+      {
+        error: "Forbidden",
+        message: `Amount ${data.amount} exceeds cap ${cap} for actionType "${data.actionType}".`,
+      },
+      { status: 403 }
+    );
+  }
+
+  // Overall per-request cap.
+  if (data.amount > MAX_CLIENT_SPEND_PER_REQUEST) {
+    return NextResponse.json(
+      {
+        error: "Forbidden",
+        message: `Amount ${data.amount} exceeds max per-request spend ${MAX_CLIENT_SPEND_PER_REQUEST}.`,
+      },
+      { status: 403 }
+    );
+  }
+
+  // RBAC: only STAFF/ADMIN may SPEND for certain actionTypes.
+  // (For now, all authenticated users can SPEND on the allowed list.)
+  // Future: restrict PRIORITY_LISTING_SPEND to STAFF/ADMIN.
+  // const userRole = session.user.role as string;
+  // if (data.actionType === "PRIORITY_LISTING_SPEND" && !["STAFF", "ADMIN"].includes(userRole)) {
+  //   return NextResponse.json({ error: "Forbidden", message: "Insufficient role." }, { status: 403 });
+  // }
+
+  /* ── SPEND guard (pre-check; defense in depth) ───────────────────── */
   if (data.direction === "SPEND") {
     const wallet = await prisma.tokenWallet.findUnique({
       where: { userId: authenticatedUserId },
@@ -152,10 +245,7 @@ export async function POST(request: Request) {
   } catch (err) {
     // P2002 = unique constraint violation on idempotencyKey — should not
     // happen since we check before calling, but handle defensively.
-    if (
-      err instanceof Error &&
-      err.message.includes("P2002")
-    ) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return NextResponse.json(
         {
           error: "Conflict",
@@ -164,6 +254,13 @@ export async function POST(request: Request) {
             "Check the result for the already-committed row.",
         },
         { status: 409 }
+      );
+    }
+
+    if (err instanceof InsufficientBalanceError) {
+      return NextResponse.json(
+        { error: "Insufficient token balance", message: err.message },
+        { status: 400 }
       );
     }
 

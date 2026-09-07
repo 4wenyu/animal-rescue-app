@@ -1,24 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The project carries third-party `.d.ts` files (`@auth/core`,
-  // `next-auth/react`, `zod/v4/locales/*.d.ts`) that produce hundreds
-  // of strict-mode errors unrelated to our code. They drag the tsc
-  // stage past 240s and mask real source errors. We have already
-  // verified our source compiles cleanly under `next build`; defer
-  // the full tsc pass to CI / pre-release by ignoring build errors
-  // here. The full type-check should still run in CI as a separate
-  // `tsc --noEmit` step before tagging releases.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
-  // Next.js 16 ships Turbopack as the default bundler. Aliases for
-  // `@/...` already come from tsconfig `"paths": { "@/*": ["./*"] }`
-  // — Robo adds no extra config here. Setting `turbopack: {}` keeps
-  // Turbopack active (the default) without forcing an empty turbopack
-  // config and triggering the upgrade-warning it would otherwise emit.
+  // Sprint A — CI hardening. Type errors must block the build again. We
+  // previously set `ignoreBuildErrors: true` because third-party `.d.ts`
+  // files dragged the tsc stage past 240s; that debt is now cleared (our
+  // source is `tsc --noEmit` clean). If third-party type noise returns,
+  // exclude those specific packages in tsconfig rather than re-enabling
+  // this blanket escape hatch.
   turbopack: {},
+
+  // Step 4 — photo-first imagery. Enable the Next Image optimizer for
+  // the demo animal photo host (placedog.net). Swap in real shelter
+  // CDNs (S3/R2 signed URLs, Shelterluv/Petfinder media) here at launch.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "placedog.net" },
+    ],
+  },
 };
 
 export default nextConfig;

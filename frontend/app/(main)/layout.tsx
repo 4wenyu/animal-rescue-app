@@ -17,7 +17,7 @@ export default function MainLayout({
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100/80 font-sans">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto">
+      <main id="main-content" className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-10 py-10">{children}</div>
       </main>
     </div>

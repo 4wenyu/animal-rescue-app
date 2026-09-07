@@ -7,6 +7,15 @@ import {
   PawPrint,
   Heart,
   Shield,
+  ShieldCheck,
+  Scale,
+  BookOpen,
+  FileText,
+  Users,
+  Phone,
+  HelpCircle,
+  HeartHandshake,
+  Handshake,
   ChevronRight,
   Search,
   AlertTriangle,
@@ -15,18 +24,21 @@ import {
   Building2,
   Menu,
   X,
-  Scale,
-  BookOpen,
-  FileText,
-  Users,
-  Phone,
   ChevronDown,
-  Clock,
+  CalendarClock,
 } from "lucide-react";
 import dogs from "../data/dogs.json";
+import dynamic from "next/dynamic";
 import { LocaleSwitch } from "@/src/components/LocaleSwitch";
-import { LiveTimer } from "@/src/components/LiveTimer";
 import { HeroMesh } from "@/src/components/HeroMesh";
+import { PawParticles } from "@/src/components/PawParticles";
+import { AnimalPhoto } from "@/src/components/ui/AnimalPhoto";
+
+// 3D paw emblem — lazy island, WebGL only on client, never SSR.
+const PawEmblem = dynamic(
+  () => import("@/src/components/PawEmblem").then((m) => m.PawEmblem),
+  { ssr: false, loading: () => null }
+);
 
 // ── Synchronous i18n hook ────────────────────────────────────────────────
 // Import JSON directly (no dynamic import) so translations work on first render.
@@ -121,6 +133,8 @@ type Dog = {
   statutoryHoldCleared: boolean;
   intakeTimestamp: string;
   imageUrl?: string;
+  sex?: "Male" | "Female";
+  personality?: string;
 };
 
 // ── Corporate Sponsors (NEUTRAL_ACKNOWLEDGMENT mode — IRC § 513(i)) ────────
@@ -178,13 +192,40 @@ function getAgeLabel(age: number, tr: (key: string) => string): string {
   return age === 1 ? `1 ${tr("common.year")}` : `${age} ${tr("common.years")}`;
 }
 
+/**
+ * Sprint B — dignified deadline copy. Formats the animal's real
+ * `strayHoldExpiresAt` date into "Needs a home by {date}" without a
+ * fabricated ticking countdown (the old LiveTimer clock showed legal-jargon
+ * HOLD OVERDUE states on a public adoption surface).
+ */
+function getDeadlineLabel(
+  animal: { strayHoldExpiresAt?: string; statutoryHoldCleared?: boolean },
+  tr: (key: string, vars?: Record<string, string | number>) => string,
+  locale: string,
+): string | null {
+  if (!animal.strayHoldExpiresAt) return null;
+  const d = new Date(animal.strayHoldExpiresAt);
+  if (Number.isNaN(d.getTime())) return null;
+  const dateLabel = d.toLocaleDateString(locale, {
+    month: "short",
+    day: "numeric",
+  });
+  return tr("adoption_feed.needs_home_by", { date: dateLabel });
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 const HAMBURGER_LINKS = [
   { href: "/about/mission", labelKey: "nav.about.mission", icon: Shield },
-  { href: "/about/legal", labelKey: "nav.about.legal", icon: Scale },
   { href: "/about/process", labelKey: "nav.about.process", icon: BookOpen },
   { href: "/about/story", labelKey: "nav.about.story", icon: FileText },
-  { href: "/about/about-us", labelKey: "nav.about.about_us", icon: Users },
+  { href: "/about/team", labelKey: "nav.about.team", icon: Users },
+  { href: "/about/partners", labelKey: "nav.about.partners", icon: Handshake },
+  { href: "/about/faq", labelKey: "nav.about.faq", icon: HelpCircle },
+  { href: "/about/about-us", labelKey: "nav.about.about_us", icon: Building2 },
+  { href: "/about/privacy", labelKey: "nav.about.privacy", icon: ShieldCheck },
+  { href: "/about/terms", labelKey: "nav.about.terms", icon: Scale },
+  { href: "/about/careers", labelKey: "nav.about.careers", icon: HeartHandshake },
+  { href: "/about/legal", labelKey: "nav.about.legal", icon: FileText },
   { href: "/about/contact", labelKey: "nav.about.contact", icon: Phone },
 ] as const;
 
@@ -198,7 +239,7 @@ export default function PublicHomePage() {
   ).length;
 
   return (
-    <div className="min-h-screen font-sans">
+    <div id="main-content" className="min-h-screen font-sans">
       {/* ── Navigation Bar ─────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-slate-200/60 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -234,6 +275,13 @@ export default function PublicHomePage() {
             </div>
             <span className="mx-1 h-5 w-px bg-slate-200" />
             <LocaleSwitch />
+            <Link
+              href="/lost-pet-intake"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              <Search className="h-4 w-4" />
+              {tr("nav.find_my_pet")}
+            </Link>
             <Link
               href="/intake/public"
               className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
@@ -292,6 +340,14 @@ export default function PublicHomePage() {
               ))}
               <hr className="my-2 border-slate-100" />
               <Link
+                href="/lost-pet-intake"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                <Search className="h-4 w-4 text-slate-400" />
+                {tr("nav.find_my_pet")}
+              </Link>
+              <Link
                 href="/intake/public"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
@@ -325,6 +381,7 @@ export default function PublicHomePage() {
       <section className="relative w-full h-[85vh] overflow-hidden flex items-center justify-center bg-transparent">
         <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
           <HeroMesh />
+          <PawParticles />
         </div>
         <div className="relative z-10 w-full max-w-4xl mx-auto bg-white/70 backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(203,213,225,0.3)] border border-white/60 p-12 text-center">
             <motion.div
@@ -362,6 +419,14 @@ export default function PublicHomePage() {
               className="mt-8 flex flex-wrap items-center justify-center gap-3"
             >
               <Link
+                href="/lost-pet-intake"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#334155] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-700/25 transition hover:bg-[#1e293b] hover:shadow-xl active:scale-[0.97]"
+              >
+                <Search className="h-4 w-4" />
+                {tr("hero.cta_lost_pet")}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
                 href="/fundraising"
                 className="inline-flex items-center gap-2 rounded-xl bg-[#10B981] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-[#059669] hover:shadow-xl active:scale-[0.97]"
               >
@@ -378,6 +443,43 @@ export default function PublicHomePage() {
             </Link>
           </motion.div>
         </div>
+
+        {/* Signature 3D paw emblem — lazy WebGL island, right of the CTA card */}
+        <div className="absolute right-[6%] top-1/2 z-10 hidden -translate-y-1/2 lg:block xl:right-[10%]">
+          <PawEmblem />
+        </div>
+
+        {/* §Step 4 — featured animal photo, left of the CTA card */}
+        {adoptable[0]?.imageUrl && (
+          <div className="absolute left-[6%] top-1/2 z-10 hidden w-72 -translate-y-1/2 lg:block xl:left-[9%]">
+            <Link
+              href={`/adopt/${adoptable[0].id}`}
+              className="group block overflow-hidden rounded-3xl border-4 border-white/70 bg-white shadow-2xl shadow-emerald-900/20 backdrop-blur-sm transition hover:scale-[1.02] hover:shadow-emerald-900/30"
+            >
+              <div className="relative aspect-[4/5] overflow-hidden">
+                <AnimalPhoto
+                  src={adoptable[0].imageUrl}
+                  alt={adoptable[0].name}
+                  priority
+                  roundedClassName=""
+                  className="transition-transform duration-500 group-hover:scale-105"
+                  sizes="(min-width: 1024px) 288px, 0px"
+                />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">
+                    {adoptable[0].name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {tr(`breeds.${adoptable[0].breed}`)}
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-emerald-500 transition-transform group-hover:translate-x-1" />
+              </div>
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* ── Public Adoption Broadcast Feed ─────────────────────────── */}
@@ -429,19 +531,19 @@ export default function PublicHomePage() {
                   }`}
                 />
 
+                {/* §Step 4 — photo-first lead image */}
+                <div className="relative -mx-5 -mt-5 mb-4 h-44 overflow-hidden">
+                  <AnimalPhoto
+                    src={animal.imageUrl}
+                    alt={animal.name}
+                    priority={i < 3}
+                    roundedClassName=""
+                    className="transition-transform duration-500 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  />
+                </div>
+
                 <div className="flex items-start gap-4">
-                  {animal.imageUrl ? (
-                    <img
-                      src={animal.imageUrl}
-                      alt={animal.name}
-                      className="h-14 w-14 shrink-0 rounded-xl object-cover border border-slate-200"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                      <PawPrint className="h-5 w-5 text-slate-400" />
-                    </div>
-                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -473,6 +575,24 @@ export default function PublicHomePage() {
                       </span>
                     </div>
 
+                    {/* Sex chip — honest roster attribute (review §3.4). */}
+                    {animal.sex && (
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+                          {animal.sex === "Female"
+                            ? tr("adopt.sex_female")
+                            : tr("adopt.sex_male")}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Personality blurb — one honest line, not a fabricated bio. */}
+                    {animal.personality && (
+                      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                        {animal.personality}
+                      </p>
+                    )}
+
                     {animal.euthanasia_risk_status === "AT_RISK" && (
                       <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-700">
                         <AlertTriangle className="h-3 w-3" />
@@ -480,25 +600,40 @@ export default function PublicHomePage() {
                       </div>
                     )}
 
-                    {/* Blueprint §3 — Live ticking clock */}
-                    <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-2 border border-slate-100">
-                      <Clock className="h-3 w-3 text-slate-400" />
-                      <LiveTimer
-                        intakeTimestamp={animal.intakeTimestamp}
-                        holdDurationHours={72}
-                        statutoryHoldCleared={animal.statutoryHoldCleared}
-                      />
+                    {/* Sprint B — live availability + dignified deadline copy */}
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500">
+                      {animal.statutoryHoldCleared ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          </span>
+                          {tr("adoption_feed.still_available")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-500">
+                          <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                          {tr("adoption_feed.on_hold")}
+                        </span>
+                      )}
+                      {getDeadlineLabel(animal, (k, vars) => tr(k, vars), locale) && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarClock className="h-3 w-3 text-slate-400" />
+                          {getDeadlineLabel(animal, (k, vars) => tr(k, vars), locale)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* §4.1 — View details routes to /hold-profile/[id] */}
+                {/* Sprint B — always-visible CTA to adopter profile */}
                 <Link
-                  href={`/hold-profile/${animal.id}`}
-                  className="mt-4 flex items-center gap-2 text-xs font-medium text-emerald-600 opacity-0 transition group-hover:opacity-100"
+                  href={`/adopt/${animal.id}`}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:bg-emerald-500 active:scale-[0.98]"
                 >
-                  <span>{tr("adoption_feed.view_details")}</span>
-                  <ArrowRight className="h-3 w-3" />
+                  <Heart className="h-4 w-4" />
+                  {tr("adoption_feed.meet_name", { name: animal.name })}
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </motion.div>
             );

@@ -24,10 +24,16 @@ export const TokenActionSchema = z.enum([
   "VOLUNTEER_HOUR_EARN",
   "REFERRAL_CONVERTED_EARN",
   "ONBOARDING_BONUS_EARN",
+  // Phase 3: Corporate-funded sponsor acknowledgment grant.
+  // Value flows sponsor -> user. NOT ad-remuneration. UBIT IRC § 513(i)
+  // attribution handled via the sponsorOrgId FK on TokenTransaction.
+  "SPONSOR_VIEW_CREDIT_EARN",
   "SEARCH_FEE_WAIVE_SPEND",
   "PRIORITY_LISTING_SPEND",
   "PRINTED_FLYER_SPEND",
   "SHARE_BOOST_SPEND",
+  // Phase 3: Lost Pet Search service redemption (post-grant SPEND).
+  "LOST_PET_SEARCH_SPEND",
   "EXPIRE_DEDUCT",
   "ADJUSTMENT_ADMIN",
 ]);

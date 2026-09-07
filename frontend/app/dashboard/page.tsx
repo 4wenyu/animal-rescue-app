@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   PawPrint,
@@ -16,12 +17,18 @@ import {
   AlertTriangle,
   ChevronRight,
   ArrowLeft,
+  Search,
 } from "lucide-react";
 import dogs from "../../data/dogs.json";
 import { PremiumStatCard } from "@/src/components/dashboard/PremiumStatCard";
 import { AnimalTable } from "@/src/components/dashboard/AnimalTable";
+import { MySearches } from "@/src/components/dashboard/MySearches";
 import { UbitSponsorWidget, EsignStatsWidget } from "@/src/components/dashboard/widgets";
 import { TokenWalletCardClient } from "@/src/components/dashboard/TokenWalletCard.client";
+import {
+  SponsorshipCheckoutModal,
+  type SearchGrantSuccess,
+} from "@/src/components/dashboard/SponsorshipCheckoutModal";
 import { SignOutButton } from "@/src/components/auth/SignOutButton";
 
 // ── Synchronous i18n ─────────────────────────────────────────────────────
@@ -108,16 +115,52 @@ type Dog = {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
   const [filter, setFilter] = useState<string | null>(null);
+  const [sponsorModalOpen, setSponsorModalOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const { tr, locale } = useI18n();
+
+  // Fetch the current token balance so the sponsor-gateway modal can
+  // pre-flight the Insufficient Funds check (balance + 50 must cover 100).
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/tokens/wallet", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!cancelled && j?.wallet) setWalletBalance(j.wallet.cachedBalance);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSearchGranted = useCallback(
+    (result: SearchGrantSuccess) => {
+      // Refresh the wallet card to reflect the +50 / -100 ledger rows.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("tokenwallet:refresh"));
+      }
+      router.push(
+        `/lost-pet-intake?credit=${encodeURIComponent(result.creditTxnId)}` +
+          `&spend=${encodeURIComponent(result.spendTxnId)}` +
+          `&newBalance=${encodeURIComponent(String(result.newBalance))}`,
+      );
+    },
+    [router],
+  );
+
   const dogsTyped = dogs as Dog[];
   const totalDogs = dogsTyped.length;
   const healthyCount = dogsTyped.filter((d) => d.medicalStatus === "Healthy").length;
   const needsReviewCount = dogsTyped.filter((d) => d.medicalStatus === "Needs Review").length;
   const avgAge = (dogsTyped.reduce((s, d) => s + d.age, 0) / totalDogs).toFixed(1);
 
-  const healthyTrend = Math.round(((healthyCount - 248) / 248) * 100);
-  const reviewTrend = -Math.round(((48 - needsReviewCount) / 48) * 100);
+  // Honest stat meta (review §4.2 #174/#175): no invented baselines (248/48),
+  // no hardcoded numerators (271/342). Each card states only what the 12-animal
+  // roster actually is. Trend badges are omitted entirely — there is no real
+  // historical snapshot to compute them from.
 
   const filteredDogs = useMemo(() => {
     if (!filter) return dogsTyped;
@@ -139,7 +182,7 @@ export default function Dashboard() {
       value: totalDogs,
       icon: PawPrint,
       accentColor: "#533afd",
-      trend: 8,
+      meta: tr("dashboard.stats.of_total", { count: totalDogs }),
       filterKey: "Total Dogs",
     },
     {
@@ -147,7 +190,7 @@ export default function Dashboard() {
       value: healthyCount,
       icon: HeartPulse,
       accentColor: "#15be53",
-      trend: healthyTrend,
+      meta: tr("dashboard.stats.of_total", { count: totalDogs }),
       filterKey: "Healthy",
     },
     {
@@ -155,7 +198,7 @@ export default function Dashboard() {
       value: needsReviewCount,
       icon: AlertTriangle,
       accentColor: "#ea2261",
-      trend: reviewTrend,
+      meta: tr("dashboard.stats.of_total", { count: totalDogs }),
       filterKey: "Needs Review",
     },
     {
@@ -163,6 +206,7 @@ export default function Dashboard() {
       value: `${avgAge} ${tr("dashboard.stats.yrs")}`,
       icon: Users,
       accentColor: "#533afd",
+      meta: tr("dashboard.stats.across_all"),
       filterKey: null,
     },
   ];
@@ -204,6 +248,14 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <SignOutButton className="mr-1" />
+            <button
+              type="button"
+              onClick={() => setSponsorModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition-all duration-200 hover:bg-emerald-100 active:scale-[0.97]"
+            >
+              <Search className="h-4 w-4" />
+              {tr("dashboard.find_my_pet")}
+            </button>
             <Link
               href="/intake/public"
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:from-emerald-500 hover:to-emerald-400 hover:shadow-emerald-500/30 active:scale-[0.97]"
@@ -238,8 +290,8 @@ export default function Dashboard() {
               value={stat.value}
               icon={stat.icon}
               accentColor={stat.accentColor}
-              trend={stat.trend}
               totalDogs={totalDogs}
+              meta={stat.meta}
               delay={i * 0.07}
             />
           </div>
@@ -250,6 +302,11 @@ export default function Dashboard() {
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <UbitSponsorWidget />
         <EsignStatsWidget />
+      </div>
+
+      {/* ── My lost-pet searches — status timeline (Sprint A) ── */}
+      <div className="mb-8">
+        <MySearches />
       </div>
 
       {/* ── Triage Table ────────────────────────────────────── */}
@@ -267,6 +324,14 @@ export default function Dashboard() {
           {tr("dashboard.v3")}
         </span>
       </motion.p>
+
+      {/* ── Epic 2 sponsor-gateway modal (gates the Lost Pet Search) ── */}
+      <SponsorshipCheckoutModal
+        open={sponsorModalOpen}
+        currentBalance={walletBalance}
+        onClose={() => setSponsorModalOpen(false)}
+        onSearchGranted={handleSearchGranted}
+      />
     </div>
   );
 }

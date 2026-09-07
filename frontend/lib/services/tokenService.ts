@@ -37,6 +37,21 @@ import {
 export { Prisma };
 
 // ---------------------------------------------------------------------------
+// Custom errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a SPEND transaction would drop the cached balance below zero.
+ * Caught by the API route and translated to a 400 response.
+ */
+export class InsufficientBalanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InsufficientBalanceError";
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Prisma singleton (consumed via @/lib/prisma to survive hot-reload)
 // ---------------------------------------------------------------------------
 
@@ -86,7 +101,7 @@ export interface ProcessTokenResult {
 const DIRECTION_SIGN: Record<string, -1 | 1> = {
   EARN: 1,
   REFUND: 1,
-  EXPIRE: 1,
+  EXPIRE: -1, // Tier 0.1: EXPIRE is a debit (burns tokens), not a mint.
   SPEND: -1,
 } as const;
 
@@ -97,6 +112,25 @@ const LIFETIME_COUNTER: Record<string, LifetimeField> = {
   REFUND: "lifetimeEarned",
   EXPIRE: "lifetimeExpired",
   SPEND: "lifetimeSpent",
+} as const;
+
+/**
+ * Lifetime field that a REVERSAL row should DECREMENT.
+ *
+ * Reversing a transaction undoes the SAME lifetime counter it touched — NOT
+ * a different one. (Earlier the reversal logic double-counted lifetimeEarned
+ * for EXPIRE↔REFUND pairs; that's the Tier 0.1 fix.)
+ *
+ *   EARN    was credited to lifetimeEarned   → reverse EARN    → SPEND,  -earned
+ *   SPEND   was credited to lifetimeSpent    → reverse SPEND   → EARN,   -spent
+ *   EXPIRE  was credited to lifetimeExpired  → reverse EXPIRE  → REFUND, -expired
+ *   REFUND  was credited to lifetimeEarned   → reverse REFUND  → EXPIRE, -earned
+ */
+const REVERSE_LIFETIME_FIELD: Record<string, LifetimeField> = {
+  EARN: "lifetimeEarned",
+  SPEND: "lifetimeSpent",
+  EXPIRE: "lifetimeExpired",
+  REFUND: "lifetimeEarned",
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -150,35 +184,60 @@ export async function processTokenTransaction(
       return { transaction: existing, wallet, idempotentReplay: true };
     }
 
-    // ---- 2b. Upsert wallet (create on first transaction) ---------------
+    // ---- 2b. Upsert wallet (atomic balance floor for SPEND) ---------------
     const walletWhere = { userId: d.userId };
-    const walletExists = await tx.tokenWallet.findUnique({
+    const sign = DIRECTION_SIGN[d.direction]!;
+    const delta = sign * d.amount;
+
+    // For SPEND, refuse if the wallet does not exist (no implicit creation).
+    // This prevents a fresh user from minting -1 deltas into thin air.
+    const existingWallet = await tx.tokenWallet.findUnique({
       where: walletWhere,
-      select: { walletId: true },
+      select: { walletId: true, cachedBalance: true },
     });
 
     let wallet: Awaited<ReturnType<typeof tx.tokenWallet.findUniqueOrThrow>>;
 
-    if (!walletExists) {
+    if (!existingWallet) {
       // First transaction for this user — create wallet.
-      // delta must be >= 0 here (EARN/REFUND/EXPIRE); SPEND with no prior
-      // balance is rejected at the API layer before this function is called.
+      // Reject any negative delta (SPEND or EXPIRE) on a non-existent wallet.
+      if (delta < 0) {
+        throw new InsufficientBalanceError(
+          `Cannot ${d.direction} ${d.amount} tokens: wallet does not exist.`,
+        );
+      }
+      // First EARN/REFUND — create wallet with positive balance.
       wallet = await tx.tokenWallet.create({
         data: {
           userId: d.userId,
-          cachedBalance: Math.max(0, delta),
+          cachedBalance: delta,
           lifetimeEarned:
             d.direction === "EARN" || d.direction === "REFUND" ? d.amount : 0,
-          lifetimeSpent: d.direction === "SPEND" ? d.amount : 0,
+          lifetimeSpent: 0,
           lifetimeExpired: d.direction === "EXPIRE" ? d.amount : 0,
           status: "ACTIVE",
         },
       });
+    } else if (d.direction === "SPEND") {
+      // Atomic conditional update: only update if balance is sufficient.
+      const updated = await tx.tokenWallet.updateMany({
+        where: { userId: d.userId, cachedBalance: { gte: d.amount } },
+        data: {
+          cachedBalance: { increment: delta },
+          [counterField]: { increment: d.amount },
+          lastActivityAt: new Date(),
+        },
+      });
+      if (updated.count === 0) {
+        throw new InsufficientBalanceError(
+          `Insufficient balance: cannot SPEND ${d.amount} tokens.`,
+        );
+      }
+      wallet = await tx.tokenWallet.findUniqueOrThrow({ where: { userId: d.userId } });
     } else {
-      // Existing wallet — atomic counter increments.
-      // Prisma accepts negative increment for SPEND and subtracts correctly.
+      // EARN / REFUND / EXPIRE on existing wallet.
       wallet = await tx.tokenWallet.update({
-        where: walletWhere,
+        where: { userId: d.userId },
         data: {
           cachedBalance: { increment: delta },
           [counterField]: { increment: d.amount },
@@ -363,6 +422,89 @@ export async function awardShareReward(
 }
 
 // ---------------------------------------------------------------------------
+// grantFreeSearchMilestone — the "share with 10 groups, search is free" promise
+// ---------------------------------------------------------------------------
+
+/** Search cost the sponsor normally underwrites (mirrors SEARCH_FEE_AMOUNT). */
+export const FREE_SEARCH_GRANT_AMOUNT = 100;
+
+/** Number of VERIFIED shares that unlock the free search. */
+export const FREE_SEARCH_MILESTONE = 10;
+
+export interface FreeSearchMilestoneResult {
+  granted: boolean;
+  alreadyGranted: boolean;
+  verifiedCount: number;
+  balanceAfter?: number;
+}
+
+/**
+ * grantFreeSearchMilestone
+ * =========================
+ * Honors the Idea's core economy promise: share a lost-pet search with 10
+ * verified communities/groups → the search is free (a +100 token grant that
+ * exactly covers SEARCH_FEE_AMOUNT).
+ *
+ * The grant is:
+ *   - VERIFIED-only: only shares a staff/admin reviewer marked VERIFIED count
+ *     (never PENDING self-reports — that sybil vector was closed in T0-3).
+ *   - scoped to a search: counts shares whose evidenceSnapshot.relatedSearchId
+ *     matches the search.
+ *   - idempotent: idempotencyKey `share-milestone:${searchId}` means repeated
+ *     evaluation (cron, radar page load, review) can never double-mint.
+ *
+ * Callers: the admin review endpoint (PATCH /api/shares/[shareId]) and the
+ * radar widget's milestone resolver (POST /api/shares/milestone-grant).
+ */
+export async function grantFreeSearchMilestone(
+  searchId: string,
+): Promise<FreeSearchMilestoneResult> {
+  const search = await prisma().lostPetSearch.findUnique({
+    where: { searchId },
+    select: { searchId: true, userId: true },
+  });
+  if (!search) {
+    return { granted: false, alreadyGranted: false, verifiedCount: 0 };
+  }
+
+  // Count VERIFIED shares linked to this search (JSON path on evidenceSnapshot).
+  const shares = await prisma().viralShareVerification.findMany({
+    where: {
+      status: "VERIFIED",
+      evidenceSnapshot: {
+        path: ["relatedSearchId"],
+        equals: searchId,
+      },
+    },
+    select: { shareId: true },
+  });
+  const verifiedCount = shares.length;
+
+  if (verifiedCount < FREE_SEARCH_MILESTONE) {
+    return { granted: false, alreadyGranted: false, verifiedCount };
+  }
+
+  // Milestone reached → EARN +100 (covers the search fee). processTokenTransaction
+  // is idempotent on `idempotencyKey`, so this is safe to run repeatedly.
+  const result = await processTokenTransaction({
+    userId: search.userId,
+    direction: "EARN",
+    actionType: "SHARE_10_GROUPS_EARN",
+    amount: FREE_SEARCH_GRANT_AMOUNT,
+    idempotencyKey: `share-milestone:${searchId}`,
+    currency: "USD",
+    notes: `Free search unlocked at ${FREE_SEARCH_MILESTONE} verified shares (searchId=${searchId})`,
+  });
+
+  return {
+    granted: true,
+    alreadyGranted: result.idempotentReplay,
+    verifiedCount,
+    balanceAfter: result.wallet.cachedBalance,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // awardReferralConverted / awardVolunteerHour — STUBS, future work.
 // ---------------------------------------------------------------------------
 
@@ -456,6 +598,12 @@ export async function reverseTransaction(
     const revSign = isEarnSide ? 1 : -1;
     const revDelta = revSign * original.amount;
 
+    // Tier 0.1: the reversal DECREMENTS the same lifetime field the
+    // original INCREMENTED. This stops the lifetime-counter double-count
+    // (review #66) where reversing an EXPIRE would wrongly bump
+    // lifetimeEarned.
+    const decField = REVERSE_LIFETIME_FIELD[original.direction];
+
     // Insert reversal row first (balanceAfter is patched after wallet update)
     const reversed = await tx.tokenTransaction.create({
       data: {
@@ -478,9 +626,7 @@ export async function reverseTransaction(
       where: { userId: original.userId },
       data: {
         cachedBalance: { increment: revDelta },
-        lifetimeEarned: isEarnSide ? { increment: original.amount } : undefined,
-        lifetimeSpent: revDir === "SPEND" ? { increment: original.amount } : undefined,
-        lifetimeExpired: revDir === "EXPIRE" ? { increment: original.amount } : undefined,
+        [decField]: { decrement: original.amount },
         lastActivityAt: new Date(),
       },
     });
