@@ -67,10 +67,25 @@ export async function POST(request: Request) {
   // Sprint C — search-scoped shares ("Share my search" on the radar).
   // The share carries which LostPetSearch it belongs to so the radar can
   // show honest free-search progress (X verified / 10) for that search.
-  const relatedSearchId =
-    typeof rawBody.relatedSearchId === "string"
-      ? rawBody.relatedSearchId
-      : null;
+  // Self-dealing guard: the linked search must be owned by the caller —
+  // a third party cannot attach shares to another user's search.
+  let relatedSearchId: string | null = null;
+  if (typeof rawBody.relatedSearchId === "string" && rawBody.relatedSearchId.trim().length > 0) {
+    relatedSearchId = rawBody.relatedSearchId.trim();
+    const linked = await prisma.lostPetSearch.findUnique({
+      where: { searchId: relatedSearchId },
+      select: { searchId: true, userId: true },
+    });
+    if (!linked || linked.userId !== userId) {
+      return NextResponse.json(
+        {
+          error: "Forbidden",
+          message: "relatedSearchId must reference a LostPetSearch you own.",
+        },
+        { status: 403 },
+      );
+    }
+  }
 
   let parsed;
   try {

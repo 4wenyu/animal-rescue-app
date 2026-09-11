@@ -47,16 +47,38 @@ export async function POST(request: Request) {
       );
     }
 
-    await prisma.outreachProfile.update({
-      where: { profileId: profile.profileId },
-      data: {
-        status: "UNSUBSCRIBED",
-        unsubscribedAt: new Date(),
-      },
+    // Unsubscribe cancels pending delivery: flip the profile to UNSUBSCRIBED
+    // AND mark any open DRAFTs as SKIPPED atomically, so staff can never
+    // approve-and-send a draft generated before consent was revoked.
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.outreachProfile.update({
+        where: { profileId: profile.profileId },
+        data: {
+          status: "UNSUBSCRIBED",
+          unsubscribedAt: new Date(),
+        },
+      });
+      const skipped = await tx.outreachDraft.updateMany({
+        where: {
+          profileId: profile.profileId,
+          status: "DRAFT",
+        },
+        data: {
+          status: "SKIPPED",
+          reviewedAt: new Date(),
+          sourceNote: "cancelled: profile unsubscribed",
+        },
+      });
+      return skipped.count;
     });
 
     return NextResponse.json(
-      { ok: true, status: "UNSUBSCRIBED", message: "You are unsubscribed from outreach." },
+      {
+        ok: true,
+        status: "UNSUBSCRIBED",
+        cancelledDrafts: result,
+        message: "You are unsubscribed from outreach.",
+      },
       { status: 200 },
     );
   } catch (err) {

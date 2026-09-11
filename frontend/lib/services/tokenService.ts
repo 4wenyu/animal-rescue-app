@@ -51,6 +51,18 @@ export class InsufficientBalanceError extends Error {
   }
 }
 
+/**
+ * Thrown when an idempotencyKey already belongs to a DIFFERENT user's ledger
+ * row. A replay must return the caller's own committed row; anything else is
+ * a cross-user probe and must never leak another user's data.
+ */
+export class IdempotencyConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "IdempotencyConflictError";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Prisma singleton (consumed via @/lib/prisma to survive hot-reload)
 // ---------------------------------------------------------------------------
@@ -172,102 +184,177 @@ export async function processTokenTransaction(
   const counterField = LIFETIME_COUNTER[d.direction]!;
 
   // 2. Atomic transaction
-  const result = await prisma().$transaction(async (tx) => {
-    // ---- 2a. Idempotency guard ----------------------------------------
-    const existing = await tx.tokenTransaction.findUnique({
-      where: { idempotencyKey: d.idempotencyKey },
-    });
-    if (existing) {
-      const wallet = await tx.tokenWallet.findUniqueOrThrow({
-        where: { userId: d.userId },
+  let result: {
+    transaction: {
+      txnId: string;
+      userId: string;
+      direction: string;
+      actionType: string;
+      amount: number;
+      balanceAfter: number;
+      idempotencyKey: string;
+      createdAt: Date;
+    };
+    wallet: {
+      walletId: string;
+      userId: string;
+      cachedBalance: number;
+      lifetimeEarned: number;
+      lifetimeSpent: number;
+      lifetimeExpired: number;
+      status: string;
+    };
+    idempotentReplay: boolean;
+  };
+  try {
+    result = await prisma().$transaction(async (tx) => {
+      // ---- 2a. Idempotency guard ----------------------------------------
+      const existing = await tx.tokenTransaction.findUnique({
+        where: { idempotencyKey: d.idempotencyKey },
       });
-      return { transaction: existing, wallet, idempotentReplay: true };
-    }
-
-    // ---- 2b. Upsert wallet (atomic balance floor for SPEND) ---------------
-    const walletWhere = { userId: d.userId };
-    const sign = DIRECTION_SIGN[d.direction]!;
-    const delta = sign * d.amount;
-
-    // For SPEND, refuse if the wallet does not exist (no implicit creation).
-    // This prevents a fresh user from minting -1 deltas into thin air.
-    const existingWallet = await tx.tokenWallet.findUnique({
-      where: walletWhere,
-      select: { walletId: true, cachedBalance: true },
-    });
-
-    let wallet: Awaited<ReturnType<typeof tx.tokenWallet.findUniqueOrThrow>>;
-
-    if (!existingWallet) {
-      // First transaction for this user — create wallet.
-      // Reject any negative delta (SPEND or EXPIRE) on a non-existent wallet.
-      if (delta < 0) {
-        throw new InsufficientBalanceError(
-          `Cannot ${d.direction} ${d.amount} tokens: wallet does not exist.`,
-        );
+      if (existing) {
+        // Ownership check — a replay must return the CALLER's committed row.
+        // If someone probes with another user's idempotencyKey, never leak
+        // that user's ledger row.
+        if (existing.userId !== d.userId) {
+          throw new IdempotencyConflictError(
+            "idempotencyKey is already in use by a different user.",
+          );
+        }
+        const wallet = await tx.tokenWallet.findUniqueOrThrow({
+          where: { userId: d.userId },
+        });
+        return { transaction: existing, wallet, idempotentReplay: true };
       }
-      // First EARN/REFUND — create wallet with positive balance.
-      wallet = await tx.tokenWallet.create({
+
+      // ---- 2b. Upsert wallet (atomic balance floor for SPEND) ---------------
+      const walletWhere = { userId: d.userId };
+      const sign = DIRECTION_SIGN[d.direction]!;
+      const delta = sign * d.amount;
+
+      // For SPEND, refuse if the wallet does not exist (no implicit creation).
+      // This prevents a fresh user from minting -1 deltas into thin air.
+      const existingWallet = await tx.tokenWallet.findUnique({
+        where: walletWhere,
+        select: { walletId: true, cachedBalance: true },
+      });
+
+      let wallet: Awaited<ReturnType<typeof tx.tokenWallet.findUniqueOrThrow>>;
+
+      if (!existingWallet) {
+        // First transaction for this user — create wallet.
+        // Reject any negative delta (SPEND or EXPIRE) on a non-existent wallet.
+        if (delta < 0) {
+          throw new InsufficientBalanceError(
+            `Cannot ${d.direction} ${d.amount} tokens: wallet does not exist.`,
+          );
+        }
+        // First EARN/REFUND — create wallet with positive balance.
+        wallet = await tx.tokenWallet.create({
+          data: {
+            userId: d.userId,
+            cachedBalance: delta,
+            lifetimeEarned:
+              d.direction === "EARN" || d.direction === "REFUND" ? d.amount : 0,
+            lifetimeSpent: 0,
+            lifetimeExpired: d.direction === "EXPIRE" ? d.amount : 0,
+            status: "ACTIVE",
+          },
+        });
+      } else if (d.direction === "SPEND") {
+        // Atomic conditional update: only update if balance is sufficient.
+        const updated = await tx.tokenWallet.updateMany({
+          where: { userId: d.userId, cachedBalance: { gte: d.amount } },
+          data: {
+            cachedBalance: { increment: delta },
+            [counterField]: { increment: d.amount },
+            lastActivityAt: new Date(),
+          },
+        });
+        if (updated.count === 0) {
+          throw new InsufficientBalanceError(
+            `Insufficient balance: cannot SPEND ${d.amount} tokens.`,
+          );
+        }
+        wallet = await tx.tokenWallet.findUniqueOrThrow({ where: { userId: d.userId } });
+      } else if (d.direction === "EXPIRE") {
+        // EXPIRE is also a debit — apply the same atomic balance floor so a
+        // cron-supplied amount can never drive cachedBalance negative.
+        const updated = await tx.tokenWallet.updateMany({
+          where: { userId: d.userId, cachedBalance: { gte: d.amount } },
+          data: {
+            cachedBalance: { increment: delta },
+            [counterField]: { increment: d.amount },
+            lastActivityAt: new Date(),
+          },
+        });
+        if (updated.count === 0) {
+          throw new InsufficientBalanceError(
+            `Insufficient balance: cannot EXPIRE ${d.amount} tokens.`,
+          );
+        }
+        wallet = await tx.tokenWallet.findUniqueOrThrow({ where: { userId: d.userId } });
+      } else {
+        // EARN / REFUND on existing wallet (positive deltas only).
+        wallet = await tx.tokenWallet.update({
+          where: { userId: d.userId },
+          data: {
+            cachedBalance: { increment: delta },
+            [counterField]: { increment: d.amount },
+            lastActivityAt: new Date(),
+          },
+        });
+      }
+
+      // ---- 2c. Insert immutable ledger row --------------------------------
+      const transaction = await tx.tokenTransaction.create({
         data: {
           userId: d.userId,
-          cachedBalance: delta,
-          lifetimeEarned:
-            d.direction === "EARN" || d.direction === "REFUND" ? d.amount : 0,
-          lifetimeSpent: 0,
-          lifetimeExpired: d.direction === "EXPIRE" ? d.amount : 0,
-          status: "ACTIVE",
+          direction: d.direction as "EARN" | "SPEND" | "EXPIRE" | "REFUND",
+          actionType: d.actionType as import("@prisma/client").TokenAction,
+          amount: d.amount,
+          balanceAfter: wallet.cachedBalance,
+          sourceViralShareId: d.sourceViralShareId,
+          costBasisMinorUnits: d.costBasisMinorUnits,
+          currency: d.currency,
+          sponsorOrgId: d.sponsorOrgId,
+          issuedByJob: d.issuedByJob,
+          issuedByUserId: d.issuedByUserId,
+          notes: d.notes,
+          idempotencyKey: d.idempotencyKey,
+          isAdjustment: false,
         },
       });
-    } else if (d.direction === "SPEND") {
-      // Atomic conditional update: only update if balance is sufficient.
-      const updated = await tx.tokenWallet.updateMany({
-        where: { userId: d.userId, cachedBalance: { gte: d.amount } },
-        data: {
-          cachedBalance: { increment: delta },
-          [counterField]: { increment: d.amount },
-          lastActivityAt: new Date(),
-        },
-      });
-      if (updated.count === 0) {
-        throw new InsufficientBalanceError(
-          `Insufficient balance: cannot SPEND ${d.amount} tokens.`,
-        );
-      }
-      wallet = await tx.tokenWallet.findUniqueOrThrow({ where: { userId: d.userId } });
-    } else {
-      // EARN / REFUND / EXPIRE on existing wallet.
-      wallet = await tx.tokenWallet.update({
-        where: { userId: d.userId },
-        data: {
-          cachedBalance: { increment: delta },
-          [counterField]: { increment: d.amount },
-          lastActivityAt: new Date(),
-        },
-      });
-    }
 
-    // ---- 2c. Insert immutable ledger row --------------------------------
-    const transaction = await tx.tokenTransaction.create({
-      data: {
-        userId: d.userId,
-        direction: d.direction as "EARN" | "SPEND" | "EXPIRE" | "REFUND",
-        actionType: d.actionType as import("@prisma/client").TokenAction,
-        amount: d.amount,
-        balanceAfter: wallet.cachedBalance,
-        sourceViralShareId: d.sourceViralShareId,
-        costBasisMinorUnits: d.costBasisMinorUnits,
-        currency: d.currency,
-        sponsorOrgId: d.sponsorOrgId,
-        issuedByJob: d.issuedByJob,
-        issuedByUserId: d.issuedByUserId,
-        notes: d.notes,
-        idempotencyKey: d.idempotencyKey,
-        isAdjustment: false,
-      },
+      return { transaction, wallet, idempotentReplay: false };
     });
-
-    return { transaction, wallet, idempotentReplay: false };
-  });
+  } catch (err) {
+    // Concurrent duplicate: another request committed the same idempotencyKey
+    // between our pre-check and our create. The unique constraint fires P2002
+    // (the transaction aborts), so re-fetch the committed row OUTSIDE the
+    // transaction and return it as an idempotent replay. Ownership is checked
+    // so a cross-user probe still never leaks.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const committed = await prisma().tokenTransaction.findUnique({
+        where: { idempotencyKey: d.idempotencyKey },
+      });
+      if (committed) {
+        if (committed.userId !== d.userId) {
+          throw new IdempotencyConflictError(
+            "idempotencyKey is already in use by a different user.",
+          );
+        }
+        const wallet = await prisma().tokenWallet.findUniqueOrThrow({
+          where: { userId: d.userId },
+        });
+        result = { transaction: committed, wallet, idempotentReplay: true };
+      } else {
+        throw err;
+      }
+    } else {
+      throw err;
+    }
+  }
 
   return {
     transaction: {
@@ -468,8 +555,12 @@ export async function grantFreeSearchMilestone(
   }
 
   // Count VERIFIED shares linked to this search (JSON path on evidenceSnapshot).
+  // The count is scoped to the SEARCH OWNER's shares — the radar widget shows
+  // the owner's X/10 progress, so the evaluated threshold must match what the
+  // owner sees; other users' shares can never inflate the grant.
   const shares = await prisma().viralShareVerification.findMany({
     where: {
+      userId: search.userId,
       status: "VERIFIED",
       evidenceSnapshot: {
         path: ["relatedSearchId"],
@@ -621,15 +712,36 @@ export async function reverseTransaction(
       },
     });
 
-    // Update wallet counters
-    const wallet = await tx.tokenWallet.update({
-      where: { userId: original.userId },
-      data: {
-        cachedBalance: { increment: revDelta },
-        [decField]: { decrement: original.amount },
-        lastActivityAt: new Date(),
-      },
-    });
+    // Update wallet counters — with the same non-negative balance floor as
+    // SPEND/EXPIRE when the reversal is a debit (reversing an EARN/REFUND).
+    let wallet: Awaited<ReturnType<typeof tx.tokenWallet.findUniqueOrThrow>>;
+    if (revDelta < 0) {
+      const updated = await tx.tokenWallet.updateMany({
+        where: { userId: original.userId, cachedBalance: { gte: original.amount } },
+        data: {
+          cachedBalance: { increment: revDelta },
+          [decField]: { decrement: original.amount },
+          lastActivityAt: new Date(),
+        },
+      });
+      if (updated.count === 0) {
+        throw new InsufficientBalanceError(
+          `Cannot reverse ${txnId}: balance is below the reversal amount.`,
+        );
+      }
+      wallet = await tx.tokenWallet.findUniqueOrThrow({
+        where: { userId: original.userId },
+      });
+    } else {
+      wallet = await tx.tokenWallet.update({
+        where: { userId: original.userId },
+        data: {
+          cachedBalance: { increment: revDelta },
+          [decField]: { decrement: original.amount },
+          lastActivityAt: new Date(),
+        },
+      });
+    }
 
     // Correct balanceAfter now that we have the post-update balance
     await tx.tokenTransaction.update({

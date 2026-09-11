@@ -28,7 +28,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
-import { processTokenTransaction, InsufficientBalanceError } from "@/lib/services/tokenService";
+import { processTokenTransaction, InsufficientBalanceError, IdempotencyConflictError } from "@/lib/services/tokenService";
 import { prisma } from "@/lib/prisma";
 import { TokenTransactionDataSchema } from "@/lib/schemas/token";
 
@@ -106,10 +106,23 @@ export async function POST(request: Request) {
   try {
     // Force userId from session — prevents a caller from specifying a
     // different user's ID in the request body (defence in depth).
-    data = TokenTransactionDataSchema.parse({
-      ...body,
+    //
+    // WHITELIST the client surface: provenance/attribution fields
+    // (sponsorOrgId, sourceViralShareId, issuedByUserId, issuedByJob,
+    // costBasisMinorUnits) are NEVER accepted from a client request — they
+    // are server-internal audit fields. Accepting them would let a caller
+    // forge 513(i) sponsor attribution or link a spend to an arbitrary
+    // share/org.
+    const clientAllowed = {
       userId: authenticatedUserId,
-    });
+      direction: body.direction,
+      actionType: body.actionType,
+      amount: body.amount,
+      idempotencyKey: body.idempotencyKey,
+      currency: body.currency,
+      notes: body.notes,
+    };
+    data = TokenTransactionDataSchema.parse(clientAllowed);
   } catch (err) {
     if (err instanceof ZodError) {
       return NextResponse.json(
@@ -244,14 +257,37 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     // P2002 = unique constraint violation on idempotencyKey — should not
-    // happen since we check before calling, but handle defensively.
+    // happen since processTokenTransaction now translates concurrent
+    // duplicates into an idempotent replay, but handle defensively.
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      // Re-fetch the committed row so callers can read the already-committed
+      // result instead of guessing from a bare 409.
+      const committed = await prisma.tokenTransaction.findUnique({
+        where: { idempotencyKey: (data.idempotencyKey as string) ?? "" },
+      });
+      if (committed) {
+        return NextResponse.json(
+          {
+            ok: true,
+            idempotentReplay: true,
+            transaction: {
+              txnId: committed.txnId,
+              direction: committed.direction,
+              actionType: committed.actionType,
+              amount: committed.amount,
+              balanceAfter: committed.balanceAfter,
+              idempotencyKey: committed.idempotencyKey,
+              createdAt: committed.createdAt,
+            },
+          },
+          { status: 200 }
+        );
+      }
       return NextResponse.json(
         {
           error: "Conflict",
           message:
-            "A transaction with this idempotencyKey already exists. " +
-            "Check the result for the already-committed row.",
+            "A transaction with this idempotencyKey already exists.",
         },
         { status: 409 }
       );
@@ -261,6 +297,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Insufficient token balance", message: err.message },
         { status: 400 }
+      );
+    }
+
+    if (err instanceof IdempotencyConflictError) {
+      return NextResponse.json(
+        { error: "Conflict", message: err.message },
+        { status: 409 }
       );
     }
 

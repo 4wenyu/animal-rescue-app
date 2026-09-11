@@ -87,6 +87,19 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       );
     }
 
+    // Self-dealing guard: a reviewer may not verify their OWN share. Without
+    // this, a STAFF user could create a search + 10 shares, then PATCH them
+    // VERIFIED to mint the +100 milestone grant to themselves.
+    if (existing.userId === session.user.id) {
+      return NextResponse.json(
+        {
+          error: "Forbidden",
+          message: "You cannot review your own share (self-dealing guard).",
+        },
+        { status: 403 },
+      );
+    }
+
     // A settled share (VERIFIED/REJECTED/EXPIRED) can't be re-flipped to
     // PENDING via this endpoint — the schema only accepts settling statuses,
     // so this is structurally guaranteed.

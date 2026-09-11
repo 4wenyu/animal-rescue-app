@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-08-30 — Agent-Team Review Fix Pass (Critical/High findings closed)
+
+7-agent independent review of the true-MVP (see `docs/AGENT_TEAM_REVIEW_2026-08-30.md`) found 1 Critical + 4 High issues. All are fixed and smoke-verified live (13/13 checks + no-mint probe).
+
+### Critical — statutory-hold bypass in anonymous intake (CLOSED)
+- **`app/api/animals/intake/route.ts`** — the intake clock is now **always the server clock** (`new Date()`); a client-supplied `intakeTimestamp` (past/garbage date) is never used for hold math. `OWNER_SURRENDER` clears the hold **only** when an authenticated STAFF/ADMIN recorded it; anonymous citizens are always treated as `PUBLIC_STRAY` (hold computed from server time), and the recorded `intakeRecord.intakeType` is the **server-decided** type, never the client-claimed one.
+- **`src/lib/holdRegulations.ts`** — `computeStrayHoldExpiry` returns `null` on invalid dates (was: `new Date()`, which made a garbage timestamp look instantly hold-cleared); `isStatutoryHoldCleared` returns `false` on invalid input.
+- **Honest consent flag** — `electronicConsentFlag` is now `true` only when a real signed `x-esign-hash` header is present (was hardcoded `true`); the public intake page sends the hash header.
+
+### High — unbounded GET-time token mint (CLOSED)
+- **`app/p/[shareId]/page.tsx`** — removed `awardShareReward` entirely. GET requests no longer mutate the ledger (was: +5 mint keyed on the spoofable `x-forwarded-for` → unlimited self-mint). The page keeps the `observedAt` analytics bump and the animal profile stub. Verified: zero `:landing:` ledger rows since deploy.
+
+### High — pay-side not enforced (CLOSED)
+- **`app/api/searches/route.ts`** — `debitTxnId` is now **required** and must resolve to a `LOST_PET_SEARCH_SPEND` owned by the caller (missing → 400, invalid/foreign → 402). Concurrent-create races are caught (P2002 → idempotent replay of the committed row). The idempotency replay branch no longer leaks another user's search row (IDOR closed).
+
+### High — outreach consent integrity (CLOSED)
+- **`lib/services/outreachService.ts`** — copy is honest: "first available animal (region matching not yet implemented)" instead of the false "matched by region". `reviewOutreachDraft` now refuses to approve drafts for a non-ACTIVE (unsubscribed) profile and auto-skips them.
+- **`app/api/outreach/unsubscribe/route.ts`** — unsubscribing atomically flips the profile to UNSUBSCRIBED **and** marks its open DRAFTs SKIPPED (`cancelledDrafts` returned), so staff can never approve-and-send after consent is revoked.
+
+### Medium — self-dealing (CLOSED)
+- **`app/api/shares/[shareId]/route.ts`** — reviewer may not review their own share (403 self-dealing guard; blocks staff creating a search + 10 shares and verifying them to self-mint the +100 grant).
+- **`lib/services/tokenService.ts` `grantFreeSearchMilestone`** — the verified-share count is now scoped to the **search owner** (matches the radar widget's owner-scoped progress); third parties can no longer inflate the milestone.
+- **`app/api/shares/route.ts`** — `relatedSearchId` must reference a `LostPetSearch` owned by the caller (403 otherwise).
+
+### Ledger correctness (CLOSED)
+- **`lib/services/tokenService.ts`** — EXPIRE now uses the same atomic `cachedBalance >= amount` floor as SPEND (was: plain `update` → could drive balance negative). `reverseTransaction` applies the floor when the reversal is a debit. Concurrent duplicate idempotency keys are translated to an idempotent replay (P2002 caught outside the transaction, committed row re-fetched) instead of a bare 409. Replay now checks **ownership** — a probe with another user's idempotencyKey throws `IdempotencyConflictError` (never leaks another user's ledger row).
+- **`app/api/tokens/transaction/route.ts`** — client surface **whitelisted** (userId, direction, actionType, amount, idempotencyKey, currency, notes); provenance/attribution fields (`sponsorOrgId`, `sourceViralShareId`, `issuedByUserId`, `issuedByJob`, `costBasisMinorUnits`) can no longer be forged by a client. P2002 → committed row returned; `IdempotencyConflictError` → 409.
+
+### Migration
+- **`prisma/migrations/20260830_tier1_7_outreach/`** — real migration for `OutreachProfile`/`OutreachDraft` + enums (was `db push`-only), plus `migration_lock.toml`. Marked applied on the live DB; `prisma migrate status` = "Database schema is up to date!". NOTE: the pre-sprint base schema predates the migrations directory (sprint_a only ALTERs `users`), so fresh environments still need `prisma db push` first (documented in the migration file).
+
+### Verified
+- `tsc --noEmit` exit 0 · `npm run build` exit 0 · prod server smoke: `/`, `/login`, `/outreach`, `/intake/public` 200; `/dashboard` 307→login; `/adopt/999` 404; 13/13 fix-specific checks PASS (pay-gate, self-dealing guards, provenance whitelist, unsubscribe-cancels-drafts, soft-404, milestone ownership); anonymous `OWNER_SURRENDER` + past date → `statutoryHoldCleared:false` confirmed in DB.
+
+---
+
 ## 2026-09-07 — EPIC 3 Closed Loop: real delivery on approve (Tier 1.7)
 
 ### Fixed

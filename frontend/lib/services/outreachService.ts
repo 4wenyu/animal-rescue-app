@@ -75,42 +75,47 @@ export function buildOutreachCopy(
     ? `a ${animal.breed} at a nearby partner shelter`
     : "a local animal that needs help right now";
 
+  // Stage-1 honesty: the matcher does NOT actually use the profile's region —
+  // it cycles the latest hold-cleared animals. The copy must say so.
+  const sourceTail =
+    "autonomous agent — stage 1, first available animal (region matching not yet implemented)";
+
   switch (area) {
     case "DONATE":
       return {
         subject: `Help ${animalLine} — a one-time gift goes further than you think`,
         body: `You asked to be contacted about donation opportunities. Right now, ${animalLine} is waiting. This is an automated outreach (stage 1) — a real human at the shelter is ready to answer any question.`,
-        sourceNote: "autonomous agent — stage 1, donation ask, matched by region",
+        sourceNote: `autonomous agent — stage 1, donation ask, ${sourceTail}`,
       };
     case "FOSTER":
       return {
         subject: `Could you foster ${animalLine}?`,
         body: `You told us you can foster. We found ${animalLine} that could really use a temporary home. This is an automated outreach (stage 1) — a shelter coordinator will follow up personally if you're interested.`,
-        sourceNote: "autonomous agent — stage 1, foster ask, matched by region",
+        sourceNote: `autonomous agent — stage 1, foster ask, ${sourceTail}`,
       };
     case "ADOPT":
       return {
         subject: `Meet ${animalLine} — looking for a forever family`,
         body: `You asked to hear about adoptable animals. ${animalLine} has completed its required holding period and is ready for adoption. This is an automated outreach (stage 1); a real adoption counselor is on hand to help.`,
-        sourceNote: "autonomous agent — stage 1, adoption ask, matched by region",
+        sourceNote: `autonomous agent — stage 1, adoption ask, ${sourceTail}`,
       };
     case "VOLUNTEER":
       return {
         subject: `Your shelter could use your hands this week`,
-        body: `You opted in to hear about volunteer shifts. We're matching nearby needs, starting with ${animalLine}. This is an automated outreach (stage 1) — reply and a volunteer lead will connect you.`,
-        sourceNote: "autonomous agent — stage 1, volunteer ask, matched by region",
+        body: `You opted in to hear about volunteer shifts. We're matching needs, starting with ${animalLine}. This is an automated outreach (stage 1) — reply and a volunteer lead will connect you.`,
+        sourceNote: `autonomous agent — stage 1, volunteer ask, ${sourceTail}`,
       };
     case "SHARE":
       return {
         subject: `Can you share ${animalLine} with your community?`,
         body: `You offered to help spread the word. ${animalLine} needs visibility right now. This is an automated outreach (stage 1) — sharing a post takes two minutes and can save a life.`,
-        sourceNote: "autonomous agent — stage 1, share ask, matched by region",
+        sourceNote: `autonomous agent — stage 1, share ask, ${sourceTail}`,
       };
     default:
       return {
         subject: `Transport help needed for ${animalLine}`,
         body: `You offered transport help. There's a need nearby for ${animalLine}. This is an automated outreach (stage 1) — a coordinator will share the route details if you can help.`,
-        sourceNote: "autonomous agent — stage 1, transport ask, matched by region",
+        sourceNote: `autonomous agent — stage 1, transport ask, ${sourceTail}`,
       };
   }
 }
@@ -185,10 +190,37 @@ export async function reviewOutreachDraft(
   approve: boolean,
   note?: string,
 ): Promise<"SENT" | "SKIPPED"> {
-  const draft = await prisma.outreachDraft.findUnique({ where: { draftId } });
+  const draft = await prisma.outreachDraft.findUnique({
+    where: { draftId },
+    select: {
+      draftId: true,
+      status: true,
+      sourceNote: true,
+      profileId: true,
+      profile: { select: { status: true } },
+    },
+  });
   if (!draft) throw new Error("Draft not found");
   if (draft.status !== "DRAFT") {
     throw new Error("Only DRAFT outreach can be reviewed");
+  }
+
+  // Consent gate: a profile that unsubscribed can NEVER be sent to. Pending
+  // drafts for a non-ACTIVE profile are auto-skipped instead.
+  if (draft.profile?.status !== "ACTIVE") {
+    if (approve) {
+      throw new Error("Cannot approve outreach for an unsubscribed profile");
+    }
+    await prisma.outreachDraft.update({
+      where: { draftId },
+      data: {
+        status: "SKIPPED",
+        reviewedByUserId: reviewerUserId,
+        reviewedAt: new Date(),
+        ...(note ? { sourceNote: `${draft.sourceNote} — review: ${note}` } : {}),
+      },
+    });
+    return "SKIPPED";
   }
 
   if (approve) {
