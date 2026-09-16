@@ -6,6 +6,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PawPrint, Eye, EyeOff } from "lucide-react";
 
+/**
+ * The seeded demo accounts are real ADMIN/STAFF logins, so their password
+ * must never be printed on a deployed sign-in page. Inlined at build time
+ * from NODE_ENV, which is "production" for `next build`.
+ */
+const showDemoHint = process.env.NODE_ENV !== "production";
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +37,7 @@ function LoginForm() {
     });
 
     if (result?.error) {
-      setError("Invalid credentials. Try admin@rescuehub.org / admin123");
+      setError("Incorrect email or password.");
       setLoading(false);
     } else {
       router.push(callbackUrl);
@@ -119,9 +126,11 @@ function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-[11px] text-slate-400">
-          Demo: admin@rescuehub.org / admin123
-        </p>
+        {showDemoHint && (
+          <p className="mt-4 text-center text-[11px] text-slate-600">
+            Demo: admin@rescuehub.org / admin123
+          </p>
+        )}
 
         <p className="mt-3 text-center text-sm text-slate-500">
           New to RescueHub?{" "}

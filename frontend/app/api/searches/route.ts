@@ -33,6 +33,7 @@ import { Prisma } from "@prisma/client";
 
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
+import { SEARCH_FEE_AMOUNT } from "@/lib/services/tokenService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -161,14 +162,19 @@ export async function POST(request: Request) {
       userId: true,
       actionType: true,
       direction: true,
+      amount: true,
     },
   });
 
+  // The amount check is load-bearing: /api/tokens/transaction accepts any
+  // positive amount up to the cap, so without it a caller could SPEND 1 token
+  // and activate a 100-token search.
   if (
     !debit ||
     debit.userId !== authenticatedUserId ||
     debit.direction !== "SPEND" ||
-    debit.actionType !== "LOST_PET_SEARCH_SPEND"
+    debit.actionType !== "LOST_PET_SEARCH_SPEND" ||
+    debit.amount < SEARCH_FEE_AMOUNT
   ) {
     return NextResponse.json(
       {

@@ -41,7 +41,7 @@ export type DeliveryOutcome =
  * was skipped) and we do NOT deliver.
  *
  * @param draftId     the approved draft
- * @param reviewerId  staff user id (for the audit note on failure paths)
+ * @param reviewerId  staff user id, persisted as `reviewedByUserId`
  * @param shelterName display name used in the Telegram copy
  */
 export async function deliverApprovedDraft(
@@ -57,10 +57,18 @@ export async function deliverApprovedDraft(
     });
     if (!draft) return null;
 
-    // Conditional transition — the race gate.
+    // Conditional transition — the race gate. The reviewer is stamped in the
+    // same write as the status flip: a delivered message must always name the
+    // human who authorized it (the SKIPPED paths already do this).
+    const reviewedAt = new Date();
     const flipped = await tx.outreachDraft.updateMany({
       where: { draftId, status: "DRAFT" },
-      data: { status: "SENT", sentAt: new Date() },
+      data: {
+        status: "SENT",
+        sentAt: reviewedAt,
+        reviewedByUserId: reviewerId,
+        reviewedAt,
+      },
     });
     return flipped.count === 1 ? draft : undefined;
   });

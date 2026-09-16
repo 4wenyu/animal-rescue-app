@@ -512,8 +512,15 @@ export async function awardShareReward(
 // grantFreeSearchMilestone — the "share with 10 groups, search is free" promise
 // ---------------------------------------------------------------------------
 
+/**
+ * Token cost of one lost-pet search. Single source of truth: the sponsor
+ * grant, the client SPEND cap and the `/api/searches` pay-gate all read this
+ * constant, so the fee cannot drift between the charge and the check.
+ */
+export const SEARCH_FEE_AMOUNT = 100;
+
 /** Search cost the sponsor normally underwrites (mirrors SEARCH_FEE_AMOUNT). */
-export const FREE_SEARCH_GRANT_AMOUNT = 100;
+export const FREE_SEARCH_GRANT_AMOUNT = SEARCH_FEE_AMOUNT;
 
 /** Number of VERIFIED shares that unlock the free search. */
 export const FREE_SEARCH_MILESTONE = 10;

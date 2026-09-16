@@ -26,6 +26,7 @@ import { ZodError } from "zod";
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { PetIntakeBatchSchema, type PetIntake } from "@/lib/schemas/intake";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import {
   computeStrayHoldExpiry,
   isStatutoryHoldCleared,
@@ -43,6 +44,13 @@ const CUSTODIAN_ORG_ID = "f4eedd11-2222-4000-a000-000000000001";
 
 /** Hard cap on animals per batch — bounds the work of a single request. */
 const MAX_BATCH_SIZE = 50;
+
+/**
+ * Hard cap on intake bonuses one user may earn per rolling 24h. Sized well
+ * above a real shelter's daily intake so it never throttles legitimate work,
+ * while bounding what a compromised staff account can mint.
+ */
+const MAX_INTAKE_BONUSES_PER_DAY = 25;
 
 /* ---------------------------------------------------------------------- */
 
@@ -63,7 +71,31 @@ export async function POST(request: Request) {
     );
   }
 
-  /* ── 2. Parse + validate body ───────────────────────────────── */
+  /* ── 2. Rate limit ──────────────────────────────────────────── */
+  // Anonymous submissions are allowed by design (public stray intake), so
+  // throttle per caller to bound unbounded Animal row creation. Authenticated
+  // staff get their own bucket keyed on user id so a shared office IP can't
+  // exhaust the anonymous budget.
+  const ip = getClientIp(request);
+  const rateLimitKey = submittedUserId
+    ? `animals-intake:user:${submittedUserId}`
+    : `animals-intake:ip:${ip}`;
+  const { ok: withinLimit, retryAfterSeconds } = checkRateLimit(
+    rateLimitKey,
+    10,
+    60 * 1000,
+  );
+  if (!withinLimit) {
+    return NextResponse.json(
+      {
+        error: "Too Many Requests",
+        message: "Too many intake submissions — please wait a moment and try again.",
+      },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
+    );
+  }
+
+  /* ── 3. Parse + validate body ───────────────────────────────── */
   let body: unknown;
   try {
     body = await request.json();
@@ -118,9 +150,26 @@ export async function POST(request: Request) {
 
   // Onboarding bonus only applies to the authenticated staff path — an
   // anonymous citizen has no wallet to credit (Tier 0.4).
-  const shouldMintBonus = submittedUserId !== null;
+  //
+  // The bonus mints per animal, and a request may carry MAX_BATCH_SIZE of
+  // them, so an uncapped mint lets one staff account manufacture unlimited
+  // tokens from throwaway records. Cap it per user per day; intake itself is
+  // never blocked, only the reward stops accruing past the cap.
+  let bonusBudget = 0;
+  if (submittedUserId !== null) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const mintedToday = await prisma.tokenTransaction.count({
+      where: {
+        userId: submittedUserId,
+        actionType: "ONBOARDING_BONUS_EARN",
+        createdAt: { gte: since },
+      },
+    });
+    bonusBudget = Math.max(0, MAX_INTAKE_BONUSES_PER_DAY - mintedToday);
+  }
+  const shouldMintBonus = bonusBudget > 0;
 
-  /* ── 3. Atomic insert: Animal + IntakeRecord (+ staff bonus) ── */
+  /* ── 4. Atomic insert: Animal + IntakeRecord (+ staff bonus) ── */
   try {
     const result = await prisma.$transaction(async (tx) => {
       // 3a. Make sure the custodian org exists (dev convenience).
@@ -199,8 +248,9 @@ export async function POST(request: Request) {
 
         animals.push({ animalId: animal.animalId, intakeId: intake.intakeId });
 
-        // ── Staff-only bonus. Skipped entirely for anonymous citizens. ──
-        if (shouldMintBonus && submittedUserId) {
+        // ── Staff-only bonus. Skipped entirely for anonymous citizens, and
+        // stops once the rolling daily budget is exhausted. ──
+        if (shouldMintBonus && submittedUserId && bonuses.length < bonusBudget) {
           const bonus = await tx.tokenTransaction.create({
             data: {
               userId: submittedUserId,
@@ -248,9 +298,9 @@ export async function POST(request: Request) {
       return { animals, bonuses };
     });
 
-    const tokensAwarded = shouldMintBonus
-      ? result.animals.length * 50
-      : 0;
+    // Derived from the rows actually committed, not from the animal count —
+    // the daily bonus budget can cap the mint partway through a batch.
+    const tokensAwarded = result.bonuses.length * 50;
 
     return NextResponse.json(
       {
@@ -266,7 +316,9 @@ export async function POST(request: Request) {
             ? result.animals.length === 1
               ? "Animal created +50 tokens awarded."
               : `${result.animals.length} animals created, ${tokensAwarded} tokens awarded.`
-            : `${result.animals.length} animal${result.animals.length === 1 ? "" : "s"} recorded (no token grant for anonymous submissions).`,
+            : submittedUserId
+              ? `${result.animals.length} animal${result.animals.length === 1 ? "" : "s"} recorded (daily intake bonus limit reached).`
+              : `${result.animals.length} animal${result.animals.length === 1 ? "" : "s"} recorded (no token grant for anonymous submissions).`,
       },
       { status: 201 },
     );
@@ -274,11 +326,10 @@ export async function POST(request: Request) {
     console.error("[api/animals/intake] failed:", err);
     return NextResponse.json(
       {
+        // Never echo internal error text to the client — the insert is
+        // transactional, so "nothing was committed" is always accurate.
         error: "Internal Server Error",
-        message:
-          err instanceof Error
-            ? err.message
-            : "Intake transaction failed; nothing was committed.",
+        message: "Intake failed; nothing was committed. Please try again.",
       },
       { status: 500 },
     );

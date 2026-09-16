@@ -265,6 +265,17 @@ export async function POST(request: Request) {
       const committed = await prisma.tokenTransaction.findUnique({
         where: { idempotencyKey: (data.idempotencyKey as string) ?? "" },
       });
+      // Ownership check: idempotencyKey is globally unique, so a caller who
+      // guesses another user's key must not read back their ledger row.
+      if (committed && committed.userId !== authenticatedUserId) {
+        return NextResponse.json(
+          {
+            error: "Conflict",
+            message: "A transaction with this idempotencyKey already exists.",
+          },
+          { status: 409 }
+        );
+      }
       if (committed) {
         return NextResponse.json(
           {
