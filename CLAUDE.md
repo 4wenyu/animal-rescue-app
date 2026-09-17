@@ -1,6 +1,6 @@
 App: Next15
 Stack: TS+TWC+Shadcn
-DB: src/data/dogs.json
+DB: Prisma + Postgres (lib/prisma.ts); static roster: data/dogs.json (read-only)
 No CSS inline
 Comp < 150 lines
 Server Comp > Client

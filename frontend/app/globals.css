@@ -8,8 +8,9 @@
   --color-sidebar: #0f172a;
   --color-sidebar-hover: #1e293b;
   --color-sidebar-active: #334155;
-  --color-accent: #06b6d4;
-  --color-accent-soft: #0891b2;
+  --color-accent: #10b981;
+  --color-accent-hover: #059669;
+  --color-accent-soft: #d1fae5;
   --color-card: #ffffff;
   --color-card-border: #e2e8f0;
   --color-muted: #f8fafc;
@@ -20,6 +21,11 @@
 :root {
   --background: #f1f5f9;
   --foreground: #0f172a;
+  --preview-offset: 0px;
+}
+
+html[data-site-mode="preview"] {
+  --preview-offset: 2.5rem;
 }
 
 body {

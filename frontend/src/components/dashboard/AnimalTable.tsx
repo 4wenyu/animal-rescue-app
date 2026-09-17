@@ -125,7 +125,7 @@ function StrayHoldBadge({ dog, tr }: { dog: Dog; tr: (k: string) => string }) {
           <ShieldAlert className="h-3 w-3" />
           {tr("dashboard.table.locked")}
         </span>
-        <span className="text-[11px] text-slate-400">
+        <span className="text-[11px] text-slate-600">
           {tr("dashboard.table.hayden_note")}
         </span>
       </div>
@@ -421,7 +421,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
                         <span className="font-semibold text-slate-900 block">
                           {dog.name}
                         </span>
-                        <span className="text-[11px] text-slate-400 font-medium">
+                        <span className="text-[11px] text-slate-600 font-medium">
                           #{dog.id}
                         </span>
                       </div>
@@ -499,7 +499,7 @@ export function AnimalTable({ dogs, onViewAll }: AnimalTableProps) {
       {/* ── Compliance Footer ─────────────────────────────────────────── */}
       <motion.div
         variants={rowVariant}
-        className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-slate-400"
+        className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-slate-600"
       >
         <span className="inline-flex items-center gap-1">
           <ShieldCheck className="h-3 w-3" />

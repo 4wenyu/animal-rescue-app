@@ -12,27 +12,58 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
-import { generateOutreachDrafts } from "@/lib/services/outreachService";
+import {
+  generateOutreachDrafts,
+  previewOutreachGeneration,
+} from "@/lib/services/outreachService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+async function requireStaff() {
   const session = await auth();
   const role = (session?.user as unknown as Record<string, unknown> | undefined)
     ?.role as string | undefined;
   if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Unauthorized", message: "Valid session required." },
-      { status: 401 },
-    );
+    return {
+      ok: false as const,
+      response: NextResponse.json(
+        { error: "Unauthorized", message: "Valid session required." },
+        { status: 401 },
+      ),
+    };
   }
   if (role !== "STAFF" && role !== "ADMIN") {
+    return {
+      ok: false as const,
+      response: NextResponse.json(
+        { error: "Forbidden", message: "STAFF/ADMIN role required to run the agent." },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true as const };
+}
+
+/** Plan-only: what the agent would draft, without writing rows. */
+export async function GET() {
+  const gate = await requireStaff();
+  if (!gate.ok) return gate.response;
+  try {
+    const preview = await previewOutreachGeneration(5);
+    return NextResponse.json({ ok: true, preview }, { status: 200 });
+  } catch (err) {
+    console.error("[api/outreach/generate] preview failed:", err);
     return NextResponse.json(
-      { error: "Forbidden", message: "STAFF/ADMIN role required to run the agent." },
-      { status: 403 },
+      { error: "Internal Server Error", message: "Could not preview the agent run." },
+      { status: 500 },
     );
   }
+}
+
+export async function POST() {
+  const gate = await requireStaff();
+  if (!gate.ok) return gate.response;
 
   try {
     const created = await generateOutreachDrafts(5);

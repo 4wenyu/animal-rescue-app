@@ -5,9 +5,37 @@
     "tagline": "Connecting Rescues, Sponsors, and Forever Homes",
     "description": "A multi-tenant regulatory compliance engine for 501(c)(3) animal rescues, municipal shelters, corporate sponsors, and the public."
   },
+  "preview": {
+    "kicker": "Private preview",
+    "banner": "Private preview — sample animals, not a live shelter.",
+    "banner_cta": "How to try it",
+    "title": "You are invited to try RescueHub",
+    "lede": "This is a private preview before launch. Animals and the radar feed are sample data. Nothing here is a live municipal listing.",
+    "real_title": "What is real",
+    "real_body": "The assistant, adoption profiles, home match, lost-pet chat, and token ledger all run. A new account receives one search credit so you can finish the loop.",
+    "sim_title": "What is simulated",
+    "sim_body": "Partner sightings on the radar page, sponsor wordmarks, and outreach delivery unless Telegram is configured.",
+    "path_adopt_title": "Meet who needs a home",
+    "path_adopt_time": "About 2 minutes",
+    "path_adopt_body": "Browse the roster, try the three-question match, and open a profile.",
+    "path_lost_title": "Report a missing pet",
+    "path_lost_time": "About 3 minutes",
+    "path_lost_body": "Talk to the lost-pet assistant. Create an account to activate a search with your preview credit.",
+    "path_staff_title": "Staff portal",
+    "path_staff_time": "Ask the host",
+    "path_staff_body": "Intake, stray holds, and outreach review. The host will give you a login — it is not printed here.",
+    "cta_start": "Start this path",
+    "copy_link": "Copy invite link",
+    "copied": "Copied",
+    "share_hint": "Send this page. Ask the host for the site password if the link is gated."
+  },
   "nav": {
     "public_portal": "Public Portal",
     "dashboard": "Dashboard",
+    "kennel_walk": "Kennel walk",
+    "today": "Today's animal",
+    "sign_in": "Sign in",
+    "sign_out": "Sign out",
     "intake": "Intake",
     "medical": "Medical",
     "fundraising": "Fundraising",
@@ -38,6 +66,39 @@
     "cta_crowdfunding": "Emergency Crowdfunding",
     "cta_surrender": "Public Surrender Portal",
     "cta_lost_pet": "I lost a pet"
+  },
+  "play": {
+    "title": "Who needs a home?",
+    "body": "Three quiet questions. We introduce you to a real animal on this list — not a high score.",
+    "q_pace": "What's your pace?",
+    "pace_calm": "Quiet evenings",
+    "pace_walks": "Daily walks",
+    "pace_trail": "Trail days",
+    "q_space": "Your space?",
+    "space_apt": "Apartment",
+    "space_house": "House",
+    "space_yard": "Yard to roam",
+    "q_home": "Who's at home?",
+    "home_solo": "Just me",
+    "home_kids": "Kids",
+    "home_pets": "Other pets",
+    "meet": "Meet {name}",
+    "again": "Start over",
+    "progress": "{n} of 3"
+  },
+  "today": {
+    "kicker": "Today's introduction",
+    "title": "Meet {name}",
+    "body": "Everyone who opens RescueHub today meets the same animal. Send this page — that is how a home shows up.",
+    "share": "Send {name} to a friend",
+    "share_title": "Meet {name} on RescueHub",
+    "share_text": "Meet {name} — today's kennel introduction on RescueHub.",
+    "copied": "Link copied",
+    "calendar": "Remind me tomorrow",
+    "calendar_title": "Kennel walk — meet tomorrow's animal",
+    "tomorrow": "Tomorrow: a {breed} is waiting.",
+    "album_title": "Animals you've met",
+    "album_empty": "Walk the kennel once. Your introductions live here."
   },
   "adoption_feed": {
     "title": "Adoption Broadcast",
@@ -74,6 +135,25 @@
     "clear_filter": "Clear filter: {filter}",
     "add_animal": "Add Animal",
     "find_my_pet": "🔍 Find My Pet",
+    "hello": "Welcome back",
+    "hello_named": "Welcome back, {name}",
+    "citizen_sub": "Sixty seconds with an animal who needs a home.",
+    "today_title": "What needs you today",
+    "today_walk": "Kennel walk",
+    "today_walk_body": "Sixty seconds. Meet an animal waiting for a home.",
+    "today_medical": "Medical review",
+    "today_medical_body": "{count} animals need a second look.",
+    "today_outreach": "Outreach drafts",
+    "today_outreach_body": "Approve messages before anything is sent.",
+    "today_search": "Lost-pet search",
+    "today_search_body": "Start or resume a search with your wallet.",
+    "walk_kicker": "Daily play",
+    "walk_day": "Day {count}",
+    "walk_day_zero": "Begin",
+    "walk_streak": "{count}-day kennel walk",
+    "walk_streak_zero": "Start a daily kennel walk",
+    "walk_today_done": "You walked the kennel today.",
+    "walk_come_back": "Come back tomorrow — another animal will be waiting.",
     "v3": "RescueHub · Triage System · v3.5",
     "timer_format": "{h}h {m}m {s}s",
     "stats": {
@@ -210,6 +290,8 @@
     }
   },
   "adopt": {
+    "hold_cta_note": "{name} is currently on a statutory hold. Adopt and foster applications open once the hold clears — you can still donate or contact the shelter.",
+    "form_close": "Close",
     "story": "{name} is looking for a loving forever home. Our team has been getting to know {name} while they wait — ask us anything about their personality, habits, and favorite things.",
     "personality_label": "A little about {name}",
     "sex_male": "Male",
@@ -311,6 +393,10 @@
     "fundraising_cta": "View active campaigns"
   },
   "intake_hub": {
+    "ai_doc_title": "AI Document Scan",
+    "county_title": "Municipal / County Transfer",
+    "county_body": "For Animal Control Officers handing off a stray to the shelter. Sends a transfer notice to the shelter coordinator — no animal record is created until the shelter accepts.",
+    "county_cta": "Open County Transfer",
     "title": "Intake Operations",
     "subtitle": "Choose an intake path to begin processing an animal record.",
     "public_title": "Public Surrender Portal",
@@ -325,6 +411,10 @@
     "staff_only_badge": "Staff Only"
   },
   "public_intake": {
+    "submitting": "Submitting intake…",
+    "submit_failed_title": "Submission failed",
+    "submit_failed_body": "We could not record your intake, so nothing was submitted. Your signed waiver is still valid — you can safely retry.",
+    "retry": "Retry submission",
     "title": "Public Surrender Portal",
     "intro": "This ESIGN/UETA-compliant electronic waiver creates a legally defensible chain of custody. Please select the option that applies to your situation.",
     "found_stray_label": "🐾  I found a stray animal",
@@ -356,7 +446,8 @@
     "title": "RescueHub Assistant",
     "open_label": "Open chat",
     "close_label": "Close chat",
-    "greeting": "Hello. I am the RescueHub Assistant. I understand you are looking for your pet, and I am here to help. Take a deep breath. To start, what is your pet's name?",
+    "greeting": "Hello — I'm the RescueHub Assistant. I can help you find a missing pet, meet an animal who needs a home, start a surrender, or support a medical campaign. What brings you here today?",
+    "greeting_adopt": "Looking for a companion? Tell me about your home and I'll point you to an animal waiting here. I will not assume anyone is missing.",
     "input_placeholder": "Type your response...",
     "attach_label": "Attach file",
     "send_label": "Send message",
@@ -390,7 +481,13 @@
     "private_note": "Conversations are treated as confidential intake records. Tokens have already been debited for this search.",
     "wallet_balance_label": "Wallet balance:",
     "wallet_balance_unit": "tokens",
-    "stream_unavailable_title": "Sorry — the intake stream hit an error. Please try again in a moment. ({error})"
+    "stream_unavailable_title": "Sorry — the intake stream hit an error. Please try again in a moment. ({error})",
+    "draft_restored": "We kept what you already told us — nothing was lost.",
+    "confirm_title": "Start this search?",
+    "confirm_body": "We'll broadcast what we have. This uses your search credit ({fee} tokens).",
+    "confirm_start": "Start searching",
+    "confirm_back": "Keep editing",
+    "confirm_fee_note": "You won't be charged again if this search was already paid for."
   },
   "document_scan": {
     "title": "AI Intake — Batch Document Upload",
@@ -426,7 +523,12 @@
     "yes": "Yes",
     "no": "No",
     "intake_notes": "Intake Notes",
-    "intake_number": "Intake #{n}"
+    "intake_number": "Intake #{n}",
+    "ai_suggested": "AI suggested",
+    "ai_banner": "These fields were extracted by AI. Confirm each record before treating it as a medical or legal fact.",
+    "verify_checkbox": "I verified this record against the source document",
+    "verified_badge": "Verified by staff",
+    "accept_confirmed": "Accept {count} verified record(s)"
   },
   "fundraising": {
     "title": "Fundraising Campaigns",
@@ -501,6 +603,11 @@
     "iframe_title": "Sponsor acknowledgment message"
   },
   "radar": {
+    "share_error_create": "Couldn't create the share link right now. Please try again.",
+    "share_error_generic": "Couldn't create the share link right now.",
+    "share_error_claim": "Couldn't claim the free search right now. Please try again.",
+    "share_error_claim_generic": "Couldn't claim the free search.",
+    "share_error_milestone": "The milestone isn't met yet — keep sharing!",
     "back_to_dashboard": "Back to dashboard",
     "eyebrow": "Lost Pet · Rescue Radar",
     "load_error_title": "Couldn't load search",
@@ -644,6 +751,14 @@
     "review_approve": "Approve & send",
     "review_skip": "Skip",
     "agent_run": "Run the agent",
-    "agent_running": "Running…"
+    "agent_running": "Running…",
+    "agent_preview_title": "The agent will draft messages",
+    "agent_preview_body": "About {drafts} people who opted in, using {animals} hold-cleared animal(s). Nothing is sent until you approve each draft.",
+    "agent_preview_confirm": "Generate drafts",
+    "agent_preview_cancel": "Not now",
+    "status_approved": "Holding",
+    "hold_sending_in": "Sends in {s}s — you can still undo",
+    "hold_send_now": "Send now",
+    "hold_undo": "Undo"
   }
 }

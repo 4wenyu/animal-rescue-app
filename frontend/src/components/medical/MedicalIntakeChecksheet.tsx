@@ -1,4 +1,5 @@
 "use client";
+import { t as translate, resolveLocale, STORAGE_KEY } from "@/src/lib/useI18n";
 
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
@@ -58,96 +59,9 @@ export interface MedicalFormData {
 // Synchronous i18n (6 locales + SSR-safe English fallbacks)
 // ---------------------------------------------------------------------------
 
-import enDict from "../../../locales/en.json";
-import esDict from "../../../locales/es.json";
-import zhCNDict from "../../../locales/zh-CN.json";
-import zhTWDict from "../../../locales/zh-TW.json";
-import jaDict from "../../../locales/ja.json";
-import koDict from "../../../locales/ko.json";
-import zhLegacyDict from "../../../locales/zh.json";
 
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-  zh: zhLegacyDict as unknown as Record<string, unknown>,
-};
-const STORAGE_KEY = "rescuehub_locale";
 
-function resolveLocale(stored: string | null): string {
-  if (stored === "zh") return "zh-CN";
-  if (
-    stored === "en" || stored === "es" || stored === "zh-CN" ||
-    stored === "zh-TW" || stored === "ja" || stored === "ko"
-  ) return stored;
-  return "en";
-}
 
-const EN_FALLBACK: Record<string, string> = {
-  "medical.checksheet.title": "Medical Intake Checksheet",
-  "medical.checksheet.subtitle":
-    "ASPCA / CART-aligned brief intake exam — Animal ID: {id} · Species: {species}",
-  "medical.checksheet.weight": "Weight",
-  "medical.checksheet.weight_unit": "lbs",
-  "medical.checksheet.tpr_header": "TPR (Temperature, Pulse, Respiration)",
-  "medical.checksheet.tpr_temp": "Temperature",
-  "medical.checksheet.tpr_pulse": "Pulse",
-  "medical.checksheet.tpr_resp": "Respiration",
-  "medical.checksheet.unit_f": "°F",
-  "medical.checksheet.unit_bpm": "bpm",
-  "medical.checksheet.unit_brpm": "brpm",
-  "medical.checksheet.procedures_header": "Intake Procedures",
-  "medical.checksheet.procedure_microchip": "Microchip Scanned",
-  "medical.checksheet.procedure_vaccines": "Vaccines Administered",
-  "medical.checksheet.procedure_dewormer": "Dewormer Administered",
-  "medical.checksheet.procedure_topspot": "Topspot flea/tick applied",
-  "medical.checksheet.emergency_signs_header": "Emergency Signs",
-  "medical.checksheet.vet_flagged": "VET FLAGGED",
-  "medical.checksheet.detected_warning":
-    "⚠️ Emergency signs detected — a veterinarian will be notified upon save.",
-  "medical.checksheet.save_button": "Save Medical Intake Record",
-  "medical.checksheet.confirm_title": "Medical Intake Recorded",
-  "medical.checksheet.confirm_complete":
-    "Animal {id} ({species}) medical check complete.",
-  "medical.checksheet.new_exam": "New Exam",
-  "medical.checksheet.vet_required":
-    "⚠️ Veterinary Notification Required",
-  "medical.checksheet.vet_required_body":
-    "Emergency signs detected: {signs}. A veterinarian has been flagged for immediate review.",
-  // Emergency sign defaults
-  "medical.checksheet.emergency_sign.ulcers_in_mouth_or_nose":
-    "Ulcers in mouth or nose",
-  "medical.checksheet.emergency_sign.vomiting": "Vomiting",
-  "medical.checksheet.emergency_sign.diarrhea_bloody": "Diarrhea (bloody)",
-  "medical.checksheet.emergency_sign.coughing": "Coughing",
-  "medical.checksheet.emergency_sign.patchy_hair_loss": "Patchy hair loss",
-  "medical.checksheet.emergency_sign.open_wounds_lacerations":
-    "Open wounds / lacerations",
-  "medical.checksheet.emergency_sign.seizures": "Seizures",
-  "medical.checksheet.emergency_sign.difficulty_breathing":
-    "Difficulty breathing",
-  "medical.checksheet.emergency_sign.limping_unable_to_bear_weight":
-    "Limping / unable to bear weight",
-  "medical.checksheet.emergency_sign.conjunctivitis_eye_discharge":
-    "Conjunctivitis (eye discharge)",
-};
-
-function trFor(locale: string, key: string, vars?: Record<string, string | number>): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const p of parts) {
-    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
-    value = (value as Record<string, unknown>)[p];
-  }
-  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
-  if (!vars) return value;
-  return Object.entries(vars).reduce((str, [k, v]) =>
-    str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)), value);
-}
 
 // ---------------------------------------------------------------------------
 // PROPS
@@ -208,7 +122,7 @@ export function MedicalIntakeChecksheet({
   }, []);
   const locale = localeProp ?? fallbackLocale;
   const t = (key: string, vars?: Record<string, string | number>) =>
-    trFor(locale, key, vars);
+    translate(locale, key, vars);
 
   // ── Derived ─────────────────────────────────────────────────────────
   const hasEmergencySigns = selectedSymptoms.length > 0;

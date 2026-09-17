@@ -15,14 +15,17 @@
  *   - Transitions are terminal — once FOUND/CANCELLED the row is immutable.
  *   - closedAt is stamped server-side (never trusted from the body).
  *   - Optional `notes` is appended ("— closed: …"), never replacing capture notes.
+ *   - The transition itself is conditional (updateMany on the pre-transition
+ *     status), so two concurrent PATCHes cannot both append notes — the loser
+ *     of the race gets a 409 instead of a double transition.
  *
- * Auth: reuse the session DTO shape from /api/searches (user.id + role).
+ * Auth: shared requireRole() helper (session user.id + role).
  */
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { auth } from "@/app/api/auth/[...nextauth]/auth";
+import { parseJsonBody, requireRole } from "@/lib/api/helpers";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -40,33 +43,15 @@ export async function PATCH(
   const { searchId } = await context.params;
 
   /* ── 1. Authenticate ─────────────────────────────────────────────── */
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Unauthorized", message: "Valid session required." },
-      { status: 401 },
-    );
-  }
-  const authenticatedUserId = session.user.id as string;
-  const role = (session.user as unknown as Record<string, unknown>).role as
-    | string
-    | undefined;
+  const authz = await requireRole();
+  if (!authz.ok) return authz.response;
+  const authenticatedUserId = authz.user.id;
+  const role = authz.user.role;
 
   /* ── 2. Validate body ────────────────────────────────────────────── */
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  const parsed = PatchSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Validation failed", issues: parsed.error.flatten() },
-      { status: 400 },
-    );
-  }
-  const { status, notes } = parsed.data;
+  const body = await parseJsonBody(request, PatchSchema);
+  if (!body.ok) return body.response;
+  const { status, notes } = body.data;
 
   /* ── 3. Load row ─────────────────────────────────────────────────── */
   const search = await prisma.lostPetSearch.findUnique({ where: { searchId } });
@@ -98,19 +83,43 @@ export async function PATCH(
     );
   }
 
-  /* ── 6. Persist ──────────────────────────────────────────────────── */
+  /* ── 6. Persist (conditional transition) ─────────────────────────── */
+  // Fast-path pre-check above gives a friendly 409; the updateMany `where`
+  // below makes the transition atomic — it only lands if the row is still
+  // SEARCHING, so a concurrent PATCH that raced past its own pre-check
+  // cannot double-append notes or re-close the row.
   const updatedNotes =
     notes && notes.length > 0
       ? `${search.notes ?? ""}${search.notes ? "\n" : ""}— closed: ${notes}`.trim()
       : search.notes;
 
-  const updated = await prisma.lostPetSearch.update({
-    where: { searchId },
+  const transitioned = await prisma.lostPetSearch.updateMany({
+    where: { searchId, status: "SEARCHING" },
     data: {
       status,
       closedAt: new Date(),
       notes: updatedNotes,
     },
+  });
+
+  if (transitioned.count === 0) {
+    // Lost the race: another writer transitioned first. Re-read so the
+    // message names the status that actually won.
+    const current = await prisma.lostPetSearch.findUnique({
+      where: { searchId },
+      select: { status: true },
+    });
+    return NextResponse.json(
+      {
+        error: "Conflict",
+        message: `Search is already ${current?.status ?? "resolved"} and cannot be transitioned.`,
+      },
+      { status: 409 },
+    );
+  }
+
+  const updated = await prisma.lostPetSearch.findUnique({
+    where: { searchId },
     select: {
       searchId: true,
       userId: true,
@@ -126,6 +135,14 @@ export async function PATCH(
       notes: true,
     },
   });
+
+  if (!updated) {
+    // Row vanished between the conditional update and this read.
+    return NextResponse.json(
+      { error: "Not Found", message: "No LostPetSearch with that id." },
+      { status: 404 },
+    );
+  }
 
   return NextResponse.json({ ok: true, search: updated }, { status: 200 });
 }

@@ -1,4 +1,5 @@
 "use client";
+import { t as translate, resolveLocale, STORAGE_KEY } from "@/src/lib/useI18n";
 
 import {
   type FormEvent,
@@ -26,65 +27,10 @@ async function sha256(payload: string): Promise<string> {
 // Synchronous i18n (6 locales + SSR-safe English fallbacks)
 // ---------------------------------------------------------------------------
 
-import enDict from "../../../locales/en.json";
-import esDict from "../../../locales/es.json";
-import zhCNDict from "../../../locales/zh-CN.json";
-import zhTWDict from "../../../locales/zh-TW.json";
-import jaDict from "../../../locales/ja.json";
-import koDict from "../../../locales/ko.json";
-import zhLegacyDict from "../../../locales/zh.json";
 
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-  zh: zhLegacyDict as unknown as Record<string, unknown>,
-};
 
-const STORAGE_KEY = "rescuehub_locale";
 
-function resolveLocale(stored: string | null): string {
-  if (stored === "zh") return "zh-CN";
-  if (
-    stored === "en" || stored === "es" || stored === "zh-CN" ||
-    stored === "zh-TW" || stored === "ja" || stored === "ko"
-  ) return stored;
-  return "en";
-}
 
-const EN_FALLBACK: Record<string, string> = {
-  "esign.owner_surrender_title":
-    "Owner Surrender — Transfer of Ownership Waiver",
-  "esign.found_stray_title": "Found Stray — Intake Declaration",
-  "esign.legal_intro":
-    "Under the Electronic Signatures in Global and National Commerce Act (ESIGN) and the Uniform Electronic Transactions Act (UETA), your electronic consent and signature are legally equivalent to a physical signature on paper.",
-  "esign.consent_label":
-    "I consent to conduct electronic business with RescueHub and the receiving animal rescue organisation. I agree that all records, disclosures, and signatures may be provided and retained electronically.",
-  "esign.full_legal_name": "Full Legal Name (Electronic Signature)",
-  "esign.signature_placeholder":
-    "Type your full legal name as your electronic signature",
-  "esign.affirmation_hint":
-    "By typing your name above, you affirmatively intend to sign this document electronically under ESIGN / UETA.",
-  "esign.error_consent_required":
-    "You must consent to electronic business and provide your full legal name to execute this waiver.",
-  "esign.error_unexpected": "An unexpected error occurred. Please try again.",
-  "esign.processing_button": "Processing...",
-  "esign.execute_button": "Execute Waiver & Submit",
-};
-
-function trFor(locale: string, key: string): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const p of parts) {
-    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
-    value = (value as Record<string, unknown>)[p];
-  }
-  return typeof value === "string" ? value : EN_FALLBACK[key] ?? key;
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -145,7 +91,7 @@ export function ESIGNLiabilityWaiver({
   }, []);
 
   const locale = localeProp ?? fallbackLocale;
-  const t = (key: string) => trFor(locale, key);
+  const t = (key: string) => translate(locale, key);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -206,7 +152,7 @@ export function ESIGNLiabilityWaiver({
   );
 
   // ── Render ────────────────────────────────────────────────────────────
-  const title = trFor(
+  const title = translate(
     locale,
     surrenderType === "OWNER_SURRENDER"
       ? "esign.owner_surrender_title"

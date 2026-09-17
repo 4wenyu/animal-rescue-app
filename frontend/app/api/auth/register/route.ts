@@ -28,6 +28,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
+import { grantPreviewSearchCredit } from "@/lib/services/tokenService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,6 +105,15 @@ export async function POST(request: Request) {
       });
       return created;
     });
+
+    try {
+      await grantPreviewSearchCredit(user.userId);
+    } catch (creditErr) {
+      console.error(
+        "[api/auth/register] Preview search credit failed; account still created:",
+        creditErr,
+      );
+    }
 
     return NextResponse.json(
       {

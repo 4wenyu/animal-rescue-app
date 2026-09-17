@@ -1,4 +1,5 @@
 "use client";
+import { t as translate } from "@/src/lib/useI18n";
 
 /**
  * LostPetAgent — Epic 3 / AI Agent Outreach Engine
@@ -48,27 +49,14 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivateSearchConfirm } from "./ActivateSearchConfirm";
+import { OPENING_HOOK_SENTINEL } from "./lostPetDraft";
+import { useLostPetDraft } from "./useLostPetDraft";
+import { writeLocaleCookie } from "@/src/lib/localeCode";
 
-// Locale JSON — mirrors the project pattern from FloatingChatbot.tsx.
-// All 7 locales (legacy "zh" alias resolves to zh-CN via the codebase's
-// existing shim — see LOCALE_DICTS below).
-import enDict from "../../../locales/en.json";
-import esDict from "../../../locales/es.json";
-import zhCNDict from "../../../locales/zh-CN.json";
-import zhTWDict from "../../../locales/zh-TW.json";
-import jaDict from "../../../locales/ja.json";
-import koDict from "../../../locales/ko.json";
-import zhLegacyDict from "../../../locales/zh.json";
-
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-  zh: zhLegacyDict as unknown as Record<string, unknown>,
-};
+// Locale strings resolve through the shared src/lib/useI18n module
+// (`translate(locale, key)`); this component keeps its own storage key and
+// event name only for the subscription effect below.
 const LOCALE_STORAGE_KEY = "rescuehub_locale";
 const LOCALE_CHANGE_EVENT = "rescuehub-locale-change";
 
@@ -86,71 +74,6 @@ function resolveStoredLocale(stored: string | null): LocaleCode {
     return stored;
   }
   return "en";
-}
-
-/**
- * English fallback used during SSR (so the chat window renders correctly
- * before hydration). Mirrors FloatingChatbot's EN_FALLBACK but only covers
- * the keys this component consumes; any new chatIntake key not in here is
- * returned verbatim by `tr()` so devs can spot the gap locally.
- */
-const EN_FALLBACK: Record<string, string> = {
-  "chatIntake.greeting":
-    "I am so sorry your pet is missing. I'm here to help you find them. Take a deep breath—what kind of pet are you looking for, and where did you last see them?",
-  "chatIntake.sidebar_title": "Intake progress",
-  "chatIntake.sidebar_help_species": "Dog, cat, rabbit, bird, other",
-  "chatIntake.sidebar_help_breed": "Labrador, tabby, parakeet, mixed",
-  "chatIntake.sidebar_help_color": "Primary markings, fur/feather color",
-  "chatIntake.sidebar_help_collar": "Tags, microchip, harness color, ID plate",
-  "chatIntake.sidebar_help_last_seen": "Address, cross-streets, neighborhood, landmark",
-  "chatIntake.label_species": "Species",
-  "chatIntake.label_breed": "Breed",
-  "chatIntake.label_color": "Color & markings",
-  "chatIntake.label_collar": "Collar & ID",
-  "chatIntake.label_last_seen": "Last seen",
-  "chatIntake.optional_badge": "optional",
-  "chatIntake.mobile_progress": "Start: {count}/2",
-  "chatIntake.not_sure_note":
-    "Not sure about a detail? That's okay — you can start searching with just the essentials, and say \"not sure\" whenever you need to.",
-  "chatIntake.signin_title": "Create a free account to activate",
-  "chatIntake.signin_body":
-    "Your search details are ready. A free account lets you save, share, and track your lost-pet search.",
-  "chatIntake.signin_create": "Create account",
-  "chatIntake.signin_login": "I already have an account",
-  "chatIntake.input_placeholder": "Tell me about your pet…",
-  "chatIntake.send_label": "Send message",
-  "chatIntake.ready_to_broadcast": "Intake complete · ready to broadcast",
-  "chatIntake.activate_button": "🚀 Activate Search Network",
-  "chatIntake.activating_label": "Activating…",
-  "chatIntake.private_note":
-    "Conversations are treated as confidential intake records. Tokens have already been debited for this search.",
-  "chatIntake.wallet_balance_label": "Wallet balance:",
-  "chatIntake.wallet_balance_unit": "tokens",
-  "chatIntake.stream_unavailable_title":
-    "Sorry — the intake stream hit an error. Please try again in a moment. ({error})",
-};
-
-function trFor(
-  locale: string,
-  key: string,
-  vars?: Record<string, string>,
-): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const p of parts) {
-    if (typeof value !== "object" || value === null) {
-      value = EN_FALLBACK[key] ?? key;
-      break;
-    }
-    value = (value as Record<string, unknown>)[p];
-  }
-  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
-  if (!vars) return value;
-  return Object.entries(vars).reduce(
-    (str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, "g"), v),
-    value,
-  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -189,13 +112,7 @@ type IntakeObject = z.infer<typeof lostPetIntakeSchema>;
 /* Constants                                                                   */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Empathy-first opening hook. Source of truth lives in locale JSON
- * (`chatIntake.greeting`); this sentinel is replaced on mount so the
- * rendered greeting always matches the active locale, even if the user
- * changes language before the component mounts.
- */
-const OPENING_HOOK_SENTINEL = "__open_hook_placeholder__";
+/** Empathy-first opening hook — locale JSON is the source of truth. */
 
 /* -------------------------------------------------------------------------- */
 /* Field ordering & helpers                                                    */
@@ -337,17 +254,21 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      setLocale(
-        resolveStoredLocale(localStorage.getItem(LOCALE_STORAGE_KEY)),
+      const resolved = resolveStoredLocale(
+        localStorage.getItem(LOCALE_STORAGE_KEY),
       );
+      setLocale(resolved);
+      writeLocaleCookie(resolved);
     } catch {
       /* default English */
     }
     const handler = () => {
       try {
-        setLocale(
-          resolveStoredLocale(localStorage.getItem(LOCALE_STORAGE_KEY)),
+        const resolved = resolveStoredLocale(
+          localStorage.getItem(LOCALE_STORAGE_KEY),
         );
+        setLocale(resolved);
+        writeLocaleCookie(resolved);
       } catch {
         /* noop */
       }
@@ -358,7 +279,7 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   }, []);
 
   const t = useCallback(
-    (key: string, vars?: Record<string, string>) => trFor(locale, key, vars),
+    (key: string, vars?: Record<string, string>) => translate(locale, key, vars),
     [locale],
   );
 
@@ -367,7 +288,11 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   // first mount + whenever the locale changes (so a live language switch
   // pre-conversation reflects immediately).
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    { id: "opening-hook", role: "assistant", content: OPENING_HOOK_SENTINEL },
+    {
+      id: "opening-hook",
+      role: "assistant",
+      content: translate("en", "chatIntake.greeting"),
+    },
   ]);
   const [input, setInput] = useState("");
 
@@ -379,9 +304,17 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
 
   /* ── Activation flow: species + lastSeen → "Activate Search Network" → POST + radar redirect ─ */
   const [isActivating, setIsActivating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
   /** TRUE when activation failed because the visitor is not signed in. */
   const [needsSignIn, setNeedsSignIn] = useState(false);
+
+  const { restored: draftRestored, clear: clearDraft } = useLostPetDraft({
+    messages,
+    accumulated: accumulated as Record<string, unknown>,
+    setMessages,
+    setAccumulated: setAccumulated as (next: Record<string, unknown> | ((prev: Record<string, unknown>) => Record<string, unknown>)) => void,
+  });
 
   /* ── Vision attachment for the intake flow. If the user attaches a photo,
         we read it as a base64 data URL on submit and forward it to Gemini
@@ -509,13 +442,14 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
   /*    Runs on every render-with-sentinel present (defensively).         ─ */
   useEffect(() => {
     const translated = t("chatIntake.greeting");
-    setMessages((prev) =>
-      prev.length === 1 &&
-      prev[0]?.id === "opening-hook" &&
-      prev[0]?.content !== translated
-        ? [{ ...prev[0]!, content: translated }]
-        : prev,
-    );
+    setMessages((prev) => {
+      const first = prev[0];
+      if (first?.id !== "opening-hook") return prev;
+      const shouldReplace =
+        first.content === OPENING_HOOK_SENTINEL || prev.length === 1;
+      if (!shouldReplace || first.content === translated) return prev;
+      return [{ ...first, content: translated }, ...prev.slice(1)];
+    });
   }, [t]);
 
   /* ── Bind to /api/chat-intake. Schema reference is required by the hook typedef. ─ */
@@ -719,7 +653,8 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
         setIsActivating(false);
         return;
       }
-      // Success — exit the chat into the radar payoff.
+      // Success — drop the local draft so a later visit starts clean.
+      clearDraft();
       router.push(`/radar/${json.search.searchId}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown submit error";
@@ -727,7 +662,7 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
       setIsActivating(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActivating, captured, context?.spendTxnId, router]);
+  }, [isActivating, captured, context?.spendTxnId, router, clearDraft]);
   return (
     <div
       className="flex h-[calc(100vh-2rem)] w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
@@ -766,6 +701,14 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-6">
+          {draftRestored && (
+            <p
+              role="status"
+              className="mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800"
+            >
+              {t("chatIntake.draft_restored")}
+            </p>
+          )}
           <div className="space-y-5">
             {messages.map((msg) => (
               <MessageBubble key={msg.id} msg={msg} />
@@ -961,7 +904,7 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
           {canActivate(captured) ? (
             <button
               type="button"
-              onClick={() => void activateSearchNetwork()}
+              onClick={() => setConfirmOpen(true)}
               disabled={isActivating}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:from-emerald-500 hover:via-emerald-500 hover:to-amber-400 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-70"
             >
@@ -1112,7 +1055,7 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
             </div>
             <button
               type="button"
-              onClick={() => void activateSearchNetwork()}
+              onClick={() => setConfirmOpen(true)}
               disabled={isActivating}
               className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:from-emerald-500 hover:via-emerald-500 hover:to-amber-400 hover:shadow-emerald-500/40 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-70"
             >
@@ -1171,6 +1114,18 @@ export default function LostPetAgent({ context, onExit }: LostPetAgentProps) {
           </motion.div>
         )}
       </aside>
+      <ActivateSearchConfirm
+        open={confirmOpen}
+        fields={FIELD_ORDER.map((field) => ({
+          label: fieldLabel(field, t),
+          value: captured[field],
+        }))}
+        fee={100}
+        activating={isActivating}
+        onConfirm={() => void activateSearchNetwork()}
+        onClose={() => setConfirmOpen(false)}
+        t={t}
+      />
     </div>
   );
 }

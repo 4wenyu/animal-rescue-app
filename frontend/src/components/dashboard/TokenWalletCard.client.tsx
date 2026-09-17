@@ -420,7 +420,7 @@ export function TokenWalletCardClient({
                 {tr("dashboard.wallet.recent_activity_title")}
               </h3>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-600">
               {tr(
                 data.recent.length === 1
                   ? "dashboard.wallet.recent_activity_singular"

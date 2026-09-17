@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:seed": "node prisma/seed.mjs",
+    "postinstall": "prisma generate --schema=../prisma/schema.prisma",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {

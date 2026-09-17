@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 48" role="img" aria-label="Merrick">
+  <rect width="168" height="48" rx="6" fill="#7C2D12"/>
+  <ellipse cx="22" cy="24" rx="12" ry="7" fill="#F59E0B"/>
+  <circle cx="12" cy="24" r="5" fill="#F59E0B"/>
+  <circle cx="32" cy="24" r="5" fill="#F59E0B"/>
+  <text x="102" y="32" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="700" letter-spacing="1" fill="#FEF3C7">MERRICK</text>
+</svg>

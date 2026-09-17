@@ -124,4 +124,50 @@ describe.each(TRANSLATIONS)("%s.json", (locale, dict) => {
       `${locale} drops or renames {placeholders} — these render literally`,
     ).toEqual([]);
   });
+
+  it("is not double-encoded UTF-8 (mojibake)", () => {
+    const hits = EN_PATHS.filter((path) => {
+      const value = leafAt(dict, path);
+      return typeof value === "string" && looksLikeMojibake(value);
+    });
+
+    expect(
+      hits,
+      `${locale} still has nested UTF-8/Windows-1252 garbage`,
+    ).toEqual([]);
+  });
+});
+
+/**
+ * UTF-8 bytes misread as Latin-1/CP1252 leave Ã, Â, or â€ sequences
+ * (e.g. "Más" → "MÃ¡s" → "MÃÂ¡s"). These render as the homepage garbage
+ * in the Spanish screenshot.
+ */
+function looksLikeMojibake(value: string): boolean {
+  return /Ã.|Â[§°]|â€|\uFFFD/.test(value);
+}
+
+describe("es.json Spanish copy (homepage)", () => {
+  const esDict = es as Dict;
+
+  it("renders the hero headline with real accents", () => {
+    expect(leafAt(esDict, "hero.headline")).toBe(
+      "Cada Segundo Cuenta. Agiliza el Cumplimiento, Salva Más Vidas.",
+    );
+    expect(leafAt(esDict, "hero.cta_lost_pet")).toBe("Perdí una mascota");
+    expect(leafAt(esDict, "hero.cta_crowdfunding")).toBe(
+      "Emergencia: Recaudación de Fondos",
+    );
+    expect(leafAt(esDict, "hero.cta_surrender")).toBe(
+      "Portal de Entrega Pública",
+    );
+  });
+
+  it("keeps navigation and Daily Play in Spanish", () => {
+    expect(leafAt(esDict, "nav.public_portal")).toBe("Portal Público");
+    expect(leafAt(esDict, "nav.sign_in")).toBe("Iniciar sesión");
+    expect(leafAt(esDict, "nav.fundraising")).toBe("Recaudación");
+    expect(leafAt(esDict, "play.title")).toBe("¿Quién necesita un hogar?");
+    expect(leafAt(esDict, "play.pace_calm")).toBe("Tardes tranquilas");
+  });
 });

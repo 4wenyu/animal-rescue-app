@@ -54,7 +54,7 @@ function LoginForm() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Sign In
           </h1>
-          <p className="mt-1 text-sm text-slate-500">RescueHub Staff Portal</p>
+          <p className="mt-1 text-sm text-slate-500">Walk the kennel. Find a pet. Come back tomorrow.</p>
           {registered && (
             <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
               Account created — sign in to continue.
@@ -128,7 +128,8 @@ function LoginForm() {
 
         {showDemoHint && (
           <p className="mt-4 text-center text-[11px] text-slate-600">
-            Demo: admin@rescuehub.org / admin123
+            Local preview — use the staff email you were given. Do not paste
+            passwords into the page.
           </p>
         )}
 

@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Languages, ChevronDown } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, Languages } from "lucide-react";
+import { useI18n } from "@/src/lib/useI18n";
 
 /**
  * Locale selector. Phase 6 i18n expansion: 6 locales total.
  *
  * Display order: English, Español, 简体中文, 繁體中文, 日本語, 한국어.
- * Order matches LOCALES in src/lib/i18n.ts except Chinese variants are
- * split out individually rather than the legacy single "zh" entry.
+ *
+ * The selected locale lives in the shared `useI18n` store (localStorage
+ * "rescuehub_locale" + the "rescuehub-locale-change" event), so this switch,
+ * the home islands, and every hook consumer stay in sync — and `<html lang>`
+ * updates to the active BCP-47 tag. A11y: aria-expanded/aria-haspopup
+ * trigger, Escape closes and restores focus, visible focus rings.
  */
 const LOCALES: ReadonlyArray<{ code: string; label: string; flag: string }> = [
   { code: "en", label: "English", flag: "🇺🇸" },
@@ -19,56 +24,38 @@ const LOCALES: ReadonlyArray<{ code: string; label: string; flag: string }> = [
   { code: "ko", label: "한국어", flag: "🇰🇷" },
 ];
 
-const STORAGE_KEY = "rescuehub_locale";
-
-function isValidLocale(value: string | null | undefined): value is string {
-  return (
-    value === "en" || value === "es" ||
-    value === "zh-CN" || value === "zh-TW" ||
-    value === "ja" || value === "ko"
-  );
-}
-
 export function LocaleSwitch() {
-  const [locale, setLocaleState] = useState("en");
+  const { locale, setLocale } = useI18n();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        // Legacy alias: "zh" → "zh-CN" (Simplified Mandarin)
-        if (stored === "zh") setLocaleState("zh-CN");
-        else if (isValidLocale(stored)) setLocaleState(stored);
-        else setLocaleState("en");
-      } catch {
-        setLocaleState("en");
-      }
-    }
-  }, []);
+  // The hook's locale is always a valid LocaleCode (it already resolves the
+  // legacy "zh" alias to "zh-CN"), so this lookup cannot miss.
+  const current = LOCALES.find((l) => l.code === locale) ?? LOCALES[0];
 
   const handleSelect = (code: string) => {
-    if (!isValidLocale(code)) return;
-    setLocaleState(code);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(STORAGE_KEY, code);
-        window.dispatchEvent(
-          new CustomEvent("rescuehub-locale-change", { detail: code }),
-        );
-      } catch {}
-    }
+    setLocale(code);
     setOpen(false);
   };
 
-  const current = LOCALES.find((l) => l.code === locale) ?? LOCALES[0];
-
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && open) {
+          setOpen(false);
+          triggerRef.current?.focus();
+        }
+      }}
+    >
       <button
+        ref={triggerRef}
+        type="button"
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
         aria-label="Select language"
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
       >
         <Languages className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">{current.flag} {current.label}</span>
@@ -81,13 +68,16 @@ export function LocaleSwitch() {
           <div
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
+            aria-hidden="true"
           />
           <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
             {LOCALES.map((l) => (
               <button
                 key={l.code}
+                type="button"
                 onClick={() => handleSelect(l.code)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium transition hover:bg-slate-50 ${
+                aria-pressed={l.code === locale}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none ${
                   l.code === locale
                     ? "text-emerald-700 bg-emerald-50"
                     : "text-slate-600"

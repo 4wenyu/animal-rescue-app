@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ESIGNLiabilityWaiver,
@@ -11,62 +11,9 @@ import {
   type SpeciesBreedValue,
 } from "@/src/components/ui/SpeciesBreedSelect";
 import { breedLabel } from "@/src/lib/animalTaxonomy";
-import { ArrowLeft, PawPrint, Shield, Heart } from "lucide-react";
+import { ArrowLeft, PawPrint, Shield, Heart, Loader2, AlertCircle } from "lucide-react";
 
-// ── Synchronous i18n: import every locale dictionary statically so the
-//    first paint renders the right language without a flash. ──────────────
-import enDict from "../../../../locales/en.json";
-import esDict from "../../../../locales/es.json";
-import zhCNDict from "../../../../locales/zh-CN.json";
-import zhTWDict from "../../../../locales/zh-TW.json";
-import jaDict from "../../../../locales/ja.json";
-import koDict from "../../../../locales/ko.json";
-import zhLegacyDict from "../../../../locales/zh.json";
-
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-  zh: zhLegacyDict as unknown as Record<string, unknown>,
-};
-
-const STORAGE_KEY = "rescuehub_locale";
-
-function resolveLocale(stored: string | null): string {
-  if (stored === "zh") return "zh-CN"; // legacy alias
-  if (
-    stored === "en" || stored === "es" || stored === "zh-CN" ||
-    stored === "zh-TW" || stored === "ja" || stored === "ko"
-  ) return stored;
-  return "en";
-}
-
-// SSR-safe fallbacks (English) so the page is meaningful before hydration.
-const EN_FALLBACK: Record<string, string> = {
-  "public_intake.title": "Public Surrender Portal",
-  "public_intake.intro":
-    "This ESIGN/UETA-compliant electronic waiver creates a legally defensible chain of custody. Please select the option that applies to your situation.",
-  "public_intake.found_stray_label": "🐾  I found a stray animal",
-  "public_intake.found_stray_desc":
-    "You found an animal that appears to be lost, abandoned, or injured.",
-  "public_intake.owner_surrender_label": "📝  I need to surrender my pet",
-  "public_intake.owner_surrender_desc":
-    "You are the legal owner and wish to transfer custody to RescueHub.",
-  "public_intake.waiver_title": "Electronic Waiver",
-  "public_intake.waiver_intro":
-    "Review and sign the ESIGN/UETA-compliant liability waiver. Your typed legal name constitutes an electronic signature under federal law.",
-  "public_intake.cancel_prefix": "Cancel —",
-  "public_intake.confirm_title": "Submission Complete",
-  "public_intake.confirm_body":
-    "Your surrender request has been recorded. The ESIGN waiver hash below serves as your verifiable electronic receipt.",
-  "public_intake.hash_label": "ESIGN Waiver Record",
-  "public_intake.hash_description":
-    "SHA-256 hash of your typed-name signature and consent transaction. Keep this for your records.",
-  "nav.back_to_options": "Back to Intake Options",
-};
+import { useI18n } from "@/src/lib/useI18n";
 
 /** Localized label for the optional animal-kind picker (kept inline to avoid
  *  touching 7 locale files for one heading). */
@@ -78,20 +25,6 @@ const ANIMAL_KIND_LABEL: Record<string, string> = {
   ja: "これはどんな動物ですか？（任意）",
   ko: "어떤 동물인가요? (선택 사항)",
 };
-
-function tr(locale: string, key: string, vars?: Record<string, string | number>): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const p of parts) {
-    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
-    value = (value as Record<string, unknown>)[p];
-  }
-  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
-  if (!vars) return value;
-  return Object.entries(vars).reduce((str, [k, v]) =>
-    str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)), value);
-}
 
 /** Hardcoded surrender-type data — keys map to i18n via labelKey. */
 const SURRENDER_TYPES: {
@@ -111,10 +44,11 @@ const SURRENDER_TYPES: {
   },
 ];
 
-/** Fire a Telegram notification for a public intake. */
+/** Fire a Telegram notification for a public intake that already persisted. */
 async function notifyTelegram(
   surrenderType: SurrenderType,
   esignHash: string,
+  animalId?: string,
 ): Promise<void> {
   try {
     await fetch("/api/telegram/notify", {
@@ -128,6 +62,7 @@ async function notifyTelegram(
         details: {
           surrenderType,
           esignHash,
+          ...(animalId ? { animalId } : {}),
         },
       }),
     });
@@ -146,65 +81,37 @@ async function notifyTelegram(
  * record. The ESIGN waiver renders at step 2 regardless of surrender type.
  */
 export default function PublicIntakePage(): ReactNode {
+  const { locale, tr } = useI18n();
   const [step, setStep] = useState<"select" | "esign" | "confirm">("select");
   const [surrenderType, setSurrenderType] = useState<SurrenderType | null>(null);
   const [esignHash, setEsignHash] = useState<string | null>(null);
-  const [locale, setLocale] = useState<string>("en");
   const [isSubmittingIntake, setIsSubmittingIntake] = useState(false);
   const [tokensAwarded, setTokensAwarded] = useState<number | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  /** Synchronous double-submit guard: state updates lag behind fast clicks. */
+  const submittingRef = useRef(false);
   const [animalKind, setAnimalKind] = useState<SpeciesBreedValue>({
     species: null,
     breed: null,
   });
-
-  // Resolve locale after hydration (server always renders English first).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      setLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
-    } catch {
-      // default to English
-    }
-  }, []);
-
-  // Re-render when locale changes anywhere else in the app.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handler = () => {
-      try {
-        setLocale(resolveLocale(localStorage.getItem(STORAGE_KEY)));
-      } catch {
-        // noop
-      }
-    };
-    window.addEventListener("rescuehub-locale-change", handler as EventListener);
-    window.addEventListener("storage", handler);
-    return () => {
-      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
-      window.removeEventListener("storage", handler);
-    };
-  }, []);
-
-  const t = (key: string, vars?: Record<string, string | number>) =>
-    tr(locale, key, vars);
 
   const handleTypeSelected = (type: SurrenderType): void => {
     setSurrenderType(type);
     setStep("esign");
   };
 
-  const handleEsignComplete = async (hash: string): Promise<void> => {
-    setEsignHash(hash);
-    if (surrenderType) {
-      // Telegram notification runs in parallel; do not await so the user
-      // sees their confirmation immediately.
-      void notifyTelegram(surrenderType, hash);
-    }
-
-    // Submit intake to /api/animals/intake. This is what creates the
-    // Animal + IntakeRecord + mints the +50 onboarding bonus. The route
-    // is idempotent for retries via the caller's idempotencyKey contract.
+  /**
+   * POST the intake to /api/animals/intake. This is what creates the
+   * Animal + IntakeRecord and mints the onboarding bonus, so the user only
+   * advances to the confirmation step on a 2xx — a failed request leaves
+   * them on the waiver step with a retryable error instead of a receipt
+   * for something that was never recorded.
+   */
+  const submitIntake = async (hash: string): Promise<void> => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmittingIntake(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/animals/intake", {
         method: "POST",
@@ -234,21 +141,40 @@ export default function PublicIntakePage(): ReactNode {
           ],
         }),
       });
-      if (res.ok) {
-        const json = (await res.json()) as {
-          tokensAwarded?: number;
-        };
-        setTokensAwarded(json.tokensAwarded ?? 0);
-      } else {
-        // Visible on the page so a failed submit isn't silent.
+
+      if (!res.ok) {
         console.warn("[intake/public] intake POST non-ok", res.status);
+        setSubmitError(tr("public_intake.submit_failed_body"));
+        return;
+      }
+
+      const json = (await res.json()) as {
+        tokensAwarded?: number;
+        rewards?: { animals?: { animalId?: string }[] };
+      };
+      setTokensAwarded(json.tokensAwarded ?? 0);
+      setStep("confirm");
+      // Alert ops only after the Animal/IntakeRecord actually exists. Do
+      // not await — a Telegram outage must not delay the citizen receipt.
+      if (surrenderType) {
+        void notifyTelegram(
+          surrenderType,
+          hash,
+          json.rewards?.animals?.[0]?.animalId,
+        );
       }
     } catch (err) {
       console.warn("[intake/public] intake POST failed", err);
+      setSubmitError(tr("public_intake.submit_failed_body"));
     } finally {
+      submittingRef.current = false;
       setIsSubmittingIntake(false);
-      setStep("confirm");
     }
+  };
+
+  const handleEsignComplete = async (hash: string): Promise<void> => {
+    setEsignHash(hash);
+    await submitIntake(hash);
   };
 
   return (
@@ -261,7 +187,7 @@ export default function PublicIntakePage(): ReactNode {
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t("nav.back_to_options")}
+            {tr("nav.back_to_options")}
           </Link>
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition">
             <PawPrint className="h-4 w-4" />
@@ -313,11 +239,11 @@ export default function PublicIntakePage(): ReactNode {
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-emerald-500" />
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                  {t("public_intake.title")}
+                  {tr("public_intake.title")}
                 </h1>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                {t("public_intake.intro")}
+                {tr("public_intake.intro")}
               </p>
             </div>
 
@@ -330,10 +256,10 @@ export default function PublicIntakePage(): ReactNode {
                   className="group w-full rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-emerald-200 hover:shadow-md"
                 >
                   <span className="text-base font-semibold text-slate-900 group-hover:text-emerald-700">
-                    {t(labelKey)}
+                    {tr(labelKey)}
                   </span>
                   <span className="mt-1 block text-sm text-slate-400">
-                    {t(descKey)}
+                    {tr(descKey)}
                   </span>
                 </button>
               ))}
@@ -357,7 +283,7 @@ export default function PublicIntakePage(): ReactNode {
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {t("nav.back_to_options")}
+                {tr("nav.back_to_options")}
               </Link>
             </div>
           </div>
@@ -370,11 +296,11 @@ export default function PublicIntakePage(): ReactNode {
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-emerald-500" />
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                  {t("public_intake.waiver_title")}
+                  {tr("public_intake.waiver_title")}
                 </h1>
               </div>
               <p className="mt-1 text-sm text-slate-500">
-                {t("public_intake.waiver_intro")}
+                {tr("public_intake.waiver_intro")}
               </p>
             </div>
 
@@ -386,13 +312,49 @@ export default function PublicIntakePage(): ReactNode {
               />
             </div>
 
+            {isSubmittingIntake && (
+              <p
+                role="status"
+                className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-600"
+              >
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {tr("public_intake.submitting")}
+              </p>
+            )}
+
+            {submitError && !isSubmittingIntake && (
+              <div
+                role="alert"
+                className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-5"
+              >
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <h2 className="text-sm font-bold text-red-900">
+                    {tr("public_intake.submit_failed_title")}
+                  </h2>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-red-700">
+                  {submitError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (esignHash) void submitIntake(esignHash);
+                  }}
+                  className="mt-4 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                >
+                  {tr("public_intake.retry")}
+                </button>
+              </div>
+            )}
+
             <div className="mt-6">
               <Link
                 href="/intake"
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {t("public_intake.cancel_prefix")} {t("nav.back_to_options")}
+                {tr("public_intake.cancel_prefix")} {tr("nav.back_to_options")}
               </Link>
             </div>
           </div>
@@ -405,11 +367,11 @@ export default function PublicIntakePage(): ReactNode {
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-emerald-600" />
                 <h1 className="text-xl font-bold tracking-tight text-emerald-900">
-                  {t("public_intake.confirm_title")}
+                  {tr("public_intake.confirm_title")}
                 </h1>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-emerald-700">
-                {t("public_intake.confirm_body")}
+                {tr("public_intake.confirm_body")}
               </p>
               {tokensAwarded !== null && tokensAwarded > 0 && (
                 <div
@@ -427,23 +389,18 @@ export default function PublicIntakePage(): ReactNode {
                   Intake recorded — no token grant for anonymous submissions.
                 </p>
               )}
-              {isSubmittingIntake && (
-                <p className="mt-2 text-xs text-amber-700">
-                  Submitting intake…
-                </p>
-              )}
             </div>
 
             {/* Hash display */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500">
-                {t("public_intake.hash_label")}
+                {tr("public_intake.hash_label")}
               </p>
               <p className="mt-2 text-xs font-mono text-slate-600 break-all">
                 {esignHash}
               </p>
               <p className="mt-3 text-xs text-slate-400">
-                {t("public_intake.hash_description")}
+                {tr("public_intake.hash_description")}
               </p>
             </div>
 
@@ -453,7 +410,7 @@ export default function PublicIntakePage(): ReactNode {
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-700 active:scale-[0.97]"
             >
               <ArrowLeft className="h-4 w-4" />
-              {t("nav.back_to_options")}
+              {tr("nav.back_to_options")}
             </Link>
           </div>
         )}

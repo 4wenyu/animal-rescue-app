@@ -36,9 +36,18 @@ import { google } from "@ai-sdk/google";
 import { Output, streamText, type ModelMessage, type UserContent } from "ai";
 import { z } from "zod";
 
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+/* -------------------------------------------------------------------------- */
+/* Request limits (same caps as /api/chat)                                     */
+/* -------------------------------------------------------------------------- */
+
+/** Max conversation turns accepted per request. */
+const MAX_MESSAGES = 20;
 
 /* -------------------------------------------------------------------------- */
 /* Strict Zod object schema                                                    */
@@ -376,7 +385,7 @@ const ALLOWED_PART_MIME = new Set<string>([
   "image/gif",
 ]);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
-const MAX_TEXT_BYTES = 32 * 1024; // 32 KB
+const MAX_TEXT_BYTES = 4000; // 4000 bytes ≈ the 4000-char cap used by /api/chat
 
 function decodeDataUrl(dataUrl: string): { mime: string; base64Bytes: number } | null {
   // Format: data:<mime>;base64,<payload>
@@ -448,6 +457,19 @@ function wirePartsToText(parts: WirePart[]): string {
 }
 
 export async function POST(req: Request) {
+  // AI/cost endpoint — throttle per IP (the intake widget is publicly reachable).
+  const ip = getClientIp(req);
+  const { ok, retryAfterSeconds } = checkRateLimit(`chat-intake:${ip}`, 10, 60 * 1000);
+  if (!ok) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),
+      {
+        status: 429,
+        headers: { "Content-Type": "application/json", "Retry-After": String(retryAfterSeconds) },
+      },
+    );
+  }
+
   try {
     const body = (await req.json()) as {
       messages: { role: string; content: unknown }[];
@@ -456,6 +478,15 @@ export async function POST(req: Request) {
     if (!Array.isArray(body.messages)) {
       return new Response(
         JSON.stringify({ error: "messages must be an array" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+    if (body.messages.length > MAX_MESSAGES) {
+      return new Response(
+        JSON.stringify({ error: `messages must contain at most ${MAX_MESSAGES} items` }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -472,6 +503,18 @@ export async function POST(req: Request) {
       if (role !== "user" && role !== "assistant" && role !== "system") {
         return new Response(
           JSON.stringify({ error: `invalid role: ${String(m.role)}` }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+      // Prompt-injection defense: the system prompt is owned by the server.
+      // A client-supplied `system` turn would let a hostile caller rewrite
+      // assistant behavior, so it is rejected outright.
+      if (role === "system") {
+        return new Response(
+          JSON.stringify({ error: 'client "system" role messages are not allowed' }),
           {
             status: 400,
             headers: { "Content-Type": "application/json" },
@@ -495,14 +538,9 @@ export async function POST(req: Request) {
       // is a stricter server-side mirror of the SDK's TextPart/ImagePart.
       // Once validated, the part shapes are structurally identical to what
       // streamText expects. Branch per role so the discriminated ModelMessage
-      // union narrows correctly — and fail-closed: image parts only belong on
-      // user messages; system/assistant turns are coerced to their text.
-      if (role === "system") {
-        messages.push({
-          role: "system",
-          content: typeof content === "string" ? content : wirePartsToText(content),
-        });
-      } else if (role === "assistant") {
+      // union narrows correctly — image parts only belong on user messages;
+      // assistant turns are coerced to their text.
+      if (role === "assistant") {
         messages.push({
           role: "assistant",
           content: typeof content === "string" ? content : wirePartsToText(content),
@@ -565,8 +603,9 @@ export async function POST(req: Request) {
     return response;
   } catch (error) {
     console.error("🔥 [api/chat-intake] FATAL:", error);
+    // Generic 500 — internals are logged, never echoed to the client.
     return new Response(
-      JSON.stringify({ error: "chat-intake failed", detail: String(error) }),
+      JSON.stringify({ error: "chat-intake failed" }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }

@@ -12,6 +12,8 @@
  *   - Stray-hold semantics are computed SERVER-SIDE from `intakeType`; a
  *     client-supplied `statutoryHoldCleared` boolean is never trusted.
  *   - Batch size is capped to bound work.
+ *   - `x-esign-hash` is an idempotency key: a retry of the same waiver
+ *     replays the committed IntakeRecord instead of creating a second animal.
  *
  * Returns { ok, animals, tokensAwarded }:
  *   - animals       : array of newly created Animal records (one per intake)
@@ -21,12 +23,17 @@
  */
 
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { PetIntakeBatchSchema, type PetIntake } from "@/lib/schemas/intake";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import {
+  normalizeEsignHash,
+  remainingIntakeBonusBudget,
+} from "@/lib/intakeGuards";
 import {
   computeStrayHoldExpiry,
   isStatutoryHoldCleared,
@@ -45,12 +52,24 @@ const CUSTODIAN_ORG_ID = "f4eedd11-2222-4000-a000-000000000001";
 /** Hard cap on animals per batch — bounds the work of a single request. */
 const MAX_BATCH_SIZE = 50;
 
-/**
- * Hard cap on intake bonuses one user may earn per rolling 24h. Sized well
- * above a real shelter's daily intake so it never throttles legitimate work,
- * while bounding what a compromised staff account can mint.
- */
-const MAX_INTAKE_BONUSES_PER_DAY = 25;
+type IntakeAnimalRef = { animalId: string; intakeId: string };
+
+function replayResponse(existing: IntakeAnimalRef): NextResponse {
+  return NextResponse.json(
+    {
+      ok: true,
+      replayed: true,
+      animalsCreated: 1,
+      tokensAwarded: 0,
+      rewards: {
+        animals: [existing],
+        bonusCount: 0,
+      },
+      message: "Intake already recorded for this e-sign hash.",
+    },
+    { status: 200 },
+  );
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -148,30 +167,40 @@ export async function POST(request: Request) {
     );
   }
 
-  // Onboarding bonus only applies to the authenticated staff path — an
-  // anonymous citizen has no wallet to credit (Tier 0.4).
-  //
-  // The bonus mints per animal, and a request may carry MAX_BATCH_SIZE of
-  // them, so an uncapped mint lets one staff account manufacture unlimited
-  // tokens from throwaway records. Cap it per user per day; intake itself is
-  // never blocked, only the reward stops accruing past the cap.
-  let bonusBudget = 0;
-  if (submittedUserId !== null) {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const mintedToday = await prisma.tokenTransaction.count({
-      where: {
-        userId: submittedUserId,
-        actionType: "ONBOARDING_BONUS_EARN",
-        createdAt: { gte: since },
+  // One waiver signature = one animal. A batch plus a hash would collide
+  // on the unique esignIntentHash index for every animal after the first.
+  const esignHash = normalizeEsignHash(request.headers.get("x-esign-hash"));
+  if (esignHash && parsed.animals.length > 1) {
+    return NextResponse.json(
+      {
+        error: "Validation Error",
+        message:
+          "x-esign-hash is a single-intake idempotency key; send one animal.",
       },
-    });
-    bonusBudget = Math.max(0, MAX_INTAKE_BONUSES_PER_DAY - mintedToday);
+      { status: 400 },
+    );
   }
-  const shouldMintBonus = bonusBudget > 0;
 
   /* ── 4. Atomic insert: Animal + IntakeRecord (+ staff bonus) ── */
   try {
     const result = await prisma.$transaction(async (tx) => {
+      // Replay a retry of the same waiver before creating anything.
+      if (esignHash) {
+        const existing = await tx.intakeRecord.findFirst({
+          where: { esignIntentHash: esignHash },
+          select: { intakeId: true, animalId: true },
+        });
+        if (existing) {
+          return {
+            animals: [
+              { animalId: existing.animalId, intakeId: existing.intakeId },
+            ],
+            bonuses: [] as unknown[],
+            replayed: true,
+          };
+        }
+      }
+
       // 3a. Make sure the custodian org exists (dev convenience).
       await tx.organization.upsert({
         where: { orgId: CUSTODIAN_ORG_ID },
@@ -183,14 +212,33 @@ export async function POST(request: Request) {
         },
       });
 
+      // Onboarding bonus only applies to the authenticated staff path — an
+      // anonymous citizen has no wallet to credit (Tier 0.4). Count *inside*
+      // the transaction after locking the user row so concurrent POSTs cannot
+      // each snapshot the same mintedToday and blow past the daily cap.
+      let bonusBudget = 0;
+      if (submittedUserId !== null) {
+        await tx.$queryRaw`
+          SELECT 1 FROM users WHERE "userId" = ${submittedUserId} FOR UPDATE
+        `;
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const mintedToday = await tx.tokenTransaction.count({
+          where: {
+            userId: submittedUserId,
+            actionType: "ONBOARDING_BONUS_EARN",
+            createdAt: { gte: since },
+          },
+        });
+        bonusBudget = remainingIntakeBonusBudget(mintedToday);
+      }
+      const shouldMintBonus = bonusBudget > 0;
+
       // 3b. Per-animal create + record (+ bonus for staff path only).
-      const animals: { animalId: string; intakeId: string }[] = [];
+      const animals: IntakeAnimalRef[] = [];
       const bonuses: unknown[] = [];
 
       for (let i = 0; i < parsed.animals.length; i++) {
         const record = parsed.animals[i];
-
-        const esignHash = request.headers.get("x-esign-hash") ?? null;
 
         // Server-side stray-hold semantics (Tier 0.4 + review CRITICAL fix).
         // The client boolean `statutoryHoldCleared` AND any client
@@ -295,8 +343,12 @@ export async function POST(request: Request) {
         }
       }
 
-      return { animals, bonuses };
+      return { animals, bonuses, replayed: false };
     });
+
+    if (result.replayed && result.animals[0]) {
+      return replayResponse(result.animals[0]);
+    }
 
     // Derived from the rows actually committed, not from the animal count —
     // the daily bonus budget can cap the mint partway through a batch.
@@ -305,6 +357,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: true,
+        replayed: false,
         animalsCreated: result.animals.length,
         tokensAwarded,
         rewards: {
@@ -323,6 +376,21 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (err) {
+    // Concurrent retries of the same waiver: the unique esignIntentHash
+    // index fires P2002. Replay the committed row instead of 500-ing.
+    if (
+      esignHash &&
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      const committed = await prisma.intakeRecord.findFirst({
+        where: { esignIntentHash: esignHash },
+        select: { intakeId: true, animalId: true },
+      });
+      if (committed) {
+        return replayResponse(committed);
+      }
+    }
     console.error("[api/animals/intake] failed:", err);
     return NextResponse.json(
       {

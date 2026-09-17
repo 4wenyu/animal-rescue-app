@@ -24,13 +24,17 @@ function validateDepartment(value: string): string | null {
   return null;
 }
 
-/** Fire a Telegram notification for a county intake. */
+/**
+ * Notify the shelter coordinator about a municipal transfer.
+ * Returns false when the notification could not be delivered, so the caller
+ * can tell the officer instead of claiming the handoff succeeded.
+ */
 async function notifyTelegram(
   badgeNumber: string,
   departmentId: string,
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await fetch("/api/telegram/notify", {
+    const res = await fetch("/api/telegram/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -38,8 +42,9 @@ async function notifyTelegram(
         details: { officerBadgeNumber: badgeNumber, departmentId },
       }),
     });
+    return res.ok;
   } catch {
-    // Fire-and-forget — notification failure must never block the user.
+    return false;
   }
 }
 
@@ -52,6 +57,7 @@ export default function CountyIntakePage(): ReactNode {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = useCallback((): boolean => {
     const next: Record<string, string> = {};
@@ -66,14 +72,27 @@ export default function CountyIntakePage(): ReactNode {
   const handleSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if (submitting) return;
       if (!validate()) return;
+
       setSubmitting(true);
-      await new Promise((r) => setTimeout(r, 800));
-      notifyTelegram(badgeNumber, departmentId);
+      setSubmitError(null);
+
+      // Honest flow: the only thing this does is notify the shelter
+      // coordinator. No automated IRS / zoning verification happens here,
+      // so a failed notification must not be reported as a completed handoff.
+      const notified = await notifyTelegram(badgeNumber, departmentId);
+
       setSubmitting(false);
+      if (!notified) {
+        setSubmitError(
+          "Could not reach the shelter notification service. Nothing was submitted — please try again.",
+        );
+        return;
+      }
       setSubmitted(true);
     },
-    [validate, badgeNumber, departmentId],
+    [validate, badgeNumber, departmentId, submitting],
   );
 
   // ── Confirmation view ───────────────────────────────────────────────
@@ -98,14 +117,17 @@ export default function CountyIntakePage(): ReactNode {
         <div className="mx-auto max-w-2xl px-6 py-12">
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-6 text-center shadow-sm">
             <BadgeCheck className="mx-auto h-10 w-10 text-emerald-500" />
-            <h2 className="mt-2 text-lg font-bold text-emerald-900">Municipal Transfer Submitted</h2>
+            <h2 className="mt-2 text-lg font-bold text-emerald-900">Transfer Notice Sent</h2>
             <p className="mt-2 text-sm text-emerald-700">
-              Officer <strong>{badgeNumber}</strong> (Dept. <strong>{departmentId}</strong>) has initiated the digital handoff.
+              Officer <strong>{badgeNumber}</strong> (Dept. <strong>{departmentId}</strong>) has requested a municipal transfer handoff.
+            </p>
+            <p className="mt-3 text-sm text-emerald-700">
+              The shelter coordinator has been notified and will contact the receiving
+              organisation to confirm the handoff.
             </p>
             <ul className="mx-auto mt-3 max-w-xs list-inside list-disc text-left text-xs text-emerald-700">
-              <li>Receiving org EIN via IRS compliance API</li>
-              <li>Local municipal facility zoning permits</li>
-              <li>Stray hold jurisdiction rules</li>
+              <li>No automated IRS or zoning verification is performed</li>
+              <li>Stray-hold jurisdiction rules apply once the animal is recorded</li>
             </ul>
             <button
               type="button"
@@ -170,8 +192,14 @@ export default function CountyIntakePage(): ReactNode {
                     : "border-slate-300 focus:border-emerald-500 focus:ring-emerald-500/20"
                 }`}
                 autoComplete="off"
+                aria-invalid={errors.badgeNumber ? true : undefined}
+                aria-describedby={errors.badgeNumber ? "badge-number-error" : undefined}
               />
-              {errors.badgeNumber && <p className="mt-1 text-xs text-red-600">{errors.badgeNumber}</p>}
+              {errors.badgeNumber && (
+                <p id="badge-number-error" className="mt-1 text-xs text-red-600">
+                  {errors.badgeNumber}
+                </p>
+              )}
             </div>
 
             <div>
@@ -191,8 +219,14 @@ export default function CountyIntakePage(): ReactNode {
                     : "border-slate-300 focus:border-emerald-500 focus:ring-emerald-500/20"
                 }`}
                 autoComplete="off"
+                aria-invalid={errors.departmentId ? true : undefined}
+                aria-describedby={errors.departmentId ? "department-id-error" : undefined}
               />
-              {errors.departmentId && <p className="mt-1 text-xs text-red-600">{errors.departmentId}</p>}
+              {errors.departmentId && (
+                <p id="department-id-error" className="mt-1 text-xs text-red-600">
+                  {errors.departmentId}
+                </p>
+              )}
             </div>
 
             <button
@@ -200,13 +234,23 @@ export default function CountyIntakePage(): ReactNode {
               disabled={submitting}
               className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              {submitting ? "Verifying..." : "Submit Municipal Transfer"}
+              {submitting ? "Sending notice..." : "Submit Municipal Transfer"}
             </button>
+
+            {submitError && (
+              <p
+                role="alert"
+                className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700"
+              >
+                {submitError}
+              </p>
+            )}
           </form>
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-            ⚠️ Upon submission the system will verify the receiving organisation&apos;s
-            IRS standing and local municipal zoning permits before completing the transfer.
+            ⚠️ Submitting sends a notification to the shelter coordinator. It does not
+            create an animal record and performs no compliance verification — the
+            receiving shelter completes the transfer.
           </div>
         </div>
       </div>

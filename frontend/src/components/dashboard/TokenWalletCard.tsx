@@ -359,7 +359,7 @@ export default async function TokenWalletCard({
                 Recent activity
               </h3>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-600">
               Last {recent.length} {recent.length === 1 ? "transaction" : "transactions"}
             </p>
           </div>

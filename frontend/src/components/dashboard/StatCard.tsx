@@ -60,7 +60,7 @@ export function StatCard({
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[11px] text-slate-400 font-medium">
+          <span className="text-[11px] text-slate-600 font-medium">
             {label === "Avg. Age" ? "Across all animals" : `of ${totalDogs} total`}
           </span>
         </div>

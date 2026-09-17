@@ -36,9 +36,9 @@ export type DeliveryOutcome =
  * Claim the draft for delivery and deliver it.
  *
  * The claim is the transactional gate: `updateMany({ where: { draftId,
- * status: "DRAFT" } })` flips DRAFT → SENT exactly once. If it matches
- * zero rows, someone else already processed (or the draft never existed /
- * was skipped) and we do NOT deliver.
+ * status: "APPROVED" } })` flips APPROVED → SENT exactly once. If it matches
+ * zero rows, someone else already processed (or the draft was undone)
+ * and we do NOT deliver.
  *
  * @param draftId     the approved draft
  * @param reviewerId  staff user id, persisted as `reviewedByUserId`
@@ -62,7 +62,7 @@ export async function deliverApprovedDraft(
     // human who authorized it (the SKIPPED paths already do this).
     const reviewedAt = new Date();
     const flipped = await tx.outreachDraft.updateMany({
-      where: { draftId, status: "DRAFT" },
+      where: { draftId, status: "APPROVED" },
       data: {
         status: "SENT",
         sentAt: reviewedAt,

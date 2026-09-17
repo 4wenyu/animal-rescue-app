@@ -9,85 +9,74 @@
  * for a first-time adopter before they have an account.
  *
  * Validation: minimum fullName + valid email + animalId + interestType.
- * Hard-caps message length. A simple per-IP cooldown prevents form spam.
+ * Hard-caps message length. A per-IP cooldown (shared sliding-window
+ * limiter) prevents form spam.
  */
 
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
+import { parseJsonBody } from "@/lib/api/helpers";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const INTEREST_TYPES = new Set(["ADOPT", "FOSTER"]);
-
-/** Per-IP cooldown: max 5 submissions per 10 minutes (in-memory, dev-grade). */
-const _rate: Map<string, number[]> = new Map();
+/** Per-IP cooldown: max 5 submissions per 10 minutes (shared limiter). */
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = 5;
 
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (_rate.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (hits.length >= RATE_MAX) return true;
-  hits.push(now);
-  _rate.set(ip, hits);
-  return false;
-}
+/** Trim + hard-cap a free-text field; missing/non-string coerces to "". */
+const text = (max: number) =>
+  z.string().trim().transform((s) => s.slice(0, max)).catch("");
+
+const AdoptionInterestSchema = z.object({
+  fullName: text(120).pipe(
+    z.string().min(2, "fullName must be at least 2 characters"),
+  ),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .catch("")
+    .pipe(
+      z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "email must be a valid address"),
+    ),
+  animalId: text(64).pipe(z.string().min(1, "animalId is required")),
+  animalName: text(120),
+  interestType: z
+    .string()
+    .trim()
+    .transform((s) => s.toUpperCase())
+    .catch("")
+    .pipe(
+      z.enum(["ADOPT", "FOSTER"], {
+        message: "interestType must be ADOPT or FOSTER",
+      }),
+    ),
+  phone: text(40),
+  message: text(2000),
+});
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "unknown";
-
-  if (rateLimited(ip)) {
+  const ip = getClientIp(request);
+  const { ok: withinLimit, retryAfterSeconds } = checkRateLimit(
+    `adoption-interest:${ip}`,
+    RATE_MAX,
+    RATE_WINDOW_MS,
+  );
+  if (!withinLimit) {
     return NextResponse.json(
       { error: "Too Many Requests", message: "Please wait a moment and try again." },
-      { status: 429 },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
     );
   }
 
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await request.json();
-    if (typeof parsed !== "object" || parsed === null) {
-      return NextResponse.json(
-        { error: "Bad Request", message: "Body must be a JSON object." },
-        { status: 400 },
-      );
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return NextResponse.json(
-      { error: "Bad Request", message: "Invalid JSON body." },
-      { status: 400 },
-    );
-  }
-
-  const errors: string[] = [];
-
-  const fullName =
-    typeof body.fullName === "string" ? body.fullName.trim().slice(0, 120) : "";
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const animalId = typeof body.animalId === "string" ? body.animalId.trim().slice(0, 64) : "";
-  const animalName =
-    typeof body.animalName === "string" ? body.animalName.trim().slice(0, 120) : "";
-  const interestType = typeof body.interestType === "string" ? body.interestType.trim().toUpperCase() : "";
-  const phone = typeof body.phone === "string" ? body.phone.trim().slice(0, 40) : "";
-  const message = typeof body.message === "string" ? body.message.trim().slice(0, 2000) : "";
-
-  if (fullName.length < 2) errors.push("fullName must be at least 2 characters");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("email must be a valid address");
-  if (!animalId) errors.push("animalId is required");
-  if (!INTEREST_TYPES.has(interestType)) errors.push("interestType must be ADOPT or FOSTER");
-
-  if (errors.length > 0) {
-    return NextResponse.json(
-      { error: "Validation Error", message: "Body failed validation.", details: errors },
-      { status: 400 },
-    );
-  }
+  const body = await parseJsonBody(request, AdoptionInterestSchema);
+  if (!body.ok) return body.response;
+  const { fullName, email, animalId, animalName, interestType, phone, message } =
+    body.data;
 
   try {
     const lead = await prisma.adoptionInterest.create({

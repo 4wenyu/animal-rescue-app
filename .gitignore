@@ -19,3 +19,7 @@ Thumbs.db
 
 # Obsidian editor state (personal, churns constantly)
 .obsidian/
+.vercel
+.env*
+!.env.example
+!**/.env.example

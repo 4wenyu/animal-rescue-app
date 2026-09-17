@@ -47,7 +47,7 @@ export default function LostPetIntakeView() {
           <ArrowLeft className="h-4 w-4" />
           {cameFromDashboard ? "Back to dashboard" : "Back to home"}
         </Link>
-        <p className="hidden items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-slate-400 sm:inline-flex">
+        <p className="hidden items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-slate-600 sm:inline-flex">
           <Heart className="h-3 w-3 text-emerald-500" />
           Find My Pet · Secure intake
         </p>

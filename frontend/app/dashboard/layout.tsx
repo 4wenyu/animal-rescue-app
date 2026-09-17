@@ -15,10 +15,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>): ReactNode {
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100/80 font-sans">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100/80 font-sans md:flex-row">
       <Sidebar />
-      <main id="main-content" className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-10 py-10">{children}</div>
+      <main id="main-content" className="min-w-0 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">{children}</div>
       </main>
     </div>
   );

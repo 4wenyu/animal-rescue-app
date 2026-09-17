@@ -135,7 +135,7 @@ export async function generateOutreachDrafts(limit = 5): Promise<number> {
       helpAreas: true,
       regionLabel: true,
       drafts: {
-        where: { status: "DRAFT" },
+        where: { status: { in: ["DRAFT", "APPROVED"] } },
         select: { draftId: true },
         take: 1,
       },
@@ -175,21 +175,70 @@ export async function generateOutreachDrafts(limit = 5): Promise<number> {
   return created;
 }
 
+/** How long an approved draft sits before delivery so staff can undo. */
+export const OUTREACH_SEND_HOLD_MS = 30_000;
+
+export interface OutreachGenerationPreview {
+  optedIn: number;
+  alreadyQueued: number;
+  wouldCreate: number;
+  eligibleAnimals: number;
+}
+
+/** Plan summary — no writes — so staff can consent before the agent runs. */
+export async function previewOutreachGeneration(
+  limit = 5,
+): Promise<OutreachGenerationPreview> {
+  const optedIn = await prisma.outreachProfile.count({
+    where: { status: "ACTIVE" },
+  });
+  const profiles = await prisma.outreachProfile.findMany({
+    where: { status: "ACTIVE" },
+    select: {
+      drafts: {
+        where: { status: { in: ["DRAFT", "APPROVED"] } },
+        select: { draftId: true },
+        take: 1,
+      },
+    },
+    take: limit,
+  });
+  const alreadyQueued = profiles.filter((p) => p.drafts.length > 0).length;
+  const wouldCreate = profiles.filter((p) => p.drafts.length === 0).length;
+  const animals = await findOutreachEligibleAnimals(limit);
+  return { optedIn, alreadyQueued, wouldCreate, eligibleAnimals: animals.length };
+}
+
 /**
- * Approve (→ SENT + deliver) or skip (→ SKIPPED) a draft. Human-gated.
+ * Deliver any APPROVED drafts whose hold window has elapsed. Called when
+ * staff open the review queue so leaving the page still sends.
+ */
+export async function flushApprovedOutreach(): Promise<number> {
+  const cutoff = new Date(Date.now() - OUTREACH_SEND_HOLD_MS);
+  const due = await prisma.outreachDraft.findMany({
+    where: { status: "APPROVED", reviewedAt: { lte: cutoff } },
+    select: { draftId: true, reviewedByUserId: true },
+    take: 25,
+  });
+  for (const row of due) {
+    await deliverApprovedDraft(row.draftId, row.reviewedByUserId ?? "system");
+  }
+  return due.length;
+}
+
+/**
+ * Approve (→ APPROVED, 30s hold) or skip (→ SKIPPED) a draft. Human-gated.
  *
- * On approve, delivery is delegated to `deliverApprovedDraft`, which
- * performs the transactional DRAFT → SENT claim (race-safe against
- * concurrent reviewers) and then actually delivers through the
- * configured channel (Telegram) — or honestly records that no channel
- * is configured. On skip, the draft is stamped SKIPPED directly.
+ * Delivery is a separate step (`deliverApprovedDraft`) after the hold, or
+ * immediately via the deliver route. Undo during the hold is skip on an
+ * APPROVED row.
  */
 export async function reviewOutreachDraft(
   draftId: string,
   reviewerUserId: string,
   approve: boolean,
   note?: string,
-): Promise<"SENT" | "SKIPPED"> {
+): Promise<"APPROVED" | "SENT" | "SKIPPED"> {
   const draft = await prisma.outreachDraft.findUnique({
     where: { draftId },
     select: {
@@ -201,6 +250,18 @@ export async function reviewOutreachDraft(
     },
   });
   if (!draft) throw new Error("Draft not found");
+  if (draft.status === "APPROVED" && !approve) {
+    await prisma.outreachDraft.update({
+      where: { draftId },
+      data: {
+        status: "SKIPPED",
+        reviewedByUserId: reviewerUserId,
+        reviewedAt: new Date(),
+        ...(note ? { sourceNote: `${draft.sourceNote} — undone: ${note}` } : {}),
+      },
+    });
+    return "SKIPPED";
+  }
   if (draft.status !== "DRAFT") {
     throw new Error("Only DRAFT outreach can be reviewed");
   }
@@ -224,16 +285,21 @@ export async function reviewOutreachDraft(
   }
 
   if (approve) {
-    // Append the reviewer's note BEFORE delivery so the Telegram copy
-    // and the delivered sourceNote include it.
     if (note) {
       await prisma.outreachDraft.update({
         where: { draftId },
         data: { sourceNote: `${draft.sourceNote} — review: ${note}` },
       });
     }
-    await deliverApprovedDraft(draftId, reviewerUserId);
-    return "SENT";
+    await prisma.outreachDraft.update({
+      where: { draftId },
+      data: {
+        status: "APPROVED",
+        reviewedByUserId: reviewerUserId,
+        reviewedAt: new Date(),
+      },
+    });
+    return "APPROVED";
   }
 
   await prisma.outreachDraft.update({

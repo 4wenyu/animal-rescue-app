@@ -32,6 +32,7 @@ import {
   type TokenTransactionData,
   TokenTransactionDataSchema,
 } from "@/lib/schemas/token";
+import { isPreviewMode } from "@/lib/siteMode";
 
 // Re-export the namespace so consumers can still write Prisma.TokenDirection etc.
 export { Prisma };
@@ -518,6 +519,25 @@ export async function awardShareReward(
  * constant, so the fee cannot drift between the charge and the check.
  */
 export const SEARCH_FEE_AMOUNT = 100;
+
+/**
+ * One search credit for private-preview signups. Idempotent per user.
+ * No-op when SITE_MODE=live so the live economy cannot be farmed this way.
+ */
+export async function grantPreviewSearchCredit(userId: string): Promise<boolean> {
+  if (!isPreviewMode()) return false;
+  await processTokenTransaction({
+    userId,
+    direction: "EARN",
+    actionType: "ONBOARDING_BONUS_EARN",
+    amount: SEARCH_FEE_AMOUNT,
+    idempotencyKey: `preview-search-credit:${userId}`,
+    currency: "USD",
+    notes:
+      "Private-preview search credit covering one lost-pet search. Not issued when SITE_MODE=live.",
+  });
+  return true;
+}
 
 /** Search cost the sponsor normally underwrites (mirrors SEARCH_FEE_AMOUNT). */
 export const FREE_SEARCH_GRANT_AMOUNT = SEARCH_FEE_AMOUNT;

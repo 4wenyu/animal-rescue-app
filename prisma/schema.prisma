@@ -53,6 +53,15 @@ enum Render {
   NEUTRAL_ACKNOWLEDGMENT
 }
 
+// Adoption listing lifecycle. AVAILABLE animals appear on the public feed;
+// HOLD mirrors a statutory hold; PENDING/ADOPTED remove them from it.
+enum ListingStatus {
+  AVAILABLE
+  PENDING
+  ADOPTED
+  HOLD
+}
+
 // ============================================================
 // EPIC 2 — Viral Token & Brand Sponsorship Gateway
 // Enums: SharePlatform / VerificationStatus / TokenAction /
@@ -167,6 +176,16 @@ model Animal {
   statutoryHoldCleared Boolean      @default(false) // Strictly controlled by Rules Engine
   medicalStatus        MedState
 
+  // ── Adoption listing surface (additive; drives public feed + adopt pages) ──
+  name          String        @default("Unnamed")
+  species       String        @default("Dog")
+  ageYears      Int?
+  sex           String?
+  personality   String?
+  story         String?
+  imageUrl      String?
+  listingStatus ListingStatus @default(AVAILABLE)
+
   // Relations
   intakeRecord      IntakeRecord?
   medicalLogs       MedicalLog[]
@@ -183,7 +202,11 @@ model IntakeRecord {
   intakeType InType
 
   // Public Flow
-  esignIntentHash       String?
+  // Unique when present so a retry of the same waiver (same SHA-256)
+  // replays the committed IntakeRecord instead of minting a second animal.
+  // Postgres unique indexes allow multiple NULLs, so staff OCR batches
+  // that omit a hash are unaffected.
+  esignIntentHash       String? @unique
   electronicConsentFlag Boolean @default(false)
   documentSnapshotUrl   String? // AWS S3 Immutable Link
 

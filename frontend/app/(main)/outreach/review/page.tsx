@@ -5,6 +5,7 @@ import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { OutreachDraftReviewQueue } from "@/src/components/outreach/OutreachDraftReviewQueue";
 import { AgentRunButton } from "@/src/components/outreach/AgentRunButton";
+import { flushApprovedOutreach } from "@/lib/services/outreachService";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,8 @@ export default async function OutreachReviewPage(): Promise<ReactNode> {
     );
   }
 
+  await flushApprovedOutreach();
+
   const drafts = await prisma.outreachDraft.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 100,
@@ -47,6 +50,7 @@ export default async function OutreachReviewPage(): Promise<ReactNode> {
       body: true,
       sourceNote: true,
       createdAt: true,
+      reviewedAt: true,
       profile: {
         select: {
           regionLabel: true,
@@ -61,6 +65,7 @@ export default async function OutreachReviewPage(): Promise<ReactNode> {
   const serializedDrafts = drafts.map((d) => ({
     ...d,
     createdAt: d.createdAt.toISOString(),
+    reviewedAt: d.reviewedAt ? d.reviewedAt.toISOString() : null,
   }));
 
   return (

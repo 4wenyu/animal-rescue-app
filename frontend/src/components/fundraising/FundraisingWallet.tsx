@@ -1,4 +1,5 @@
 "use client";
+import { t as translate, resolveLocale, STORAGE_KEY } from "@/src/lib/useI18n";
 
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -61,73 +62,9 @@ function randomDonor(): string {
 // Synchronous i18n (6 locales + SSR-safe English fallbacks)
 // ---------------------------------------------------------------------------
 
-import enDict from "../../../locales/en.json";
-import esDict from "../../../locales/es.json";
-import zhCNDict from "../../../locales/zh-CN.json";
-import zhTWDict from "../../../locales/zh-TW.json";
-import jaDict from "../../../locales/ja.json";
-import koDict from "../../../locales/ko.json";
-import zhLegacyDict from "../../../locales/zh.json";
 
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-  zh: zhLegacyDict as unknown as Record<string, unknown>,
-};
-const STORAGE_KEY = "rescuehub_locale";
 
-function resolveLocale(stored: string | null): string {
-  if (stored === "zh") return "zh-CN";
-  if (
-    stored === "en" || stored === "es" || stored === "zh-CN" ||
-    stored === "zh-TW" || stored === "ja" || stored === "ko"
-  ) return stored;
-  return "en";
-}
 
-const EN_FALLBACK: Record<string, string> = {
-  "fundraising.wallet.title": "Fundraising Campaign",
-  "fundraising.wallet.animal_id": "Animal ID: {id}",
-  "fundraising.wallet.raised": "{amount} raised",
-  "fundraising.wallet.goal_label": "of {goal} goal",
-  "fundraising.wallet.percent_funded": "{pct}% funded",
-  "fundraising.wallet.goal_reached_msg":
-    "✓ Goal reached — restriction will auto-switch to prevent fund mixing",
-  "fundraising.wallet.medical_allocated": "Medical: {amount}",
-  "fundraising.wallet.general_allocated": "General: {amount}",
-  "fundraising.wallet.donate_title": "Submit Donation",
-  "fundraising.wallet.amount_label": "Amount ($)",
-  "fundraising.wallet.amount_placeholder": "e.g. 25.00",
-  "fundraising.wallet.allocation_label": "Fund Allocation",
-  "fundraising.wallet.allocation_general": "General Care (shelter ops)",
-  "fundraising.wallet.allocation_medical": "Medical (direct treatment)",
-  "fundraising.wallet.mixing_warning":
-    "⚠️ Target reached. New donations will switch the restriction flag to prevent legally restricted fund mixing, in accordance with donor intent tracking.",
-  "fundraising.wallet.donate_processing": "Processing...",
-  "fundraising.wallet.donate_submit": "Submit Donation",
-  "fundraising.wallet.ledger_title": "Transaction Ledger",
-  "fundraising.wallet.entries_count": "({count} entries)",
-  "fundraising.wallet.empty_ledger":
-    "No donations yet. Submit a donation above to seed the ledger.",
-};
-
-function trFor(locale: string, key: string, vars?: Record<string, string | number>): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const p of parts) {
-    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
-    value = (value as Record<string, unknown>)[p];
-  }
-  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
-  if (!vars) return value;
-  return Object.entries(vars).reduce((str, [k, v]) =>
-    str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)), value);
-}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -170,7 +107,7 @@ export function FundraisingWallet({
   }, []);
   const locale = localeProp ?? fallbackLocale;
   const t = (key: string, vars?: Record<string, string | number>) =>
-    trFor(locale, key, vars);
+    translate(locale, key, vars);
 
   // ── Derived ─────────────────────────────────────────────────────────
   const progressPct = useMemo(() => {

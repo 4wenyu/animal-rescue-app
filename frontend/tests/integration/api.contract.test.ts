@@ -19,10 +19,14 @@ async function get(path: string, redirect: RequestRedirect = "manual") {
   return fetch(`${BASE}${path}`, { redirect });
 }
 
-async function postJson(path: string, body: unknown) {
+async function postJson(
+  path: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+) {
   return fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: typeof body === "string" ? body : JSON.stringify(body),
     redirect: "manual",
   });
@@ -40,6 +44,8 @@ describe("public pages", () => {
     "/about/mission",
     "/about/privacy",
     "/fundraising",
+    "/today",
+    "/preview",
     "/robots.txt",
     "/sitemap.xml",
   ])("serves %s", async (path) => {
@@ -165,5 +171,50 @@ describe("error responses do not leak internals", () => {
     const text = await (await postJson(path, { garbage: true })).text();
 
     expect(text).not.toMatch(/node_modules|\\.prisma|at Object\.|Error: connect/);
+  });
+});
+
+describe("POST /api/animals/intake idempotency", () => {
+  const animal = {
+    species: "dog",
+    breed: "Mixed Breed",
+    medicalStatus: "Healthy",
+    euthanasia_risk_status: "SAFE",
+  };
+
+  it("replays a second POST with the same x-esign-hash", async () => {
+    const hash = `test-esign-${crypto.randomUUID()}`;
+    const body = { intakeType: "PUBLIC_STRAY", animals: [animal] };
+
+    const first = await postJson("/api/animals/intake", body, {
+      "x-esign-hash": hash,
+    });
+    const firstJson = (await first.json()) as {
+      rewards?: { animals?: { animalId?: string }[] };
+    };
+    const second = await postJson("/api/animals/intake", body, {
+      "x-esign-hash": hash,
+    });
+    const secondJson = (await second.json()) as {
+      replayed?: boolean;
+      rewards?: { animals?: { animalId?: string }[] };
+    };
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(200);
+    expect(secondJson.replayed).toBe(true);
+    expect(secondJson.rewards?.animals?.[0]?.animalId).toBe(
+      firstJson.rewards?.animals?.[0]?.animalId,
+    );
+  });
+
+  it("rejects a hashed batch larger than one animal", async () => {
+    const res = await postJson(
+      "/api/animals/intake",
+      { intakeType: "PUBLIC_STRAY", animals: [animal, animal] },
+      { "x-esign-hash": `test-esign-${crypto.randomUUID()}` },
+    );
+
+    expect(res.status).toBe(400);
   });
 });

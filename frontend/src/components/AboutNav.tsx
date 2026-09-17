@@ -4,61 +4,16 @@
  * About dropdown — appears in both the public SiteHeader and the staff Sidebar.
  * Five routes under `/about/*` plus a top-level "About Us" summary entry.
  *
- * i18n strategy: the dropdown itself is a client component so strings swap the
- * moment locale changes (via the `rescuehub-locale-change` event).
- *
- * Locale awareness: each locale JSON provides `nav.about.{label,mission,legal,
- * process,story,about_us,contact}`. This component reads the current locale
- * through a tiny inline `t()` that mirrors the Sidebar pattern (so the import
- * graph stays sibling-side, no circular ref to src/lib/i18n.ts).
+ * i18n: the shared `useI18n()` hook owns locale resolution (localStorage +
+ * the `rescuehub-locale-change` event), so this component keeps no dictionary
+ * of its own — the dropdown re-renders the moment the locale changes.
  */
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import enDict from "../../locales/en.json";
-import esDict from "../../locales/es.json";
-import zhCNDict from "../../locales/zh-CN.json";
-import zhTWDict from "../../locales/zh-TW.json";
-import jaDict from "../../locales/ja.json";
-import koDict from "../../locales/ko.json";
-
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-};
-
-const STORAGE_KEY = "rescuehub_locale";
-
-function getLocaleFromStorage(): string {
-  if (typeof window === "undefined") return "en";
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    // Legacy alias: "zh" → "zh-CN" (Simplified Mandarin)
-    if (stored === "zh") return "zh-CN";
-    if (
-      stored === "en" || stored === "es" || stored === "zh-CN" ||
-      stored === "zh-TW" || stored === "ja" || stored === "ko"
-    ) return stored;
-  } catch {}
-  return "en";
-}
-
-function t(key: string, locale: string): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS.en;
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const part of parts) {
-    if (typeof value !== "object" || value === null) return key;
-    value = (value as Record<string, unknown>)[part];
-  }
-  return typeof value === "string" ? value : key;
-}
+import { useI18n } from "@/src/lib/useI18n";
 
 type AboutVariant = "sidebar" | "header";
 
@@ -84,27 +39,9 @@ const ABOUT_ROUTES = [
 
 export function AboutNav({ variant = "header" }: AboutNavProps) {
   const [open, setOpen] = useState(false);
-  const [locale, setLocale] = useState("en");
-  const [isMounted, setIsMounted] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-
-  useEffect(() => {
-    setIsMounted(true);
-    setLocale(getLocaleFromStorage());
-  }, []);
-
-  // Re-render when locale changes anywhere else in the app
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handler = () => setLocale(getLocaleFromStorage());
-    window.addEventListener("rescuehub-locale-change", handler as EventListener);
-    window.addEventListener("storage", handler);
-    return () => {
-      window.removeEventListener("rescuehub-locale-change", handler as EventListener);
-      window.removeEventListener("storage", handler);
-    };
-  }, []);
+  const { tr } = useI18n();
 
   // Close on Escape + outside-click
   useEffect(() => {
@@ -130,8 +67,7 @@ export function AboutNav({ variant = "header" }: AboutNavProps) {
     setOpen(false);
   }, [pathname]);
 
-  const activeLocale = isMounted ? locale : "en";
-  const dropdownLabel = t("nav.about.label", activeLocale);
+  const dropdownLabel = tr("nav.about.label");
   const isActive = pathname?.startsWith("/about");
 
   // Theme tokens
@@ -184,7 +120,7 @@ export function AboutNav({ variant = "header" }: AboutNavProps) {
                     : "text-slate-700"
                 }`}
               >
-                <span>{t(labelKey, activeLocale)}</span>
+                <span>{tr(labelKey)}</span>
                 <ChevronRight
                   className={`h-3.5 w-3.5 ${isCurrent ? "text-emerald-600" : "text-slate-400"}`}
                   aria-hidden

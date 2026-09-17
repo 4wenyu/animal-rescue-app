@@ -1,4 +1,5 @@
 "use client";
+import { t as translate, resolveLocale, STORAGE_KEY } from "@/src/lib/useI18n";
 
 import {
   type ChangeEvent,
@@ -26,95 +27,9 @@ import {
 // Synchronous i18n (6 locales + SSR-safe English fallbacks)
 // ---------------------------------------------------------------------------
 
-import enDict from "../../../locales/en.json";
-import esDict from "../../../locales/es.json";
-import zhCNDict from "../../../locales/zh-CN.json";
-import zhTWDict from "../../../locales/zh-TW.json";
-import jaDict from "../../../locales/ja.json";
-import koDict from "../../../locales/ko.json";
-import zhLegacyDict from "../../../locales/zh.json";
 
-const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
-  en: enDict as unknown as Record<string, unknown>,
-  es: esDict as unknown as Record<string, unknown>,
-  "zh-CN": zhCNDict as unknown as Record<string, unknown>,
-  "zh-TW": zhTWDict as unknown as Record<string, unknown>,
-  ja: jaDict as unknown as Record<string, unknown>,
-  ko: koDict as unknown as Record<string, unknown>,
-  zh: zhLegacyDict as unknown as Record<string, unknown>,
-};
-const STORAGE_KEY = "rescuehub_locale";
 
-function resolveLocale(stored: string | null): string {
-  if (stored === "zh") return "zh-CN";
-  if (
-    stored === "en" || stored === "es" || stored === "zh-CN" ||
-    stored === "zh-TW" || stored === "ja" || stored === "ko"
-  ) return stored;
-  return "en";
-}
 
-const EN_FALLBACK: Record<string, string> = {
-  "document_scan.title": "AI Intake — Batch Document Upload",
-  "document_scan.description":
-    "Drop cage cards or intake sheets (images / PDFs) below. The Gemini model will extract structured intake records.",
-  "document_scan.dropzone_headline":
-    "Drag & drop files here, or click to browse",
-  "document_scan.dropzone_caption":
-    "JPEG, PNG, WEBP, HEIC, or PDF — multiple files allowed",
-  "document_scan.aria_dropzone": "AI Intake Batch Upload",
-  "document_scan.error_invalid_type":
-    "Only images (JPEG, PNG, WEBP, HEIC) and PDFs are accepted.",
-  "document_scan.error_unknown": "Unknown upload error.",
-  "document_scan.staged_files": "Staged files ({count})",
-  "document_scan.clear_all": "Clear all",
-  "document_scan.remove_file": "Remove {name}",
-  "document_scan.size_kb": "{kb} KB",
-  "document_scan.run_extraction": "Run AI Intake Extraction",
-  "document_scan.analyzing": "Analyzing documents with AI…",
-  "document_scan.rate_limit_note":
-    "Sequential processing keeps us under the API rate limit (~2 sec per file).",
-  "document_scan.results_heading": "Extracted Records ({count})",
-  "document_scan.results_aria": "Extraction results",
-  "document_scan.empty_results_title":
-    "No intake records detected in these documents.",
-  "document_scan.empty_results_body":
-    "The AI scanned your files successfully but could not find any readable intake records. Try uploading sharper images, ensure the cage card text is legible, or pick a different document.",
-  "document_scan.empty_results_dismiss": "Dismiss",
-  "document_scan.pre_submission_hint":
-    "No extractions yet. Stage some files above to get started.",
-  // AnimalCard subcomponent
-  "document_scan.unnamed_animal": "Unnamed animal #{n}",
-  "document_scan.unknown_species": "unknown species",
-  "document_scan.age_unknown": "Age unknown",
-  "document_scan.age_yr": "{n} yr",
-  "document_scan.field_species": "Species",
-  "document_scan.field_breed": "Breed",
-  "document_scan.field_age": "Age",
-  "document_scan.field_sex": "Sex",
-  "document_scan.field_medical": "Medical",
-  "document_scan.field_hold_cleared": "Hold Cleared",
-  "document_scan.yes": "Yes",
-  "document_scan.no": "No",
-  "document_scan.intake_notes": "Intake Notes",
-  "document_scan.intake_number": "Intake #{n}",
-};
-
-function trFor(locale: string, key: string, vars?: Record<string, string | number>): string {
-  const dict = LOCALE_DICTS[locale] ?? LOCALE_DICTS["en"];
-  const parts = key.split(".");
-  let value: unknown = dict;
-  for (const p of parts) {
-    if (typeof value !== "object" || value === null) return EN_FALLBACK[key] ?? key;
-    value = (value as Record<string, unknown>)[p];
-  }
-  if (typeof value !== "string") return EN_FALLBACK[key] ?? key;
-  if (!vars) return value;
-  return Object.entries(vars).reduce(
-    (str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
-    value,
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -186,6 +101,7 @@ export function BatchUpload({
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<ExtractedAnimal[]>([]);
+  const [verified, setVerified] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [hasAttemptedSubmission, setHasAttemptedSubmission] = useState(false);
@@ -215,7 +131,7 @@ export function BatchUpload({
   const locale = localeProp ?? fallbackLocale;
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>) =>
-      trFor(locale, key, vars),
+      translate(locale, key, vars),
     [locale],
   );
 
@@ -258,6 +174,7 @@ export function BatchUpload({
   const clearAll = useCallback(() => {
     setFiles([]);
     setResults([]);
+    setVerified(new Set());
     setError(null);
     setHasAttemptedSubmission(false);
   }, []);
@@ -336,7 +253,7 @@ export function BatchUpload({
       }
 
       setResults(accumulated);
-      onComplete?.(accumulated);
+      setVerified(new Set());
       succeededCleanly = true;
     } catch (err) {
       const message =
@@ -344,7 +261,7 @@ export function BatchUpload({
       setError(message);
       if (accumulated.length > 0) {
         setResults(accumulated);
-        onComplete?.(accumulated);
+        setVerified(new Set());
       }
     } finally {
       setIsLoading(false);
@@ -517,6 +434,9 @@ export function BatchUpload({
               {t("document_scan.results_heading", { count: results.length })}
             </h2>
           </div>
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+            {t("document_scan.ai_banner")}
+          </p>
 
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {results.map((animal, idx) => (
@@ -524,10 +444,30 @@ export function BatchUpload({
                 key={animal.intakeNumber ?? idx}
                 animal={animal}
                 index={idx}
+                verified={verified.has(idx)}
+                onToggleVerified={() => {
+                  setVerified((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(idx)) next.delete(idx);
+                    else next.add(idx);
+                    return next;
+                  });
+                }}
                 t={t}
               />
             ))}
           </ul>
+          {onComplete && verified.size > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                onComplete(results.filter((_, i) => verified.has(i)))
+              }
+              className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500"
+            >
+              {t("document_scan.accept_confirmed", { count: verified.size })}
+            </button>
+          )}
         </section>
       )}
 
@@ -589,10 +529,14 @@ type TranslateFn = (key: string, vars?: Record<string, string | number>) => stri
 function AnimalCard({
   animal,
   index,
+  verified,
+  onToggleVerified,
   t,
 }: {
   animal: ExtractedAnimal;
   index: number;
+  verified: boolean;
+  onToggleVerified: () => void;
   t: TranslateFn;
 }): ReactNode {
   const name = animal.name ?? t("document_scan.unnamed_animal", { n: index + 1 });
@@ -617,7 +561,12 @@ function AnimalCard({
   return (
     <li className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
       <header className="flex items-start justify-between gap-2 pb-3 border-b border-slate-100">
-        <h3 className="text-base font-bold text-slate-900 capitalize">{name}</h3>
+        <div>
+          <p className="mb-1 inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-800">
+            {t("document_scan.ai_suggested")}
+          </p>
+          <h3 className="text-base font-bold text-slate-900 capitalize">{name}</h3>
+        </div>
         {risk && (
           <span
             className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${riskStyles}`}
@@ -671,10 +620,24 @@ function AnimalCard({
       )}
 
       {animal.intakeNumber && (
-        <p className="mt-3 text-[11px] text-slate-400 font-mono">
+        <p className="mt-3 text-[11px] text-slate-600 font-mono">
           {t("document_scan.intake_number", { n: animal.intakeNumber })}
         </p>
       )}
+
+      <label className="mt-4 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-700">
+        <input
+          type="checkbox"
+          checked={verified}
+          onChange={onToggleVerified}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600"
+        />
+        <span>
+          {verified
+            ? t("document_scan.verified_badge")
+            : t("document_scan.verify_checkbox")}
+        </span>
+      </label>
     </li>
   );
 }

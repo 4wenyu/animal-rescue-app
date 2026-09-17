@@ -29,6 +29,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { STORAGE_KEY, writeLocaleCookie } from "./localeCode";
 import enDict from "../../locales/en.json";
 import esDict from "../../locales/es.json";
 import zhCNDict from "../../locales/zh-CN.json";
@@ -47,7 +48,8 @@ const LOCALE_DICTS: Record<string, Record<string, unknown>> = {
   zh: zhLegacyDict as unknown as Record<string, unknown>,
 };
 
-export const STORAGE_KEY = "rescuehub_locale";
+export { STORAGE_KEY };
+
 const LOCALE_CHANGE_EVENT = "rescuehub-locale-change";
 
 export type LocaleCode =
@@ -137,7 +139,9 @@ export function useI18n() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      setLocaleState(resolveLocale(window.localStorage.getItem(STORAGE_KEY)));
+      const resolved = resolveLocale(window.localStorage.getItem(STORAGE_KEY));
+      setLocaleState(resolved);
+      writeLocaleCookie(resolved);
     } catch {
       /* default English */
     }
@@ -158,6 +162,13 @@ export function useI18n() {
       window.removeEventListener(LOCALE_CHANGE_EVENT, handler as EventListener);
   }, []);
 
+  // Keep <html lang> in sync with the active locale (BCP-47 tags match
+  // LocaleCode), fixing the previously hardcoded lang="en".
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const tr = useCallback(
     (key: string, vars?: Record<string, string | number>) =>
       t(locale, key, vars),
@@ -170,6 +181,12 @@ export function useI18n() {
     if (typeof window !== "undefined") {
       try {
         window.localStorage.setItem(STORAGE_KEY, resolved);
+        writeLocaleCookie(resolved);
+        // Broadcast so every consumer — other useI18n instances, the home
+        // locale store, legacy listeners — re-reads and re-renders in sync.
+        window.dispatchEvent(
+          new CustomEvent(LOCALE_CHANGE_EVENT, { detail: resolved }),
+        );
       } catch {
         /* noop */
       }

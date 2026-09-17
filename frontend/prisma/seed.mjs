@@ -1,17 +1,3 @@
-// Prisma seed — creates the two pilot users (ADMIN/STAFF) with correct
-// emails, real scrypt-hashed passwords, roles, and ACTIVE token wallets,
-// plus the custodian Organization.
-//
-// Hash format matches lib/auth/password.ts: scrypt$N$r$p$salt$digest
-// (base64url). Verify any tweaked cost params against that module.
-//
-// Demo credentials (change before any public launch):
-//   admin@rescuehub.org / admin123   → ADMIN
-//   staff@rescuehub.org / staff123   → STAFF
-//
-// Run from frontend/:
-//   node prisma/seed.mjs
-
 import { randomBytes, scrypt as _scrypt } from "node:crypto";
 import { promisify } from "node:util";
 import { PrismaClient } from "@prisma/client";
@@ -35,20 +21,28 @@ async function hash(plain) {
   return `scrypt$${N}$${r}$${p}$${salt.toString("base64url")}$${digest.toString("base64url")}`;
 }
 
+function requiredPassword(name) {
+  const value = process.env[name];
+  if (!value || value.length < 12) {
+    throw new Error(`${name} must be set to a password of at least 12 characters`);
+  }
+  return value;
+}
+
 const USERS = [
   {
     userId: "d290f1ee-6c54-4b01-90e6-d701748f0851",
     email: "admin@rescuehub.org",
     displayName: "Admin User",
     role: "ADMIN",
-    password: "admin123",
+    password: requiredPassword("SEED_ADMIN_PASSWORD"),
   },
   {
     userId: "a77484df-f236-407b-80a2-218f262176c4",
     email: "staff@rescuehub.org",
     displayName: "Staff User",
     role: "STAFF",
-    password: "staff123",
+    password: requiredPassword("SEED_STAFF_PASSWORD"),
   },
 ];
 
@@ -84,11 +78,11 @@ async function ensureUser(u) {
       status: "ACTIVE",
     },
   });
-  console.log(`    ✓ ${user.email} (${u.role}) → ${u.userId}`);
+  console.log(`    ✓ ${user.email} (${u.role})`);
 }
 
 async function main() {
-  console.log("[prisma/seed.mjs] seeding users w/ hashed credentials + wallets");
+  console.log("[prisma/seed.mjs] seeding users + wallets");
   for (const u of USERS) await ensureUser(u);
 
   await prisma.organization.upsert({
@@ -96,14 +90,13 @@ async function main() {
     update: {},
     create: CUSTODIAN_ORG,
   });
-  console.log(`    ✓ custodian org ${CUSTODIAN_ORG.orgId}`);
+  console.log("    ✓ custodian org");
 
   const users = await prisma.user.findMany({
-    select: { userId: true, email: true, role: true },
+    select: { email: true, role: true },
     orderBy: { email: "asc" },
   });
-  console.log(`[prisma/seed.mjs] verified ${users.length} user(s):`);
-  for (const row of users) console.log(`  ${row.email} (${row.role}) → ${row.userId}`);
+  console.log(`[prisma/seed.mjs] ${users.length} user(s) in this database`);
 }
 
 main()

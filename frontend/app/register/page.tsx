@@ -3,7 +3,8 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PawPrint, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { RegisterHeading } from "./RegisterHeading";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,17 +48,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-white font-sans">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-900/5">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30">
-            <PawPrint className="h-6 w-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Create account
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Join the rescue network
-          </p>
-        </div>
+        <RegisterHeading />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

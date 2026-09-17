@@ -11,6 +11,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { useI18n } from "@/src/lib/useI18n";
+import { OutreachHoldBar } from "./OutreachHoldBar";
 
 interface DraftRow {
   draftId: string;
@@ -20,6 +21,7 @@ interface DraftRow {
   body: string;
   sourceNote: string;
   createdAt: string;
+  reviewedAt?: string | null;
   profile?: {
     regionLabel?: string | null;
     user?: { displayName?: string } | null;
@@ -56,7 +58,16 @@ export function OutreachDraftReviewQueue({
         }
         setDrafts((prev) =>
           prev.map((d) =>
-            d.draftId === draftId ? { ...d, status: json.status ?? d.status } : d,
+            d.draftId === draftId
+              ? {
+                  ...d,
+                  status: json.status ?? d.status,
+                  reviewedAt:
+                    json.status === "APPROVED"
+                      ? new Date().toISOString()
+                      : d.reviewedAt,
+                }
+              : d,
           ),
         );
       } catch (err) {
@@ -68,7 +79,36 @@ export function OutreachDraftReviewQueue({
     [],
   );
 
-  const pending = drafts.filter((d) => d.status === "DRAFT");
+  const pending = drafts.filter(
+    (d) => d.status === "DRAFT" || d.status === "APPROVED",
+  );
+
+  const deliver = useCallback(async (draftId: string) => {
+    setError(null);
+    setBusy(draftId);
+    try {
+      const res = await fetch(`/api/outreach/drafts/${draftId}/deliver`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; status?: string; message?: string }
+        | null;
+      if (!res.ok || !json?.ok) {
+        setError(json?.message ?? "Couldn't send the draft.");
+        return;
+      }
+      setDrafts((prev) =>
+        prev.map((d) =>
+          d.draftId === draftId ? { ...d, status: "SENT" } : d,
+        ),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't send the draft.");
+    } finally {
+      setBusy(null);
+    }
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -108,16 +148,28 @@ export function OutreachDraftReviewQueue({
                 className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                   d.status === "DRAFT"
                     ? "bg-amber-100 text-amber-800"
-                    : d.status === "SENT"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-slate-100 text-slate-600"
+                    : d.status === "APPROVED"
+                      ? "bg-sky-100 text-sky-800"
+                      : d.status === "SENT"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-100 text-slate-600"
                 }`}
               >
-                {d.status}
+                {d.status === "APPROVED" ? tr("outreach.status_approved") : d.status}
               </span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-slate-700">{d.body}</p>
-            <p className="mt-3 text-[11px] italic text-slate-400">{d.sourceNote}</p>
+            <p className="mt-3 text-[11px] italic text-slate-600">{d.sourceNote}</p>
+
+            {d.status === "APPROVED" && (
+              <OutreachHoldBar
+                reviewedAt={d.reviewedAt ?? d.createdAt}
+                busy={busy === d.draftId}
+                onSendNow={() => void deliver(d.draftId)}
+                onUndo={() => void review(d.draftId, false)}
+                t={tr}
+              />
+            )}
 
             {d.status === "DRAFT" && (
               <div className="mt-4 flex gap-2">

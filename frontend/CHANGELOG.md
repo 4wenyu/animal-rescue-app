@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-09-06 — Locale encoding repair
+
+**All 6 non-English dictionaries (`es`, `zh-CN`, `zh-TW`, `ja`, `ko`, `zh`) were committed with double-encoded (mojibake) text** — UTF-8 bytes that had been misread as Windows-1252 and re-saved (e.g. `Portal PÃºblico`, `å…¬å…±é—¨æˆ·`). Every non-English string rendered as garbage.
+
+- **Recovered 2,353 strings losslessly** by reversing the CP1252 misread at the byte level — single- *and* double-encoded layers, including the undefined CP1252 bytes (0x81/0x8D/0x8F/0x90/0x9D) that had passed through as control characters. Verified idempotent — 0 values remain recoverable.
+- Verified samples: `Portal Público` (es), `公共门户` (zh-CN), `接收` (zh-TW), `ダッシュボード` (ja), `대시보드` (ko).
+- Added missing `adoption_feed.adopt` to all non-English dicts.
+
+## 2026-09-06 — Ship-readiness pass (audit Phases 1–3 + product hardening)
+
+Full audit (UI/UX + API) executed with team agents, then implemented. Verified: `npm run lint` 0 errors (warnings 56 → 39), `npm run build` green, 40/40 pages.
+
+### Security & honest flows
+- **Shared rate limiter** `lib/rate-limit.ts` (pruned sliding-window, per-IP/user) applied to `api/chat`, `api/chat-intake`, `api/shelter/intake/map`, `api/telegram/notify`, `api/animals/intake`; payload caps (Zod) + prompt-injection rejection (client `system` role) on chat routes; internal error text no longer leaked in 500s.
+- **`api/auth/register`** — P2002 race → 409 (was 500).
+- **`intake/public`** — confirmation step now gated on `res.ok` with a real error card + retry, visible submitting state, double-submit guard (no more false "Submission Complete" + ESIGN receipt on failure).
+- **`intake/county`** — fake 800ms "Verifying…" + IRS/zoning claims removed; honest "transfer notice sent" flow with failure path; `aria-invalid`/`aria-describedby`.
+- **Staff role gating** in `proxy.ts` — `/intake/document-scan`, `/intake/medical`, `/medical*` now require STAFF/ADMIN (was: any logged-in user).
+
+### Architecture & conventions
+- **Home page split** — 853-line client mega-component → 33-line Server Component + 12 islands under `src/components/home/` (each <150 lines); narrowed per-island locale bundles.
+- **Radar/adopt splits** — `RadarView` 663→149, `ShareToEarnWidget` 371→128, `AdoptProfileView` 304→105 (+ ~21 new files <150 lines); CANCELLED stepper semantics, hold-state CTAs, inline-CSS removal.
+- **FloatingChatbot** — 595 lines → 8 files; route-conditional mounting + `next/dynamic ssr:false` (leaves every route's initial bundle); paperclip overlay bug fixed.
+- **Responsive shell** — sidebar → desktop aside + mobile off-canvas drawer (Escape/backdrop/route-change close, scroll lock); responsive gutters in `(main)` and dashboard layouts.
+- **Shared API helpers** `lib/api/helpers.ts` (`requireRole`, `parseJsonBody`); `searches/[searchId]` PATCH made atomic (conditional `updateMany`).
+- **i18n dedup** — 16 files moved onto shared `useI18n`/`t` (was: ~15 hand-rolled copies of the same block); `setLocale` now broadcasts the change event and syncs `document.documentElement.lang`; missing locale keys added to all 7 dictionaries.
+
+### Design system (Phase 3)
+- **Token-driven primitives** `src/components/ui/` (`button.tsx`, `card.tsx`, `cn.ts`) wired to `@theme` tokens in `globals.css`; hardcoded hex CTAs (`bg-[#10B981]` etc.) on home/site-nav migrated to `--color-accent` / `--color-sidebar` tokens.
+- **Contrast sweep** — 11px `slate-400` text bumped to `slate-600` across dashboard, login, medical, intake and outreach surfaces (AA for small text).
+
+### Ship polish
+- `app/robots.ts` + `app/sitemap.ts` (public routes + all adoption profiles).
+- `.env.example` with all required vars (incl. previously-undeclared `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`).
+
 ## 2026-08-30 — Agent-Team Review Fix Pass (Critical/High findings closed)
 
 7-agent independent review of the true-MVP (see `docs/AGENT_TEAM_REVIEW_2026-08-30.md`) found 1 Critical + 4 High issues. All are fixed and smoke-verified live (13/13 checks + no-mint probe).
