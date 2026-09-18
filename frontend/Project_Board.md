@@ -97,10 +97,10 @@ kanban-plugin: basic
 - [ ] **Secrets rotation (operator action, outside repo)** — GOOGLE_GENERATIVE_AI_API_KEY appeared in plaintext env files during development; rotate both keys in Google AI Studio before any deployment and store in a secret manager. `.gitignore` coverage verified correct (`.env*` ignored, nothing tracked).
 
 ### Phase 6: Medical Intake Module
-- [ ] `<MedicalIntakeChecksheet />` component scaffolding
-- [ ] ASPCA TPR (Temp/Pulse/Respiration) form wireframe
-- [ ] Emergency signs conditional flags (UI only)
-- [ ] Medical file linking to animal record
+- [x] `<MedicalIntakeChecksheet />` component scaffolding
+- [x] ASPCA TPR (Temp/Pulse/Respiration) form wireframe
+- [x] Emergency signs conditional flags (UI only)
+- [x] Medical file linking to animal record (`POST /api/medical/log` upserts `roster-{id}` + MedicalLog)
 
 ## 🔶 Archived / Blocked
 

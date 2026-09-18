@@ -117,7 +117,7 @@
     "still_available": "引き続き募集中",
     "on_hold": "保留中",
     "needs_home_by": "{date}までに新しいお家が必要",
-    "adopt": "Adopt",
+    "adopt": "引き取る",
     "foster": "預かりボランティア",
     "donate": "寄付",
     "contact_shelter": "シェルターに連絡"
@@ -321,6 +321,7 @@
     "compliance_aspca": "ASPCA/CART 試験に準拠",
     "compliance_irs": "IRS § 501(c)(3)",
     "back_to_list": "医療記録に戻る",
+    "save_failed": "診察記録を保存できませんでした。もう一度お試しください。",
     "checksheet": {
       "title": "医療摂取量チェックシート",
       "subtitle": "ASPCA / CART に準拠した簡単な摂取試験 — 動物 ID: {id} · 種: {species}",
@@ -342,7 +343,7 @@
       "vet_flagged": "獣医師による警告",
       "detected_warning": "⚠️ 緊急兆候が検出されました — 保存時に獣医師に通知されます。",
       "save_button": "医療摂取記録の保存",
-      "confirm_title": "医療摂取量の記録",
+      "confirm_title": "医療受け入れを記録しました",
       "confirm_complete": "動物{id} ({species}) 健康診断完了。",
       "new_exam": "新しい試験",
       "vet_required": "⚠️獣医師への通知が必要です",
@@ -549,6 +550,8 @@
       "mixing_warning": "⚠️目標達成しました。新たな寄付は、寄付者の意図の追跡に従って、法的に制限された資金の混合を防ぐために制限フラグを切り替えます。",
       "donate_processing": "処理...",
       "donate_submit": "寄付を送信する",
+      "donate_error": "この寄付を記録できませんでした。もう一度お試しください。",
+      "you": "あなた",
       "ledger_title": "取引台帳",
       "entries_count": "({count} エントリ)",
       "empty_ledger": "まだ寄付はありません。台帳をシードするには、上記の寄付を送信してください。"
@@ -649,6 +652,7 @@
     "hold_note": "{name} は現在、短期の迷子保護期間中です。{date} にはお家に迎えられる準備が整う予定です。",
     "apply_to_adopt": "{name} の里親申請",
     "apply_to_foster": "{name} の預かり申請",
+    "apply_to_contact": "{name} についてシェルターに連絡",
     "apply_note": "この申請は直接、里親コーディネーターに届きます。アカウントは不要です。通常24時間以内にご返信します。",
     "form_name": "氏名",
     "form_name_ph": "山田 花子",

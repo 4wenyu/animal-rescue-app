@@ -113,11 +113,11 @@
       "urgent_sponsor": "需要緊急贊助",
       "under_evaluation": "評估中"
     },
-    "meet_name": "認識{name}",
+    "meet_name": "認識 {name}",
     "still_available": "仍可領養",
     "on_hold": "等待中",
     "needs_home_by": "需在{date}前找到家",
-    "adopt": "Adopt",
+    "adopt": "領養",
     "foster": "寄養",
     "donate": "捐助",
     "contact_shelter": "聯繫收容所"
@@ -321,6 +321,7 @@
     "compliance_aspca": "ASPCA/CART 考試一致",
     "compliance_irs": "美國國稅局§ 501(c)(3)",
     "back_to_list": "回傳醫療記錄",
+    "save_failed": "無法儲存本次檢查。請再試一次。",
     "checksheet": {
       "title": "醫療攝取檢查表",
       "subtitle": "ASPCA / CART 一致的簡短入學考試 — 動物 ID：{id} · 物種：{species}",
@@ -342,7 +343,7 @@
       "vet_flagged": "獸醫標記",
       "detected_warning": "⚠️ 偵測到緊急跡象 - 儲存後將通知獸醫。",
       "save_button": "保存就診紀錄",
-      "confirm_title": "記錄醫療攝取量",
+      "confirm_title": "已記錄醫療入院檢查",
       "confirm_complete": "動物{id} ({species}) 體檢完成。",
       "new_exam": "新考試",
       "vet_required": "⚠️ 需要獸醫通知",
@@ -549,6 +550,8 @@
       "mixing_warning": "⚠️目標達成。根據捐贈者意圖跟踪，新的捐贈將切換限制標誌，以防止受到法律限制的資金混合。",
       "donate_processing": "加工...",
       "donate_submit": "提交捐款",
+      "donate_error": "無法記錄這筆捐款。請再試一次。",
+      "you": "我",
       "ledger_title": "交易帳本",
       "entries_count": "（{count}條目）",
       "empty_ledger": "還沒有捐款。在上面提交捐款來為帳本播種。"
@@ -649,6 +652,7 @@
     "hold_note": "{name} 目前處於短暫的流浪收容期。他們將於 {date} 準備好回家。",
     "apply_to_adopt": "申請領養 {name}",
     "apply_to_foster": "申請寄養 {name}",
+    "apply_to_contact": "就 {name} 聯繫收容所",
     "apply_note": "此申請將直接發送給我們的領養協調員，無需帳戶。我們通常會在 24 小時內回覆。",
     "form_name": "全名",
     "form_name_ph": "王小明",

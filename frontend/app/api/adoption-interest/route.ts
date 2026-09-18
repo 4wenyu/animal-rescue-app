@@ -50,9 +50,9 @@ const AdoptionInterestSchema = z.object({
     .trim()
     .transform((s) => s.toUpperCase())
     .catch("")
-    .pipe(
-      z.enum(["ADOPT", "FOSTER"], {
-        message: "interestType must be ADOPT or FOSTER",
+      .pipe(
+      z.enum(["ADOPT", "FOSTER", "CONTACT"], {
+        message: "interestType must be ADOPT, FOSTER, or CONTACT",
       }),
     ),
   phone: text(40),

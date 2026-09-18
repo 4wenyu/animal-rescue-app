@@ -321,6 +321,7 @@
     "compliance_aspca": "Examen ASPCA/CART alineado",
     "compliance_irs": "IRS § 501(c)(3)",
     "back_to_list": "Volver a Registros Médicos",
+    "save_failed": "No se pudo guardar este examen. Inténtalo de nuevo.",
     "checksheet": {
       "title": "Hoja de control de admisión médica",
       "subtitle": "Examen de admisión breve alineado con ASPCA/CART — ID de animal: {id} · Especie: {species}",
@@ -342,7 +343,7 @@
       "vet_flagged": "MARCADO PARA VETERINARIO",
       "detected_warning": "⚠️ Se detectaron señales de emergencia: se notificará a un veterinario al guardarlo.",
       "save_button": "Guardar registro de admisión médica",
-      "confirm_title": "Ingesta médica registrada",
+      "confirm_title": "Admisión médica registrada",
       "confirm_complete": "Animal {id} ({species}) chequeo médico completo.",
       "new_exam": "Nuevo examen",
       "vet_required": "⚠️ Se requiere notificación veterinaria",
@@ -549,6 +550,8 @@
       "mixing_warning": "⚠️ Objetivo alcanzado. Las nuevas donaciones cambiarán el indicador de restricción para evitar la mezcla de fondos legalmente restringidos, de acuerdo con el seguimiento de la intención de los donantes.",
       "donate_processing": "Procesando...",
       "donate_submit": "Enviar donación",
+      "donate_error": "No se pudo registrar esta donación. Inténtalo de nuevo.",
+      "you": "Tú",
       "ledger_title": "Libro mayor de transacciones",
       "entries_count": "({count} entradas)",
       "empty_ledger": "Aún no hay donaciones. Envíe una donación arriba para iniciar el libro mayor."
@@ -649,6 +652,7 @@
     "hold_note": "{name} se encuentra actualmente en una breve retención por extravío. Estará listo para ir a casa el {date}.",
     "apply_to_adopt": "Solicita adoptar a {name}",
     "apply_to_foster": "Solicita acoger a {name}",
+    "apply_to_contact": "Escribir al refugio sobre {name}",
     "apply_note": "Esto llega directamente a nuestro coordinador de adopción; no se necesita cuenta. Normalmente respondemos en 24 horas.",
     "form_name": "Nombre completo",
     "form_name_ph": "Juan Pérez",

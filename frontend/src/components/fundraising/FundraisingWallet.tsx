@@ -16,7 +16,9 @@ export interface Transaction {
 }
 
 export interface FundraisingWalletProps {
+  rosterId: number;
   animalId: string;
+  animalName?: string;
   targetGoal: number;
   currentBalance: number;
   /** Optional locale. Falls back to localStorage-driven state. */
@@ -40,24 +42,6 @@ function formatCurrency(cents: number): string {
   }).format(cents);
 }
 
-/** Pseudo-random donor names for simulation. */
-const DONOR_NAMES = [
-  "Alice M.",
-  "Bob K.",
-  "Carol S.",
-  "David L.",
-  "Elena R.",
-  "Frank T.",
-  "Grace W.",
-  "Henry P.",
-  "Iris N.",
-  "James D.",
-];
-
-function randomDonor(): string {
-  return DONOR_NAMES[Math.floor(Math.random() * DONOR_NAMES.length)]!;
-}
-
 // ---------------------------------------------------------------------------
 // Synchronous i18n (6 locales + SSR-safe English fallbacks)
 // ---------------------------------------------------------------------------
@@ -71,7 +55,9 @@ function randomDonor(): string {
 // ---------------------------------------------------------------------------
 
 export function FundraisingWallet({
+  rosterId,
   animalId,
+  animalName,
   targetGoal,
   currentBalance: initialBalance,
   locale: localeProp,
@@ -84,6 +70,7 @@ export function FundraisingWallet({
     "general",
   );
   const [submitting, setSubmitting] = useState(false);
+  const [donateError, setDonateError] = useState(false);
 
   // Locale: prop preferred, fallback to localStorage.
   const [fallbackLocale, setFallbackLocale] = useState("en");
@@ -118,28 +105,40 @@ export function FundraisingWallet({
   const isGoalReached = balance >= targetGoal;
 
   // ── Submit donation ─────────────────────────────────────────────────
-  const handleDonate = useCallback(() => {
+  const handleDonate = useCallback(async () => {
     const amount = parseFloat(donationAmount);
     if (isNaN(amount) || amount <= 0) return;
 
     setSubmitting(true);
-
-    // Simulate network latency
-    setTimeout(() => {
-      const tx: Transaction = {
-        id: nextTxId(),
-        amount,
-        donorName: randomDonor(),
-        type: allocation,
-        timestamp: new Date().toISOString(),
-      };
-
-      setTransactions((prev) => [tx, ...prev]);
-      setBalance((prev) => prev + amount);
+    setDonateError(false);
+    try {
+      const res = await fetch("/api/fundraising/donate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rosterId, amount, allocation }),
+      });
+      if (!res.ok) throw new Error("donate failed");
+      const json = (await res.json()) as { balance?: number };
+      setBalance((prev) =>
+        typeof json.balance === "number" ? json.balance : prev + amount,
+      );
+      setTransactions((prev) => [
+        {
+          id: nextTxId(),
+          amount,
+          donorName: translate(locale, "fundraising.wallet.you"),
+          type: allocation,
+          timestamp: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
       setDonationAmount("");
+    } catch {
+      setDonateError(true);
+    } finally {
       setSubmitting(false);
-    }, 400);
-  }, [donationAmount, allocation]);
+    }
+  }, [allocation, donationAmount, locale, rosterId]);
 
   // ── Transaction count per type ──────────────────────────────────────
   const medicalTotal = useMemo(
@@ -160,7 +159,9 @@ export function FundraisingWallet({
           {t("fundraising.wallet.title")}
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          {t("fundraising.wallet.animal_id", { id: animalId })}
+          {t("fundraising.wallet.animal_id", {
+            id: animalName ? `${animalName} · ${animalId}` : animalId,
+          })}
         </p>
       </div>
 
@@ -289,9 +290,18 @@ export function FundraisingWallet({
           </div>
         )}
 
+        {donateError ? (
+          <p
+            role="alert"
+            className="mb-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800"
+          >
+            {t("fundraising.wallet.donate_error")}
+          </p>
+        ) : null}
+
         <button
           type="button"
-          onClick={handleDonate}
+          onClick={() => void handleDonate()}
           disabled={submitting || !donationAmount || parseFloat(donationAmount) <= 0}
           className="w-full rounded bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
         >

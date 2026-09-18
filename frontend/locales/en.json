@@ -299,6 +299,7 @@
     "hold_note": "{name} is currently in a short stray hold. They will be ready to go home by {date}.",
     "apply_to_adopt": "Apply to adopt {name}",
     "apply_to_foster": "Apply to foster {name}",
+    "apply_to_contact": "Message the shelter about {name}",
     "apply_note": "This goes straight to our adoption coordinator — no account needed. We typically reply within 24 hours.",
     "form_name": "Full name",
     "form_name_ph": "Jane Doe",
@@ -344,6 +345,7 @@
     "compliance_aspca": "ASPCA/CART Exam Aligned",
     "compliance_irs": "IRS § 501(c)(3)",
     "back_to_list": "Back to Medical Records",
+    "save_failed": "Could not save this exam. Try again.",
     "checksheet": {
       "title": "Medical Intake Checksheet",
       "subtitle": "ASPCA / CART-aligned brief intake exam — Animal ID: {id} · Species: {species}",
@@ -557,6 +559,8 @@
       "mixing_warning": "⚠️ Target reached. New donations will switch the restriction flag to prevent legally restricted fund mixing, in accordance with donor intent tracking.",
       "donate_processing": "Processing...",
       "donate_submit": "Submit Donation",
+      "donate_error": "Could not record this donation. Try again.",
+      "you": "You",
       "ledger_title": "Transaction Ledger",
       "entries_count": "({count} entries)",
       "empty_ledger": "No donations yet. Submit a donation above to seed the ledger."

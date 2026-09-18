@@ -1,71 +1,21 @@
-"use client";
+import { notFound } from "next/navigation";
 
-import type { ReactNode } from "react";
-import {
-  MedicalIntakeChecksheet,
-  type MedicalFormData,
-} from "@/src/components/medical/MedicalIntakeChecksheet";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, PawPrint } from "lucide-react";
-import { useI18n } from "@/src/lib/useI18n";
+import dogs from "../../../../data/dogs.json";
+import { parseRosterId } from "@/lib/medicalLog";
+import type { Dog } from "@/src/components/home/types";
+import { MedicalExam } from "@/src/components/medical/MedicalExam";
 
-/**
- * Dynamic medical exam page for a specific animal.
- *
- * Route: /medical/[animalId]
- *
- * The `animalId` is extracted from the URL params. The checksheet
- * collects TPR, weight, microchip status, vaccines, dewormer,
- * topical treatments, and emergency triage signs — all mapping to
- * the Prisma MedicalLog model.
- */
-export default function MedicalExamPage(): ReactNode {
-  const params = useParams();
-  const animalId = params.animalId as string;
-  const { locale, tr } = useI18n();
+export default async function MedicalExamPage({
+  params,
+}: {
+  params: Promise<{ animalId: string }>;
+}) {
+  const { animalId } = await params;
+  const rosterId = parseRosterId(animalId);
+  if (rosterId === null) notFound();
 
-  // Heuristic species hint — replace with DB lookup in production.
-  const speciesHint = animalId.startsWith("CAT-") ? "Cat" : "Dog";
+  const dog = (dogs as Dog[]).find((item) => item.id === rosterId);
+  if (!dog) notFound();
 
-  const handleSave = (data: MedicalFormData): void => {
-    // Production: POST to /api/medical/log
-    // The payload maps 1:1 to the Prisma MedicalLog model:
-    //   weightLbs (Float?), tempPulseResp (Json), microchipScanned (Boolean),
-    //   vaccinesAdministered (Json), dewormerAdministered (Json),
-    //   emergencySignsNoted (Json)
-    console.log("Medical intake payload:", JSON.stringify(data));
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      {/* ── Bar with back button ──────────────────────────── */}
-      <div className="border-b border-slate-200/60 bg-white">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
-          <Link
-            href="/medical"
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {tr("medical.back_to_list")}
-          </Link>
-          <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition">
-            <PawPrint className="h-4 w-4" />
-            <span>RescueHub</span>
-          </Link>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-2xl px-6 py-10">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <MedicalIntakeChecksheet
-            animalId={animalId}
-            species={speciesHint}
-            locale={locale}
-            onSave={handleSave}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return <MedicalExam dog={dog} />;
 }

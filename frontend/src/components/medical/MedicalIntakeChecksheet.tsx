@@ -73,7 +73,7 @@ export interface MedicalIntakeChecksheetProps {
   /** Optional locale. Falls back to localStorage-driven state. */
   locale?: string;
   /** Called with the assembled MedicalFormData on save. */
-  onSave: (data: MedicalFormData) => void;
+  onSave: (data: MedicalFormData) => void | Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -167,8 +167,10 @@ export function MedicalIntakeChecksheet({
       });
     }
 
-    onSave(data);
-    setSaved(true);
+    void Promise.resolve(onSave(data)).then(
+      () => setSaved(true),
+      () => undefined,
+    );
   }, [
     animalId,
     species,

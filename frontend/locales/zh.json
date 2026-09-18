@@ -113,11 +113,11 @@
       "urgent_sponsor": "需要紧急赞助",
       "under_evaluation": "评估中"
     },
-    "meet_name": "认识{name}",
+    "meet_name": "认识 {name}",
     "still_available": "仍可领养",
     "on_hold": "等待中",
     "needs_home_by": "需在{date}前找到家",
-    "adopt": "Adopt",
+    "adopt": "领养",
     "foster": "寄养",
     "donate": "捐助",
     "contact_shelter": "联系收容所"
@@ -321,6 +321,7 @@
     "compliance_aspca": "ASPCA/CART 考试一致",
     "compliance_irs": "美国国税局§ 501(c)(3)",
     "back_to_list": "返回医疗记录",
+    "save_failed": "无法保存本次检查。请再试一次。",
     "checksheet": {
       "title": "医疗摄入检查表",
       "subtitle": "ASPCA / CART 一致的简短入学考试 — 动物 ID：{id} · 物种：{species}",
@@ -342,7 +343,7 @@
       "vet_flagged": "兽医标记",
       "detected_warning": "⚠️ 检测到紧急迹象 - 保存后将通知兽医。",
       "save_button": "保存就诊记录",
-      "confirm_title": "记录医疗摄入量",
+      "confirm_title": "已记录医疗入院检查",
       "confirm_complete": "动物{id} ({species}) 体检完成。",
       "new_exam": "新考试",
       "vet_required": "⚠️ 需要兽医通知",
@@ -549,6 +550,8 @@
       "mixing_warning": "⚠️目标达成。根据捐赠者意图跟踪，新的捐赠将切换限制标志，以防止受到法律限制的资金混合。",
       "donate_processing": "加工...",
       "donate_submit": "提交捐款",
+      "donate_error": "无法记录这笔捐款。请再试一次。",
+      "you": "我",
       "ledger_title": "交易账本",
       "entries_count": "（{count}条目）",
       "empty_ledger": "还没有捐款。在上面提交捐款来为账本播种。"
@@ -649,6 +652,7 @@
     "hold_note": "{name} 目前处于短暂的流浪收容期。他们将于 {date} 准备好回家。",
     "apply_to_adopt": "申请领养 {name}",
     "apply_to_foster": "申请寄养 {name}",
+    "apply_to_contact": "就 {name} 联系收容所",
     "apply_note": "此申请将直接发送给我们的领养协调员，无需账户。我们通常会在 24 小时内回复。",
     "form_name": "全名",
     "form_name_ph": "张三",

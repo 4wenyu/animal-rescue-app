@@ -1,58 +1,34 @@
-"use client";
+import { notFound } from "next/navigation";
 
-import type { ReactNode } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { FundraisingWallet } from "@/src/components/fundraising/FundraisingWallet";
-import { ChevronLeft } from "lucide-react";
-import { useI18n } from "@/src/lib/useI18n";
+import dogs from "../../../../data/dogs.json";
+import { campaignGoal } from "@/lib/fundraisingDonate";
+import { parseRosterId, rosterAnimalId } from "@/lib/medicalLog";
+import { prisma } from "@/lib/prisma";
+import type { Dog } from "@/src/components/home/types";
+import { FundraisingCampaign } from "@/src/components/fundraising/FundraisingCampaign";
 
-/**
- * Dynamic fundraising campaign page for a specific animal.
- *
- * Route: /fundraising/[animalId]
- *
- * Heuristic default goals:
- *   $1,500 for standard intake animals
- *   $5,000 for VET FLAGGED animals (animalId starting with "VET-")
- */
-export default function FundraisingPage(): ReactNode {
-  const params = useParams<{ animalId: string }>();
-  const animalId = params.animalId;
-  const { locale, tr } = useI18n();
+export default async function FundraisingAnimalPage({
+  params,
+}: {
+  params: Promise<{ animalId: string }>;
+}) {
+  const { animalId } = await params;
+  const rosterId = parseRosterId(animalId);
+  if (rosterId === null) notFound();
 
-  // Heuristic: VET- prefix = flagged animal with higher target
-  const isVetFlagged = animalId.startsWith("VET-");
-  const targetGoal = isVetFlagged ? 5000 : 1500;
+  const dog = (dogs as Dog[]).find((item) => item.id === rosterId);
+  if (!dog) notFound();
 
-  const handleDonate = (_data: {
-    amount: number;
-    allocation: "medical" | "general";
-  }): void => {
-    // Production: POST to /api/fundraising/donate
-    // The payload maps to FundraisingWallet mutations:
-    //   animalId: string, amount: number, restrictionType: FundType
-    console.log("Donation payload:", JSON.stringify({ animalId, ..._data }));
-  };
+  const wallet = await prisma.fundraisingWallet.findUnique({
+    where: { animalId: rosterAnimalId(dog.id) },
+    select: { currentBalance: true },
+  });
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      {/* ── Back button ──────────────────────────────────────── */}
-      <div className="mb-4">
-        <Link
-          href="/fundraising"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          {tr("fundraising.back_to_list")}
-        </Link>
-      </div>
-      <FundraisingWallet
-        animalId={animalId}
-        targetGoal={targetGoal}
-        currentBalance={0}
-        locale={locale}
-      />
-    </div>
+    <FundraisingCampaign
+      dog={dog}
+      goal={campaignGoal(dog.medicalStatus === "Needs Review")}
+      currentBalance={wallet ? Number(wallet.currentBalance) : 0}
+    />
   );
 }

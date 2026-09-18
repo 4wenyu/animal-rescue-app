@@ -3,7 +3,7 @@
  * (app/adopt/[id]).
  */
 
-export type InterestType = "ADOPT" | "FOSTER";
+export type InterestType = "ADOPT" | "FOSTER" | "CONTACT";
 
 export type FormStatus = "idle" | "success" | "error";
 

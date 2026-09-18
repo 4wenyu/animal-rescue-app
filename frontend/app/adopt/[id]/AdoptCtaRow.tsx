@@ -52,15 +52,14 @@ export function AdoptCtaRow({
         <Heart className="h-4 w-4" />
         {tr("adoption_feed.donate")}
       </Link>
-      <a
-        href={`mailto:adopt@rescuehub.org?subject=${encodeURIComponent(
-          `Interested in ${animal.name} (${animal.id})`,
-        )}`}
+      <button
+        type="button"
+        onClick={() => onStartApplication("CONTACT")}
         className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
       >
         <Mail className="h-4 w-4" />
         {tr("adoption_feed.contact_shelter")}
-      </a>
+      </button>
       {!available && (
         <p className="text-xs leading-relaxed text-slate-500 sm:col-span-2">
           {trWithFallback(tr, "adopt.hold_cta_note", { name: animal.name })}

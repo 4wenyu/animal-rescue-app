@@ -35,7 +35,9 @@ export function AdoptionForm({
         <h2 className="text-base font-bold text-slate-900">
           {interestType === "ADOPT"
             ? tr("adopt.apply_to_adopt", { name: animal.name })
-            : tr("adopt.apply_to_foster", { name: animal.name })}
+            : interestType === "FOSTER"
+              ? tr("adopt.apply_to_foster", { name: animal.name })
+              : tr("adopt.apply_to_contact", { name: animal.name })}
         </h2>
         <button
           type="button"

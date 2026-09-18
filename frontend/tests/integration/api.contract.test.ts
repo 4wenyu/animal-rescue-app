@@ -87,6 +87,7 @@ describe("authenticated APIs reject anonymous callers", () => {
     "/api/shares",
     "/api/outreach/opt-in",
     "/api/outreach/generate",
+    "/api/medical/log",
   ])("POST %s → 401", async (path) => {
     expect((await postJson(path, {})).status).toBe(401);
   });
@@ -130,6 +131,10 @@ describe("input validation", () => {
 
     // Missing contact fields — a 400, and never a 500.
     expect(res.status).toBe(400);
+  });
+
+  it("rejects an empty fundraising pledge with 400, not 500", async () => {
+    expect((await postJson("/api/fundraising/donate", {})).status).toBe(400);
   });
 
   it("rejects a client-supplied system message to the public chatbot", async () => {
