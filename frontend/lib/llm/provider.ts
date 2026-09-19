@@ -24,6 +24,20 @@ function firstKey(...names: string[]): string | undefined {
   return undefined;
 }
 
+/** Official OpenAI-compatible origin. `.cc` does not resolve; `/v1` is required. */
+export const TEAMOROUTER_DEFAULT_BASE_URL = "https://api.teamorouter.com/v1";
+
+export function normalizeTeamoBaseUrl(raw?: string | null): string {
+  if (!raw?.trim()) return TEAMOROUTER_DEFAULT_BASE_URL;
+  let url = raw.trim().replace(/\/+$/, "");
+  url = url.replace(
+    /^(https?:\/\/)api\.teamorouter\.cc\b/i,
+    "$1api.teamorouter.com",
+  );
+  if (!/\/v1$/i.test(url)) url = `${url}/v1`;
+  return url;
+}
+
 export function hasAnyLlmKey(): boolean {
   return Boolean(
     firstKey("TEAMOROUTER_API_KEY") ||
@@ -38,8 +52,7 @@ export function resolveChatModel(): ResolvedChatModel | null {
     const openai = createOpenAI({
       name: "teamorouter",
       apiKey: teamo,
-      baseURL:
-        firstKey("TEAMOROUTER_BASE_URL") ?? "https://api.teamorouter.com/v1",
+      baseURL: normalizeTeamoBaseUrl(firstKey("TEAMOROUTER_BASE_URL")),
     });
     const id = firstKey("TEAMOROUTER_MODEL") ?? "gemini-3.5-flash";
     return { model: openai.chat(id), via: "teamorouter" };

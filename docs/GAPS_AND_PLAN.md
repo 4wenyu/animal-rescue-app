@@ -20,7 +20,7 @@ Last updated: 2026-09-19. This supersedes the August review docs in `docs/archiv
 
 ## Still operator / legal (not code)
 
-1. Put TeamoRouter / FreeLLMAPI / Gemini keys in `frontend/.env.local` and Cursor Models (see `CURSOR_AND_LLM_SETUP.md`). Rotate any key that ever sat in chat.
+1. Put TeamoRouter / FreeLLMAPI / Gemini keys in `frontend/.env.local` (see `CURSOR_AND_LLM_SETUP.md`). Cursor Desktop API Keys are optional and do **not** power the site. Rotate any key that ever sat in chat.
 2. `npm run db:seed` with strong `SEED_*_PASSWORD` values; change them before a shared preview URL.
 3. Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` or accept record-only outreach.
 4. File nonprofit articles, EIN, Form 1023-EZ — see `NONPROFIT_SETUP.md`.

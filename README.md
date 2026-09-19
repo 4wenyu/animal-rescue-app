@@ -65,7 +65,7 @@ FREELLMAPI_MODEL=auto
 GOOGLE_GENERATIVE_AI_API_KEY=…
 ```
 
-Priority: TeamoRouter → FreeLLMAPI → Gemini. Cursor Desktop setup is in `docs/CURSOR_AND_LLM_SETUP.md`.
+Priority: TeamoRouter → FreeLLMAPI → Gemini. Cursor Desktop **API Keys** do not feed this app — only `.env.local` does. Official TeamoRouter host is `api.teamorouter.com/v1` (`.cc` does not resolve). Probe without printing secrets: `npm run llm:probe`. Full Desktop vs Cloud vs app map: `docs/CURSOR_AND_LLM_SETUP.md`.
 
 ## Quality gates
 
