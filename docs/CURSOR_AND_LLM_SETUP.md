@@ -94,25 +94,82 @@ This Cloud Agent does not read Desktop API Keys. It has no `DATABASE_URL` and no
 
 Leave Cloud Agent on the default Cursor model.
 
-## 4. Desktop does **not** pick up this branch automatically
+## 4. Handoff: Cloud Agent → Cursor Desktop
 
-Opening Cursor Desktop on your existing local clone does **not** include this work until that clone has the branch.
+Nothing needs to be copied off this Cloud VM. Every commit is already on GitHub:
+
+- Repo: `https://github.com/4wenyu/animal-rescue-app`
+- Branch: `cursor/rescuehub-mvp-loop-cfb0`
+- PR: `https://github.com/4wenyu/animal-rescue-app/pull/1`
+
+`.env.local` never lived here and should never be copied from a cloud box. Keep keys only on your laptop.
+
+### Open the same repo in Cursor Desktop
+
+1. On your laptop, open Cursor Desktop.
+2. **File → Open Folder** on your existing `animal-rescue-app` clone (the one you launched this Cloud Agent from).  
+   Or click **Open in Cursor** on the PR / Cloud Agent page — that still opens *your* clone, which may still be on `main`.
+3. In Desktop’s terminal:
 
 ```bash
+git status
+# if you have leftover local edits you want to keep:
+#   git stash -u
 git fetch origin cursor/rescuehub-mvp-loop-cfb0
 git checkout cursor/rescuehub-mvp-loop-cfb0
+git pull origin cursor/rescuehub-mvp-loop-cfb0
+```
+
+`git log -1 --oneline` should mention the MVP loop or the TeamoRouter Desktop handoff. Confirm `frontend/scripts/probe-llm.mjs` exists.
+
+Fresh clone instead of an existing folder:
+
+```bash
+git clone https://github.com/4wenyu/animal-rescue-app.git
+cd animal-rescue-app
+git checkout cursor/rescuehub-mvp-loop-cfb0
+```
+
+Then **File → Open Folder** on that directory.
+
+### Local env (this is what the Cloud Agent lacked)
+
+Reuse your existing `frontend/.env.local` if you already have Neon/`DATABASE_URL`. If the file is missing:
+
+```bash
 cd frontend
-cp .env.example .env.local   # then fill keys + DATABASE_URL locally
+cp .env.example .env.local
+```
+
+Fill, locally only:
+
+- `DATABASE_URL` — same Neon string you used before, or local Postgres
+- `AUTH_SECRET` — `openssl rand -base64 32`
+- `TEAMOROUTER_API_KEY` + `TEAMOROUTER_BASE_URL=https://api.teamorouter.com/v1`  
+  (or FreeLLMAPI / Gemini; one gateway is enough)
+- `SEED_ADMIN_PASSWORD` and `SEED_STAFF_PASSWORD` — each ≥ 12 chars; used only by `npm run db:seed`
+
+Do not commit `.env.local`. Do not paste those values into Desktop Agent chat.
+
+```bash
+cd frontend
 npm install
 npx prisma generate --schema=../prisma/schema.prisma
-npm run db:seed
+npx prisma migrate deploy --schema=../prisma/schema.prisma
+SEED_ADMIN_PASSWORD='your-local-admin-pass' SEED_STAFF_PASSWORD='your-local-staff-pass' npm run db:seed
 npm run llm:probe
 npm run dev
 ```
 
-Then: home → adopt Oscar (switch to 中文) → register (preview +100 tokens) → Find My Pet.
+Open [http://localhost:3000](http://localhost:3000). Walk: home → adopt Oscar (switch to 中文) → register (preview +100 tokens) → Find My Pet.
 
-`main` without this checkout is still the pre-MVP-loop tree. Cursor API Keys and a leftover `.env.local` do not replace `git checkout`.
+### Keep working in Desktop Agent
+
+After the branch is checked out, use **Cursor Desktop Agent / Chat in that folder**. It sees the MVP-loop code, your `.env.local`, and a real database. Leave **Use OpenAI API Key** off unless you intentionally want the *editor* to call TeamoRouter.
+
+You can stop or archive this Cloud Agent once Desktop is running. Further commits go on `cursor/rescuehub-mvp-loop-cfb0` until the PR merges.
+
+`main` without this checkout is still the pre-MVP-loop tree. Cursor API Keys do not replace `git checkout`.
 
 ## 5. Rate limits
 

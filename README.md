@@ -32,6 +32,8 @@ Sample animals live in `frontend/data/dogs.json` and are seeded into Postgres (`
 
 ## Quick start
 
+Moving from a Cloud Agent to Cursor Desktop: fetch `cursor/rescuehub-mvp-loop-cfb0` (PR [#1](https://github.com/4wenyu/animal-rescue-app/pull/1)). Do not copy the cloud VM. Step-by-step: [`docs/CURSOR_AND_LLM_SETUP.md`](docs/CURSOR_AND_LLM_SETUP.md) §4.
+
 ```bash
 cd frontend
 cp .env.example .env.local   # then fill secrets locally — never commit them
