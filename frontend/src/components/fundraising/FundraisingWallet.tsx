@@ -117,8 +117,17 @@ export function FundraisingWallet({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ rosterId, amount, allocation }),
       });
-      if (!res.ok) throw new Error("donate failed");
-      const json = (await res.json()) as { balance?: number };
+      const json = (await res.json()) as {
+        balance?: number;
+        checkoutUrl?: string;
+        preview?: boolean;
+        message?: string;
+      };
+      if (!res.ok) throw new Error(json.message ?? "donate failed");
+      if (json.checkoutUrl) {
+        window.location.href = json.checkoutUrl;
+        return;
+      }
       setBalance((prev) =>
         typeof json.balance === "number" ? json.balance : prev + amount,
       );
@@ -298,6 +307,9 @@ export function FundraisingWallet({
             {t("fundraising.wallet.donate_error")}
           </p>
         ) : null}
+        <p className="mb-3 text-xs leading-relaxed text-slate-500">
+          {t("fundraising.wallet.preview_note")}
+        </p>
 
         <button
           type="button"

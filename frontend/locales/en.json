@@ -58,14 +58,17 @@
       "team": "Our Team",
       "partners": "Partners",
       "careers": "Volunteer & Careers"
-    }
+    },
+    "share_review": "Share review"
   },
   "hero": {
     "badge": "Legally Compliant Platform",
     "headline": "Every Second Counts. Streamline Compliance, Save More Lives.",
     "cta_crowdfunding": "Emergency Crowdfunding",
     "cta_surrender": "Public Surrender Portal",
-    "cta_lost_pet": "I lost a pet"
+    "cta_lost_pet": "I lost a pet",
+    "cta_help": "I want to help",
+    "two_doors": "Lost a pet? Start a search. Want to help? Meet who needs a home."
   },
   "play": {
     "title": "Who needs a home?",
@@ -311,7 +314,12 @@
     "form_submit": "Send application",
     "form_submitting": "Sending…",
     "form_success": "Application received — our adoption coordinator will be in touch shortly.",
-    "form_error": "Something went wrong. Please try again in a moment."
+    "form_error": "Something went wrong. Please try again in a moment.",
+    "next_steps": "What happens next",
+    "next_steps_body": "We reply within 24 hours with hours, next steps, and how to meet {name}.",
+    "share": "Share",
+    "poster": "Download a share image",
+    "sticky_adopt": "Adopt {name}"
   },
   "sponsors": {
     "title": "Corporate Sponsors",
@@ -563,7 +571,8 @@
       "you": "You",
       "ledger_title": "Transaction Ledger",
       "entries_count": "({count} entries)",
-      "empty_ledger": "No donations yet. Submit a donation above to seed the ledger."
+      "empty_ledger": "No donations yet. Submit a donation above to seed the ledger.",
+      "preview_note": "Preview pledges are recorded on the demo ledger and do not charge a card. Live card checkout requires Stripe."
     }
   },
   "footer": {
@@ -764,5 +773,33 @@
     "hold_sending_in": "Sends in {s}s — you can still undo",
     "hold_send_now": "Send now",
     "hold_undo": "Undo"
+  },
+  "stay": {
+    "streak": "You've checked in {days} days. {name} is still here.",
+    "streak_start": "Come back tomorrow — {name} is still waiting."
+  },
+  "ambient": {
+    "on": "Calm sound on",
+    "off": "Calm sound off"
+  },
+  "shares": {
+    "review_empty": "No pending shares. The 10-share free search unlocks when staff verify real posts.",
+    "review_verify": "Verify",
+    "review_reject": "Reject",
+    "review_error": "Could not update that share."
+  },
+  "personalities": {
+    "Buddy": "A gentle, people-loving companion who brightens every room.",
+    "Max": "Loyal and attentive — bonds deeply once he knows he can trust you.",
+    "Bella": "A social butterfly who adores playtime and cuddles in equal measure.",
+    "Luna": "Curious and lively, always ready for the next walk together.",
+    "Charlie": "Easygoing and food-motivated — a cheerful sidekick for any home.",
+    "Daisy": "Friendly and eager to make you proud on every outing.",
+    "Rocky": "A calm, affectionate pal who thrives with a patient family.",
+    "Molly": "Sociable and sweet, happiest when she's close to her people.",
+    "Duke": "Steady and loyal, looking for an experienced, loving home.",
+    "Sadie": "A warm-hearted girl who loves slow mornings and kind voices.",
+    "Oscar": "A curious little explorer with a playful, fearless streak.",
+    "Lola": "A calm senior lady who loves slow walks and warm laps."
   }
 }

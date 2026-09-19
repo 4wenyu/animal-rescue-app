@@ -1,4 +1,20 @@
 # Changelog
+## v3.3.0 — MVP loop close (2026-09-19)
+
+### Added
+- Server-side `POST /api/tokens/sponsor-search` (513(i) acknowledgment → +100 / −100). Clients no longer mint.
+- TeamoRouter / FreeLLMAPI / Gemini router for `/api/chat` and `/api/chat-intake`.
+- Staff share review at `/shares/review` (10 verified shares still grant a free search).
+- Adopt profile conversion pass, share poster, sticky Adopt, translated personalities.
+- Home two-door CTAs, daily streak, opt-in ambient sound.
+- Roster prefers Prisma; seed copies `dogs.json`. Petfinder sync stub. Stripe checkout when keyed.
+- Apache-2.0 LICENSE, nonprofit + LLM setup docs, gap plan. Stale reviews archived.
+
+### Fixed
+- Find My Pet funding path that posted client `EARN` against a SPEND-only API.
+- Fundraising live mode no longer pretends a card was charged without Stripe.
+
+---
 ## v3.2.0 — Docs-Compliance Review & EPIC 3 Foundation Hardening (2026-08-23)
 
 ### Fixed

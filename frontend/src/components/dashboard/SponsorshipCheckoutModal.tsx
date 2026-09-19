@@ -129,42 +129,6 @@ type ModalPhase =
   | "success"
   | "insufficient_funds";
 
-interface TxResponse {
-  ok: boolean;
-  idempotentReplay?: boolean;
-  wallet: { cachedBalance: number };
-  transaction: {
-    txnId: string;
-    direction: "EARN" | "SPEND" | "EXPIRE" | "REFUND";
-    actionType: string;
-    amount: number;
-    balanceAfter: number;
-  };
-}
-
-/* -------------------------------------------------------------------------- */
-/* POST /api/tokens/transaction helper                                         */
-/* -------------------------------------------------------------------------- */
-
-async function postTransaction(
-  body: Record<string, unknown>
-): Promise<TxResponse> {
-  const res = await fetch("/api/tokens/transaction", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify(body),
-  });
-  const json = (await res.json().catch(() => null)) as TxResponse | null;
-  if (!res.ok || !json) {
-    const message =
-      (json as unknown as { message?: string } | null)?.message ??
-      `HTTP ${res.status}`;
-    throw new Error(message);
-  }
-  return json;
-}
-
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -274,58 +238,38 @@ export function SponsorshipCheckoutModal({
     if (phase === "insufficient_funds") return;
 
     setError(null);
-
-    // ── Step 1: Sponsorship view credit (+50) ────────────────────────────
     setPhase("issuing_credit");
-    let creditTxnId = "";
     try {
-      const creditRes = await postTransaction({
-        direction: "EARN",
-        actionType: "SPONSOR_VIEW_CREDIT_EARN",
-        amount: SPONSOR_CREDIT_AMOUNT,
-        idempotencyKey: creditKeyRef.current,
-        currency: "USD",
-        notes: "Sponsor acknowledgment credit — Chewy (Lost Pet Search program).",
+      const res = await fetch("/api/tokens/sponsor-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          creditKey: creditKeyRef.current,
+          spendKey: spendKeyRef.current,
+        }),
       });
-      creditTxnId = creditRes.transaction.txnId;
+      const json = (await res.json().catch(() => null)) as {
+        creditTxnId?: string;
+        spendTxnId?: string;
+        newBalance?: number;
+        message?: string;
+      } | null;
+      if (!res.ok || !json?.spendTxnId) {
+        throw new Error(json?.message ?? `HTTP ${res.status}`);
+      }
+      setPhase("success");
+      onSearchGranted({
+        creditTxnId: json.creditTxnId ?? "",
+        spendTxnId: json.spendTxnId,
+        newBalance: json.newBalance ?? currentBalance,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown error";
-      setError(`Could not issue sponsor credit: ${msg}`);
+      setError(`Could not underwrite this search: ${msg}`);
       setPhase("viewing_sponsor");
-      return;
     }
-
-    // ── Step 2: Lost Pet Search spend (-100) ─────────────────────────────
-    setPhase("spending");
-    let spendTxnId = "";
-    let newBalance = 0;
-    try {
-      const spendRes = await postTransaction({
-        direction: "SPEND",
-        actionType: "LOST_PET_SEARCH_SPEND",
-        amount: SEARCH_FEE_AMOUNT,
-        idempotencyKey: spendKeyRef.current,
-        currency: "USD",
-        notes: "Lost Pet Search service — grant + self-funded.",
-      });
-      spendTxnId = spendRes.transaction.txnId;
-      newBalance = spendRes.wallet.cachedBalance;
-    } catch (e) {
-      // The +50 credit is committed; we surface the failure cleanly and let
-      // the user retry Step 2 only (idempotencyKey stabilizes against double
-      // charging). We do NOT auto-reverse — admin can run a manual reversal.
-      const msg = e instanceof Error ? e.message : "Unknown error";
-      setError(
-        `Sponsor credit was issued, but the search fee spend failed: ${msg}. ` +
-          "You can retry to complete the search."
-      );
-      setPhase("viewing_sponsor");
-      return;
-    }
-
-    setPhase("success");
-    onSearchGranted({ creditTxnId, spendTxnId, newBalance });
-  }, [phase, onSearchGranted]);
+  }, [phase, onSearchGranted, currentBalance]);
 
   const handleAcknowledgeAndContinue = useCallback(() => {
     if (!countdownComplete) return;

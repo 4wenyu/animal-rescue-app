@@ -7,6 +7,8 @@ import { ArrowRight, Heart, Search, Shield } from "lucide-react";
 import { HeroMesh } from "@/src/components/HeroMesh";
 import { PawParticles } from "@/src/components/PawParticles";
 import { FeaturedAnimalCard } from "./FeaturedAnimalCard";
+import { AmbientToggle } from "./AmbientToggle";
+import { StayLoopBanner } from "./StayLoopBanner";
 import { useHomeLocale } from "./locale-store";
 import type { Dog } from "./types";
 
@@ -67,37 +69,47 @@ export function Hero({ featured }: { featured: Dog | null }) {
             >
               {tr("site.description")}
             </motion.p>
+            <StayLoopBanner name={featured?.name ?? "RescueHub"} />
 
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+              className="mt-8 grid gap-3 sm:grid-cols-2"
             >
               <Link
                 href="/lost-pet-intake"
-                className="inline-flex items-center gap-2 rounded-xl bg-(--color-sidebar) px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-700/25 transition hover:bg-(--color-sidebar-hover) hover:shadow-xl active:scale-[0.97]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--color-sidebar) px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-slate-700/25 transition hover:bg-(--color-sidebar-hover) hover:shadow-xl active:scale-[0.97]"
               >
                 <Search className="h-4 w-4" />
                 {tr("hero.cta_lost_pet")}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/fundraising"
-                className="inline-flex items-center gap-2 rounded-xl bg-(--color-accent) px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-(--color-accent-hover) hover:shadow-xl active:scale-[0.97]"
+                href="#play"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--color-accent) px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-(--color-accent-hover) hover:shadow-xl active:scale-[0.97]"
               >
                 <Heart className="h-4 w-4" />
-                {tr("hero.cta_crowdfunding")}
+                {tr("hero.cta_help")}
                 <ArrowRight className="h-4 w-4" />
               </Link>
+            </motion.div>
+            <p className="mt-3 text-sm text-slate-500">{tr("hero.two_doors")}</p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Link
                 href="/intake/public"
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-transparent px-6 py-3 text-sm font-semibold text-(--color-text-primary) shadow-sm transition hover:bg-white/50 active:scale-[0.97]"
+                className="text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline"
               >
-                <Heart className="h-4 w-4" />
                 {tr("hero.cta_surrender")}
               </Link>
-            </motion.div>
+              <Link
+                href="/fundraising"
+                className="text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline"
+              >
+                {tr("hero.cta_crowdfunding")}
+              </Link>
+              <AmbientToggle />
+            </div>
           </div>
         </div>
       </div>

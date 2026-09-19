@@ -1,7 +1,7 @@
-import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
 import { z } from "zod";
 
+import { missingLlmMessage, resolveChatModel } from "@/lib/llm/provider";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { chatSystemPrompt, type ChatSurface } from "@/lib/chatPrompts";
 
@@ -76,13 +76,19 @@ export async function POST(req: Request) {
     }
 
     const surface: ChatSurface = parsed.data.surface ?? "general";
+    const routed = resolveChatModel();
+    if (!routed) {
+      return Response.json({ error: missingLlmMessage() }, { status: 503 });
+    }
     const result = await streamText({
-      model: google("gemini-3.5-flash"),
+      model: routed.model,
       system: chatSystemPrompt(surface),
       messages: parsed.data.messages,
     });
 
-    return result.toTextStreamResponse();
+    const response = result.toTextStreamResponse();
+    response.headers.set("x-rescuehub-llm", routed.via);
+    return response;
   } catch (error) {
     // Log server-side; never echo internals (e.g. String(error)) to the client.
     console.error("🔥 FATAL API ERROR:", error);

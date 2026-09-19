@@ -20,7 +20,9 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { catalogDogs } from "@/lib/roster";
 import { deliverApprovedDraft } from "@/lib/services/outreachDelivery";
+import { regionMatchNote, regionsOverlap } from "@/lib/services/regionMatch";
 
 export type HelpArea =
   | "DONATE"
@@ -45,6 +47,7 @@ export interface NearAnimal {
  * surface a hold-pending animal for adoption).
  */
 export async function findOutreachEligibleAnimals(limit = 3): Promise<NearAnimal[]> {
+  const catalog = catalogDogs();
   const animals = await prisma.animal.findMany({
     where: { statutoryHoldCleared: true },
     select: {
@@ -55,15 +58,25 @@ export async function findOutreachEligibleAnimals(limit = 3): Promise<NearAnimal
       custodianOrgId: true,
     },
     orderBy: { intakeTimestamp: "desc" },
-    take: limit,
+    take: limit * 3,
   });
-  return animals.map((a) => ({
-    animalId: a.animalId,
-    breed: a.breedDesignation,
-    medicalStatus: a.medicalStatus,
-    strayHoldCleared: a.statutoryHoldCleared,
-    locationHint: null,
-  }));
+  const mapped = animals.map((a) => {
+    const match = /^roster-(\d+)$/.exec(a.animalId);
+    const catalogRow = match
+      ? catalog.find((dog) => dog.id === Number(match[1]))
+      : undefined;
+    return {
+      animalId: a.animalId,
+      breed: a.breedDesignation,
+      medicalStatus: a.medicalStatus,
+      strayHoldCleared: a.statutoryHoldCleared,
+      locationHint:
+        catalogRow?.city ??
+        process.env.NEXT_PUBLIC_PILOT_REGION ??
+        "Harborview",
+    };
+  });
+  return mapped.slice(0, limit);
 }
 
 /** Honest copy builder — never pretends to be a human volunteer. */
@@ -75,10 +88,9 @@ export function buildOutreachCopy(
     ? `a ${animal.breed} at a nearby partner shelter`
     : "a local animal that needs help right now";
 
-  // Stage-1 honesty: the matcher does NOT actually use the profile's region —
-  // it cycles the latest hold-cleared animals. The copy must say so.
-  const sourceTail =
-    "autonomous agent — stage 1, first available animal (region matching not yet implemented)";
+  const sourceTail = animal?.locationHint
+    ? `autonomous agent — stage 1, ${animal.locationHint}`
+    : "autonomous agent — stage 1, first eligible hold-cleared animal";
 
   switch (area) {
     case "DONATE":
@@ -154,15 +166,25 @@ export async function generateOutreachDrafts(limit = 5): Promise<number> {
     const area: HelpArea =
       (profile.helpAreas[0] as HelpArea | undefined) ?? "DONATE";
 
-    // Assign the nearest eligible animal, cycling by index.
-    const animal = animals[created % Math.max(1, animals.length)] ?? null;
-    const copy = buildOutreachCopy(animal, area);
+    const matched =
+      animals.find((candidate) =>
+        regionsOverlap(profile.regionLabel, candidate.locationHint),
+      ) ??
+      animals[created % Math.max(1, animals.length)] ??
+      null;
+    const note = regionMatchNote(profile.regionLabel, matched?.locationHint);
+    const copy = buildOutreachCopy(
+      matched
+        ? { ...matched, locationHint: note }
+        : null,
+      area,
+    );
 
     await prisma.outreachDraft.create({
       data: {
         profileId: profile.profileId,
         userId: profile.userId,
-        animalId: animal?.animalId ?? null,
+        animalId: matched?.animalId ?? null,
         helpAsk: area,
         subject: copy.subject,
         body: copy.body,

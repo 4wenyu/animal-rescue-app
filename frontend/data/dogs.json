@@ -11,7 +11,8 @@
     "imageUrl": "https://placedog.net/400/400?id=1",
     "strayHoldExpiresAt": "2026-08-24T16:31:40.929Z",
     "sex": "Male",
-    "personality": "A gentle, people-loving companion who brightens every room."
+    "personality": "A gentle, people-loving companion who brightens every room.",
+    "city": "Harborview"
   },
   {
     "id": 2,
@@ -25,7 +26,8 @@
     "imageUrl": "https://placedog.net/400/400?id=2",
     "strayHoldExpiresAt": "2026-08-23T16:01:40.929Z",
     "sex": "Male",
-    "personality": "Loyal and attentive — bonds deeply once he knows he can trust you."
+    "personality": "Loyal and attentive — bonds deeply once he knows he can trust you.",
+    "city": "Harborview"
   },
   {
     "id": 3,
@@ -39,7 +41,8 @@
     "imageUrl": "https://placedog.net/400/400?id=3",
     "strayHoldExpiresAt": "2026-08-21T16:31:40.929Z",
     "sex": "Female",
-    "personality": "A social butterfly who adores playtime and cuddles in equal measure."
+    "personality": "A social butterfly who adores playtime and cuddles in equal measure.",
+    "city": "Harborview"
   },
   {
     "id": 4,
@@ -53,7 +56,8 @@
     "imageUrl": "https://placedog.net/400/400?id=4",
     "strayHoldExpiresAt": "2026-08-26T04:31:40.929Z",
     "sex": "Female",
-    "personality": "Curious and energetic, always up for the next adventure."
+    "personality": "Curious and lively, always ready for the next walk together.",
+    "city": "Harborview"
   },
   {
     "id": 5,
@@ -67,7 +71,8 @@
     "imageUrl": "https://placedog.net/400/400?id=5",
     "strayHoldExpiresAt": "2026-08-17T16:31:40.929Z",
     "sex": "Male",
-    "personality": "Easygoing and food-motivated — a cheerful sidekick for any home."
+    "personality": "Easygoing and food-motivated — a cheerful sidekick for any home.",
+    "city": "Harborview"
   },
   {
     "id": 6,
@@ -81,7 +86,8 @@
     "imageUrl": "https://placedog.net/400/400?id=6",
     "strayHoldExpiresAt": "2026-08-25T16:31:40.929Z",
     "sex": "Female",
-    "personality": "Sweet-natured and calm, happiest with a cozy spot and a kind word."
+    "personality": "Sweet-natured and calm, happiest with a cozy spot and a kind word.",
+    "city": "Harborview"
   },
   {
     "id": 7,
@@ -95,7 +101,8 @@
     "imageUrl": "https://placedog.net/400/400?id=7",
     "strayHoldExpiresAt": "2026-08-26T14:31:40.929Z",
     "sex": "Male",
-    "personality": "A goofy, affectionate boy with a big heart and a bigger smile."
+    "personality": "A goofy, affectionate boy with a big heart and a bigger smile.",
+    "city": "Harborview"
   },
   {
     "id": 8,
@@ -109,7 +116,8 @@
     "imageUrl": "https://placedog.net/400/400?id=8",
     "strayHoldExpiresAt": "2026-08-12T16:31:40.929Z",
     "sex": "Male",
-    "personality": "Quiet and gentle, a steady companion who warms up beautifully."
+    "personality": "Quiet and gentle, a steady companion who warms up beautifully.",
+    "city": "Harborview"
   },
   {
     "id": 9,
@@ -123,7 +131,8 @@
     "imageUrl": "https://placedog.net/400/400?id=9",
     "strayHoldExpiresAt": "2026-08-19T16:31:40.929Z",
     "sex": "Female",
-    "personality": "Bright and eager to please, with a soft spot for snuggles."
+    "personality": "Bright and eager to please, with a soft spot for snuggles.",
+    "city": "Harborview"
   },
   {
     "id": 10,
@@ -137,7 +146,8 @@
     "imageUrl": "https://placedog.net/400/400?id=10",
     "strayHoldExpiresAt": "2026-08-23T15:01:40.929Z",
     "sex": "Male",
-    "personality": "Confident and protective, looking for an experienced, loving home."
+    "personality": "Confident and protective, looking for an experienced, loving home.",
+    "city": "Harborview"
   },
   {
     "id": 11,
@@ -151,7 +161,8 @@
     "imageUrl": "https://placedog.net/400/400?id=11",
     "strayHoldExpiresAt": "2026-08-23T16:31:40.929Z",
     "sex": "Male",
-    "personality": "A curious little explorer with a playful, fearless streak."
+    "personality": "A curious little explorer with a playful, fearless streak.",
+    "city": "Harborview"
   },
   {
     "id": 12,
@@ -165,6 +176,7 @@
     "imageUrl": "https://placedog.net/400/400?id=12",
     "strayHoldExpiresAt": "2026-08-15T16:31:40.929Z",
     "sex": "Female",
-    "personality": "A calm senior lady who loves slow walks and warm laps."
+    "personality": "A calm senior lady who loves slow walks and warm laps.",
+    "city": "Harborview"
   }
 ]
