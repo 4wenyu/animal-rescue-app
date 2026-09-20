@@ -4,6 +4,10 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import {
+  AuthDivider,
+  GoogleSignInButton,
+} from "@/src/components/auth/GoogleSignInButton";
 import { RegisterHeading } from "./RegisterHeading";
 
 export default function RegisterPage() {
@@ -49,6 +53,12 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-white font-sans">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-900/5">
         <RegisterHeading />
+
+        <GoogleSignInButton
+          callbackUrl="/dashboard"
+          label="Continue with Google"
+        />
+        <AuthDivider />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

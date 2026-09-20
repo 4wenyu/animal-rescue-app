@@ -5,6 +5,10 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PawPrint, Eye, EyeOff } from "lucide-react";
+import {
+  AuthDivider,
+  GoogleSignInButton,
+} from "@/src/components/auth/GoogleSignInButton";
 
 /**
  * The seeded demo accounts are real ADMIN/STAFF logins, so their password
@@ -61,6 +65,9 @@ function LoginForm() {
             </p>
           )}
         </div>
+
+        <GoogleSignInButton callbackUrl={callbackUrl} />
+        <AuthDivider />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
