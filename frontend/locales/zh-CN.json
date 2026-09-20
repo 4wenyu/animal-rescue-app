@@ -58,14 +58,17 @@
       "partners": "合作伙伴",
       "careers": "志愿者与招聘"
     },
-    "find_my_pet": "寻找我的宠物"
+    "find_my_pet": "寻找我的宠物",
+    "share_review": "分享审核"
   },
   "hero": {
     "badge": "法律合规平台",
     "headline": "每一秒都至关重要。简化合规流程，拯救更多生命。",
     "cta_crowdfunding": "紧急众筹",
     "cta_surrender": "公共送养门户",
-    "cta_lost_pet": "我丢失了宠物"
+    "cta_lost_pet": "我丢失了宠物",
+    "cta_help": "我想帮忙",
+    "two_doors": "丢了宠物？开始搜寻。想帮忙？来认识需要家的动物。"
   },
   "play": {
     "title": "谁需要一个家？",
@@ -554,7 +557,8 @@
       "you": "我",
       "ledger_title": "交易账本",
       "entries_count": "（{count}条目）",
-      "empty_ledger": "还没有捐款。在上面提交捐款来为账本播种。"
+      "empty_ledger": "还没有捐款。在上面提交捐款来为账本播种。",
+      "preview_note": "预览承诺只记入演示账本，不会扣款。正式收款需要 Stripe。"
     }
   },
   "chatbot": {
@@ -667,7 +671,12 @@
     "form_error": "出了点问题。请稍后再试。",
     "personality_label": "关于 {name}",
     "sex_male": "公",
-    "sex_female": "母"
+    "sex_female": "母",
+    "next_steps": "接下来会发生什么",
+    "next_steps_body": "我们会在 24 小时内回复开放时间、后续步骤，以及如何见到 {name}。",
+    "share": "分享",
+    "poster": "下载分享图",
+    "sticky_adopt": "领养 {name}"
   },
   "radar": {
     "share_error_create": "Couldn't create the share link right now. Please try again.",
@@ -765,5 +774,33 @@
     "hold_sending_in": "Sends in {s}s - you can still undo",
     "hold_send_now": "Send now",
     "hold_undo": "Undo"
+  },
+  "stay": {
+    "streak": "你已连续来访 {days} 天。{name} 还在这里。",
+    "streak_start": "明天再来——{name} 还在等你。"
+  },
+  "ambient": {
+    "on": "已开启轻柔背景音",
+    "off": "背景音关闭"
+  },
+  "shares": {
+    "review_empty": "暂无待审核分享。员工核实 10 次真实分享后可解锁免费搜寻。",
+    "review_verify": "核实",
+    "review_reject": "拒绝",
+    "review_error": "无法更新该分享。"
+  },
+  "personalities": {
+    "Oscar": "好奇心强的小小探险家，带着玩心和勇敢。",
+    "Buddy": "温柔亲人，总能把房间变得明亮。",
+    "Max": "忠诚专注，一旦信任你就会紧紧相依。",
+    "Bella": "爱玩也爱抱抱的社交小能手。",
+    "Luna": "好奇又活泼，随时准备一起去散步。",
+    "Charlie": "随和、爱吃，是家里的开心搭档。",
+    "Daisy": "友善热心，每次出门都想让你骄傲。",
+    "Rocky": "沉稳亲人，适合有耐心的家庭。",
+    "Molly": "爱社交，最喜欢依偎在人身边。",
+    "Duke": "踏实忠诚，需要有经验、有爱的家。",
+    "Sadie": "心地温暖，喜欢慢慢的早晨和温柔的声音。",
+    "Lola": "沉稳的年长女孩，爱慢走和暖暖的膝上。"
   }
 }

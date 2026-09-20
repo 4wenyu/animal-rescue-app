@@ -1,28 +1,13 @@
 "use client";
 
-/**
- * AdoptProfileView — adopter-facing profile (Sprint B #2).
- *
- * Photo-led, dignified adoption story with an always-visible CTA row:
- *   - Adopt / Foster → inline application form → POST /api/adoption-interest
- *     (both CTAs are disabled while the animal is on statutory hold)
- *   - Donate → /fundraising/[animalId]
- *   - Contact shelter → mailto
- *
- * "Still available" badge + "Needs a home by {date}" copy are derived from
- * the animal's real hold/risk data (no fake countdown, no legal jargon on
- * a public adoption surface).
- *
- * Presentation is split across sibling files: AdoptHero, AdoptDetails,
- * AdoptCtaRow, AdoptionForm; this file owns the form state machine.
- */
-
 import { useState } from "react";
 
 import { AdoptCtaRow } from "./AdoptCtaRow";
 import { AdoptDetails } from "./AdoptDetails";
 import { AdoptHero } from "./AdoptHero";
+import { AdoptStickyBar } from "./AdoptStickyBar";
 import { AdoptionForm } from "./AdoptionForm";
+import { SharePosterButton } from "./SharePosterButton";
 import { formatDate, type Dog, type FormStatus, type InterestType } from "./adoptTypes";
 
 export default function AdoptProfileView({ animal }: { animal: Dog }) {
@@ -38,11 +23,6 @@ export default function AdoptProfileView({ animal }: { animal: Dog }) {
     setInterestType(type);
     setStatus("idle");
     setShowForm(true);
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setStatus("idle");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,27 +59,38 @@ export default function AdoptProfileView({ animal }: { animal: Dog }) {
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
       <AdoptHero animal={animal} available={available} />
       <div className="p-6 sm:p-8">
-        <AdoptDetails
-          animal={animal}
-          available={available}
-          homeByDate={homeByDate}
-        />
+        <AdoptDetails animal={animal} available={available} homeByDate={homeByDate} />
         <AdoptCtaRow
           animal={animal}
           available={available}
           onStartApplication={startApplication}
+          onShare={() => {
+            const btn = document.getElementById("adopt-share-poster");
+            btn?.click();
+          }}
         />
+        <div className="mt-3">
+          <SharePosterButton animal={animal} />
+        </div>
         {showForm && (
           <AdoptionForm
             animal={animal}
             interestType={interestType}
             status={status}
             submitting={submitting}
-            onClose={closeForm}
+            onClose={() => {
+              setShowForm(false);
+              setStatus("idle");
+            }}
             onSubmit={handleSubmit}
           />
         )}
       </div>
+      <AdoptStickyBar
+        animal={animal}
+        available={available}
+        onAdopt={() => startApplication("ADOPT")}
+      />
     </div>
   );
 }

@@ -1,23 +1,18 @@
 /**
  * POST /api/fundraising/donate
- * Public pledge against a roster animal. Upserts Animal + FundraisingWallet.
+ * Preview: records a labeled pledge (no card). Live: Stripe Checkout when
+ * STRIPE_SECRET_KEY is set; otherwise refuse so we never fake money.
  */
-
 import { NextResponse } from "next/server";
 
 import { parseJsonBody } from "@/lib/api/helpers";
-import { campaignGoal, DonateBodySchema } from "@/lib/fundraisingDonate";
-import { rosterAnimalId } from "@/lib/medicalLog";
-import { prisma } from "@/lib/prisma";
+import { DonateBodySchema } from "@/lib/fundraisingDonate";
+import { applyFundraisingPledge } from "@/lib/services/fundraisingPledge";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import type { Dog } from "@/src/components/home/types";
-
-import dogs from "../../../../data/dogs.json";
+import { isPreviewMode } from "@/lib/siteMode";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const CUSTODIAN_ORG_ID = "f4eedd11-2222-4000-a000-000000000001";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -36,64 +31,78 @@ export async function POST(request: Request) {
   const body = await parseJsonBody(request, DonateBodySchema);
   if (!body.ok) return body.response;
 
-  const dog = (dogs as Dog[]).find((item) => item.id === body.data.rosterId);
-  if (!dog) {
+  const stripeKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!isPreviewMode() && stripeKey) {
+    const origin =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+      new URL(request.url).origin;
+    const params = new URLSearchParams();
+    params.set("mode", "payment");
+    params.set("success_url", `${origin}/api/fundraising/confirm?session_id={CHECKOUT_SESSION_ID}`);
+    params.set("cancel_url", `${origin}/fundraising/${body.data.rosterId}`);
+    params.set("line_items[0][quantity]", "1");
+    params.set("line_items[0][price_data][currency]", "usd");
+    params.set(
+      "line_items[0][price_data][unit_amount]",
+      String(Math.round(body.data.amount * 100)),
+    );
+    params.set(
+      "line_items[0][price_data][product_data][name]",
+      `RescueHub care fund (${body.data.allocation})`,
+    );
+    params.set("metadata[rosterId]", String(body.data.rosterId));
+    params.set("metadata[allocation]", body.data.allocation);
+    params.set("metadata[amount]", String(body.data.amount));
+
+    const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${stripeKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+    if (!stripeRes.ok) {
+      return NextResponse.json(
+        { error: "Bad Gateway", message: "Could not start card checkout." },
+        { status: 502 },
+      );
+    }
+    const session = (await stripeRes.json()) as { url?: string };
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Bad Gateway", message: "Stripe did not return a checkout URL." },
+        { status: 502 },
+      );
+    }
+    return NextResponse.json({ ok: true, checkoutUrl: session.url });
+  }
+
+  if (!isPreviewMode()) {
     return NextResponse.json(
-      { error: "Not Found", message: "That animal is not on the roster." },
-      { status: 404 },
+      {
+        error: "Not Configured",
+        message: "Card donations are not enabled. Email the shelter to give.",
+      },
+      { status: 503 },
     );
   }
 
-  const animalId = rosterAnimalId(dog.id);
-  const restrictionType = body.data.allocation === "medical" ? "MEDICAL" : "GENERAL_CARE";
-  const medicalStatus =
-    dog.medicalStatus === "Needs Review" ? "ISOLATION" : "HEALTHY_HOLD";
-  const targetAmount = campaignGoal(dog.medicalStatus === "Needs Review");
-
   try {
-    const wallet = await prisma.$transaction(async (tx) => {
-      await tx.organization.upsert({
-        where: { orgId: CUSTODIAN_ORG_ID },
-        update: {},
-        create: {
-          orgId: CUSTODIAN_ORG_ID,
-          orgType: "MUNICIPAL_SHELTER",
-          einNumber: "00-0000000",
-        },
-      });
-
-      await tx.animal.upsert({
-        where: { animalId },
-        create: {
-          animalId,
-          custodianOrgId: CUSTODIAN_ORG_ID,
-          breedDesignation: dog.breed,
-          intakeTimestamp: new Date(dog.intakeTimestamp),
-          medicalStatus,
-          name: dog.name,
-          species: "Dog",
-          ageYears: dog.age,
-          imageUrl: dog.imageUrl ?? null,
-        },
-        update: { name: dog.name },
-      });
-
-      return tx.fundraisingWallet.upsert({
-        where: { animalId },
-        create: {
-          animalId,
-          targetAmount,
-          currentBalance: body.data.amount,
-          restrictionType,
-        },
-        update: {
-          currentBalance: { increment: body.data.amount },
-        },
-      });
-    });
-
+    const result = await applyFundraisingPledge(body.data);
+    if (!result) {
+      return NextResponse.json(
+        { error: "Not Found", message: "That animal is not on the roster." },
+        { status: 404 },
+      );
+    }
     return NextResponse.json(
-      { ok: true, balance: Number(wallet.currentBalance), animalId },
+      {
+        ok: true,
+        preview: true,
+        balance: Number(result.wallet.currentBalance),
+        animalId: result.animalId,
+      },
       { status: 201 },
     );
   } catch {

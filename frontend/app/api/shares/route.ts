@@ -204,8 +204,35 @@ export async function GET(request: Request) {
     );
   }
   const userId = session.user.id as string;
+  const role = (session.user as unknown as Record<string, unknown> | undefined)
+    ?.role as string | undefined;
 
   const url = new URL(request.url);
+  if (url.searchParams.get("queue") === "pending") {
+    if (role !== "STAFF" && role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Forbidden", message: "STAFF/ADMIN role required." },
+        { status: 403 },
+      );
+    }
+    const pending = await prisma.viralShareVerification.findMany({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      take: 100,
+      select: {
+        shareId: true,
+        userId: true,
+        platform: true,
+        status: true,
+        contentUrl: true,
+        createdAt: true,
+        evidenceSnapshot: true,
+        user: { select: { email: true, displayName: true } },
+      },
+    });
+    return NextResponse.json({ ok: true, shares: pending });
+  }
+
   const searchId = url.searchParams.get("searchId");
   if (!searchId) {
     return NextResponse.json(

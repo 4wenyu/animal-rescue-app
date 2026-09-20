@@ -32,10 +32,10 @@
  *             partials and merges against the zodSchema.
  */
 
-import { google } from "@ai-sdk/google";
 import { Output, streamText, type ModelMessage, type UserContent } from "ai";
 import { z } from "zod";
 
+import { missingLlmMessage, resolveChatModel } from "@/lib/llm/provider";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -564,16 +564,10 @@ export async function POST(req: Request) {
       return buildMockStream(messages);
     }
 
-    // No GEMINI key → return a clean 503 so the client `experimental_useObject`
-    // surfaces an `error` state instead of the SDK mis-throwing.
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    const routed = resolveChatModel();
+    if (!routed) {
       return new Response(
-        JSON.stringify({
-          error:
-            "Chat intake is not configured: GOOGLE_GENERATIVE_AI_API_KEY is " +
-            "missing and CHAT_INTAKE_USE_MOCK is not set. Use the mock by " +
-            "setting CHAT_INTAKE_USE_MOCK=true.",
-        }),
+        JSON.stringify({ error: missingLlmMessage() }),
         {
           status: 503,
           headers: { "Content-Type": "application/json" },
@@ -587,7 +581,7 @@ export async function POST(req: Request) {
       LOCALE_DIRECTIVE_TEMPLATE.replace("{locale}", locale);
 
     const result = streamText({
-      model: google("gemini-3.5-flash"),
+      model: routed.model,
       system: localizedSystemPrompt,
       messages,
       output: Output.object({
@@ -596,10 +590,9 @@ export async function POST(req: Request) {
     });
 
     const response = result.toTextStreamResponse();
-    // Reflect the locale + mode used so dev/inspection tooling can confirm
-    // the right directive made it into the prompt and the response is live.
     response.headers.set("x-rescuehub-chat-intake-locale", locale);
     response.headers.set("x-rescuehub-chat-intake-mode", "live");
+    response.headers.set("x-rescuehub-llm", routed.via);
     return response;
   } catch (error) {
     console.error("🔥 [api/chat-intake] FATAL:", error);

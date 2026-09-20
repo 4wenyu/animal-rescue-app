@@ -45,7 +45,9 @@ export function AdoptHero({
         <h1 className="mt-2 text-4xl font-bold text-white drop-shadow-sm">
           {tr("adoption_feed.meet_name", { name: animal.name })}
         </h1>
-        <p className="mt-1 text-sm font-medium text-white/90">{animal.breed}</p>
+        <p className="mt-1 text-sm font-medium text-white/90">
+          {tr(`breeds.${animal.breed}`)}
+        </p>
       </div>
     </div>
   );

@@ -58,14 +58,17 @@
       "partners": "合作夥伴",
       "careers": "志願者與招募"
     },
-    "find_my_pet": "尋找我的寵物"
+    "find_my_pet": "尋找我的寵物",
+    "share_review": "分享審核"
   },
   "hero": {
     "badge": "法律合規平台",
     "headline": "分秒必爭。簡化合規流程，拯救更多生命。",
     "cta_crowdfunding": "緊急募款",
     "cta_surrender": "公共送養入口",
-    "cta_lost_pet": "我遺失了寵物"
+    "cta_lost_pet": "我遺失了寵物",
+    "cta_help": "我想幫忙",
+    "two_doors": "丟了寵物？開始搜尋。想幫忙？來認識需要家的動物。"
   },
   "play": {
     "title": "誰需要一個家？",
@@ -554,7 +557,8 @@
       "you": "我",
       "ledger_title": "交易帳本",
       "entries_count": "（{count}條目）",
-      "empty_ledger": "還沒有捐款。在上面提交捐款來為帳本播種。"
+      "empty_ledger": "還沒有捐款。在上面提交捐款來為帳本播種。",
+      "preview_note": "預覽承諾只記入示範帳本，不會扣款。正式收款需要 Stripe。"
     }
   },
   "chatbot": {
@@ -667,7 +671,12 @@
     "form_error": "出了點問題。請稍後再試。",
     "personality_label": "關於 {name}",
     "sex_male": "公",
-    "sex_female": "母"
+    "sex_female": "母",
+    "next_steps": "接下來會發生什麼",
+    "next_steps_body": "我們會在 24 小時內回覆開放時間、後續步驟，以及如何見到 {name}。",
+    "share": "分享",
+    "poster": "下載分享圖",
+    "sticky_adopt": "領養 {name}"
   },
   "radar": {
     "share_error_create": "Couldn't create the share link right now. Please try again.",
@@ -765,5 +774,33 @@
     "hold_sending_in": "Sends in {s}s - you can still undo",
     "hold_send_now": "Send now",
     "hold_undo": "Undo"
+  },
+  "stay": {
+    "streak": "你已連續來訪 {days} 天。{name} 還在這裡。",
+    "streak_start": "明天再來——{name} 還在等你。"
+  },
+  "ambient": {
+    "on": "已開啟輕柔背景音",
+    "off": "背景音關閉"
+  },
+  "shares": {
+    "review_empty": "暫無待審核分享。員工核實 10 次真實分享後可解鎖免費搜尋。",
+    "review_verify": "核實",
+    "review_reject": "拒絕",
+    "review_error": "無法更新該分享。"
+  },
+  "personalities": {
+    "Oscar": "好奇心強的小小探險家，帶著玩心和勇敢。",
+    "Buddy": "A gentle, people-loving companion who brightens every room.",
+    "Max": "Loyal and attentive — bonds deeply once he knows he can trust you.",
+    "Bella": "A social butterfly who adores playtime and cuddles in equal measure.",
+    "Luna": "Curious and lively, always ready for the next walk together.",
+    "Charlie": "Easygoing and food-motivated — a cheerful sidekick for any home.",
+    "Daisy": "Friendly and eager to make you proud on every outing.",
+    "Rocky": "A calm, affectionate pal who thrives with a patient family.",
+    "Molly": "Sociable and sweet, happiest when she's close to her people.",
+    "Duke": "Steady and loyal, looking for an experienced, loving home.",
+    "Sadie": "A warm-hearted girl who loves slow mornings and kind voices.",
+    "Lola": "A calm senior lady who loves slow walks and warm laps."
   }
 }

@@ -12,11 +12,13 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:seed": "node prisma/seed.mjs",
+    "llm:probe": "node scripts/probe-llm.mjs",
     "postinstall": "prisma generate --schema=../prisma/schema.prisma",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.82",
+    "@ai-sdk/openai": "^3.0.114",
     "@ai-sdk/react": "^3.0.207",
     "@prisma/client": "^6.19.3",
     "@react-three/drei": "^10.7.7",

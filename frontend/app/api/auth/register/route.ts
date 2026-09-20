@@ -24,11 +24,10 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
-import { grantPreviewSearchCredit } from "@/lib/services/tokenService";
+import { ensureCitizenUser } from "@/lib/auth/ensureCitizenUser";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,35 +82,16 @@ export async function POST(request: Request) {
   const passwordHash = await hashPassword(password);
 
   try {
-    const user = await prisma.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: {
-          email,
-          displayName,
-          passwordHash,
-          role: "CITIZEN",
-          marketingOptIn: false,
-        },
-      });
-      await tx.tokenWallet.create({
-        data: {
-          userId: created.userId,
-          cachedBalance: 0,
-          lifetimeEarned: 0,
-          lifetimeSpent: 0,
-          lifetimeExpired: 0,
-          status: "ACTIVE",
-        },
-      });
-      return created;
+    const user = await ensureCitizenUser({
+      email,
+      displayName,
+      passwordHash,
     });
 
-    try {
-      await grantPreviewSearchCredit(user.userId);
-    } catch (creditErr) {
-      console.error(
-        "[api/auth/register] Preview search credit failed; account still created:",
-        creditErr,
+    if (!user.created) {
+      return NextResponse.json(
+        { error: "An account with that email already exists" },
+        { status: 409 },
       );
     }
 
@@ -128,19 +108,6 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (err) {
-    // The findUnique pre-check above can lose a concurrent race; translate the
-    // unique-constraint violation into the same 409 instead of a 500.
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
-      return NextResponse.json(
-        { error: "An account with that email already exists" },
-        { status: 409 },
-      );
-    }
-    // Anything else is a server fault: log it, but never surface the error
-    // (or a framework stack trace) to an unauthenticated caller.
     console.error("[api/auth/register] Registration failed:", err);
     return NextResponse.json(
       { error: "Registration failed. Please try again." },

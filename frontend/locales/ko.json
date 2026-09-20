@@ -58,14 +58,17 @@
       "partners": "파트너",
       "careers": "자원봉사 및 채용"
     },
-    "find_my_pet": "반려동물 찾기"
+    "find_my_pet": "반려동물 찾기",
+    "share_review": "공유 검토"
   },
   "hero": {
     "badge": "법적 준수 플랫폼",
     "headline": "매 순간이 중요합니다. 준수를 간소화하고 더 많은 생명을 구하세요.",
     "cta_crowdfunding": "응급 크라우드펀딩",
     "cta_surrender": "공용 인도 포털",
-    "cta_lost_pet": "반려동물을 잃었어요"
+    "cta_lost_pet": "반려동물을 잃었어요",
+    "cta_help": "돕고 싶어요",
+    "two_doors": "반려동물을 잃었나요? 검색을 시작하세요. 돕고 싶나요? 가족이 필요한 아이를 만나세요."
   },
   "play": {
     "title": "누가 집이 필요할까요?",
@@ -554,7 +557,8 @@
       "you": "나",
       "ledger_title": "거래 원장",
       "entries_count": "({count} 항목)",
-      "empty_ledger": "아직 기부가 없습니다. 원장을 시드하려면 위의 기부금을 제출하세요."
+      "empty_ledger": "아직 기부가 없습니다. 원장을 시드하려면 위의 기부금을 제출하세요.",
+      "preview_note": "미리보기 서약은 카드 결제가 아닙니다. 실제 결제는 Stripe가 필요합니다."
     }
   },
   "chatbot": {
@@ -667,7 +671,12 @@
     "form_error": "문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     "personality_label": "{name} 소개",
     "sex_male": "수컷",
-    "sex_female": "암컷"
+    "sex_female": "암컷",
+    "next_steps": "다음 단계",
+    "next_steps_body": "24시간 안에 운영 시간, 다음 절차, {name}를 만나는 방법을 회신합니다.",
+    "share": "공유",
+    "poster": "공유 이미지 저장",
+    "sticky_adopt": "{name} 입양하기"
   },
   "radar": {
     "share_error_create": "Couldn't create the share link right now. Please try again.",
@@ -765,5 +774,33 @@
     "hold_sending_in": "Sends in {s}s - you can still undo",
     "hold_send_now": "Send now",
     "hold_undo": "Undo"
+  },
+  "stay": {
+    "streak": "{days}일 연속 방문했습니다. {name}는 아직 여기 있어요.",
+    "streak_start": "내일 다시 와 주세요. {name}가 기다리고 있어요."
+  },
+  "ambient": {
+    "on": "잔잔한 소리 켜짐",
+    "off": "잔잔한 소리 꺼짐"
+  },
+  "shares": {
+    "review_empty": "대기 중인 공유가 없습니다. 직원 확인 10회면 무료 검색이 열립니다.",
+    "review_verify": "확인",
+    "review_reject": "거절",
+    "review_error": "업데이트하지 못했습니다."
+  },
+  "personalities": {
+    "Buddy": "A gentle, people-loving companion who brightens every room.",
+    "Max": "Loyal and attentive — bonds deeply once he knows he can trust you.",
+    "Bella": "A social butterfly who adores playtime and cuddles in equal measure.",
+    "Luna": "Curious and lively, always ready for the next walk together.",
+    "Charlie": "Easygoing and food-motivated — a cheerful sidekick for any home.",
+    "Daisy": "Friendly and eager to make you proud on every outing.",
+    "Rocky": "A calm, affectionate pal who thrives with a patient family.",
+    "Molly": "Sociable and sweet, happiest when she's close to her people.",
+    "Duke": "Steady and loyal, looking for an experienced, loving home.",
+    "Sadie": "A warm-hearted girl who loves slow mornings and kind voices.",
+    "Oscar": "A curious little explorer with a playful, fearless streak.",
+    "Lola": "A calm senior lady who loves slow walks and warm laps."
   }
 }

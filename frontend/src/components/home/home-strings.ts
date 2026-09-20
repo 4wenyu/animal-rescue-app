@@ -27,7 +27,7 @@ export function isLocale(value: unknown): value is LocaleCode {
 type Dict = Record<string, unknown>;
 
 const HOME_SECTIONS = [
-  "site", "nav", "hero", "play", "today", "preview", "adoption_feed", "sponsors", "breeds", "quick_links", "footer",
+  "site", "nav", "hero", "play", "today", "preview", "adoption_feed", "sponsors", "breeds", "quick_links", "footer", "stay", "ambient",
 ] as const;
 
 function pick(source: Dict, keys: readonly string[]): Dict {

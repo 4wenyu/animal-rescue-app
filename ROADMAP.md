@@ -4,9 +4,9 @@ kanban-plugin: basic
 
 # RescueHub — Roadmap & Epic Status Board
 
-> **Current Active Phase:** **EPIC 3 — Autonomous Outreach Engine** (Phase 8) — chat-intake agent + radar payoff surface merged 2026-08-16, foundation wired
-> **Next Active Phase:** **EPIC 4 — Wide-Net Search Engine** (Phase 9)
-|> **Last Updated:** 2026-08-23
+> **Current Active Phase:** **MVP loop close** (sponsor-funded search + share review + adopt conversion) · 2026-09-19
+> **Next Active Phase:** persist lost-pet drafts; then Epic 3 geo/SMS **or** live Petfinder roster
+> **Last Updated:** 2026-09-19
 
 | Epic | Status | Active Task |
 |---|---|---|

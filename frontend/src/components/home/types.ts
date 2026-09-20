@@ -14,4 +14,5 @@ export type Dog = {
   imageUrl?: string;
   sex?: "Male" | "Female";
   personality?: string;
+  city?: string;
 };

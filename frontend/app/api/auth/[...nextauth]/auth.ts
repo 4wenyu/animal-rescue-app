@@ -1,8 +1,10 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import type { NextAuthConfig } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
+import { ensureCitizenUser } from "@/lib/auth/ensureCitizenUser";
 
 // ── Development-only demo credentials ──────────────────────────────────────
 // Retained so a fresh checkout can log in before a real user is seeded. They
@@ -26,12 +28,16 @@ const MOCK_USERS = [
   },
 ];
 
+const googleConfigured =
+  Boolean(process.env.AUTH_GOOGLE_ID) &&
+  Boolean(process.env.AUTH_GOOGLE_SECRET);
+
 async function authorizeAgainstDatabase(
   email: string,
   password: string,
 ): Promise<{ id: string; email: string; name: string; role: string } | null> {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return null;
+  if (!user?.passwordHash) return null;
 
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) return null;
@@ -80,8 +86,41 @@ export const authConfig: NextAuthConfig = {
         };
       },
     }),
+    ...(googleConfigured
+      ? [
+          Google({
+            clientId: process.env.AUTH_GOOGLE_ID!,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+            // We match Google → existing rows by verified email (no Account table yet).
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
+    signIn: async ({ user, account, profile }) => {
+      if (account?.provider !== "google") return true;
+
+      const email = user.email?.trim().toLowerCase();
+      if (!email) return false;
+
+      const emailVerified =
+        (profile as { email_verified?: boolean } | undefined)?.email_verified !==
+        false;
+
+      if (!emailVerified) return false;
+
+      const ensured = await ensureCitizenUser({
+        email,
+        displayName: user.name?.trim() || email.split("@")[0],
+        passwordHash: null,
+      });
+
+      user.id = ensured.userId;
+      (user as { role?: string }).role = ensured.role;
+      user.name = ensured.displayName;
+      return true;
+    },
     jwt: ({ token, user }) => {
       if (user) {
         token.role = (user as unknown as Record<string, unknown>).role as string;

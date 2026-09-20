@@ -58,14 +58,17 @@
       "partners": "Socios",
       "careers": "Voluntariado y empleo"
     },
-    "find_my_pet": "Buscar mi mascota"
+    "find_my_pet": "Buscar mi mascota",
+    "share_review": "Revisar compartidos"
   },
   "hero": {
     "badge": "Plataforma Legalmente Conforme",
     "headline": "Cada Segundo Cuenta. Agiliza el Cumplimiento, Salva Más Vidas.",
     "cta_crowdfunding": "Emergencia: Recaudación de Fondos",
     "cta_surrender": "Portal de Entrega Pública",
-    "cta_lost_pet": "Perdí una mascota"
+    "cta_lost_pet": "Perdí una mascota",
+    "cta_help": "Quiero ayudar",
+    "two_doors": "¿Perdiste una mascota? Empieza una búsqueda. ¿Quieres ayudar? Conoce a quien necesita hogar."
   },
   "play": {
     "title": "¿Quién necesita un hogar?",
@@ -554,7 +557,8 @@
       "you": "Tú",
       "ledger_title": "Libro mayor de transacciones",
       "entries_count": "({count} entradas)",
-      "empty_ledger": "Aún no hay donaciones. Envíe una donación arriba para iniciar el libro mayor."
+      "empty_ledger": "Aún no hay donaciones. Envíe una donación arriba para iniciar el libro mayor.",
+      "preview_note": "Las promesas de vista previa no cobran tarjeta. El cobro real requiere Stripe."
     }
   },
   "chatbot": {
@@ -667,7 +671,12 @@
     "form_error": "Algo salió mal. Por favor, inténtalo de nuevo en un momento.",
     "personality_label": "Un poco sobre {name}",
     "sex_male": "Macho",
-    "sex_female": "Hembra"
+    "sex_female": "Hembra",
+    "next_steps": "Qué sigue",
+    "next_steps_body": "Respondemos en 24 horas con horarios, pasos y cómo conocer a {name}.",
+    "share": "Compartir",
+    "poster": "Descargar imagen para compartir",
+    "sticky_adopt": "Adoptar a {name}"
   },
   "radar": {
     "share_error_create": "No se pudo crear el enlace para compartir ahora. Inténtalo de nuevo.",
@@ -765,5 +774,33 @@
     "hold_sending_in": "Se envía en {s}s — aún puedes deshacer",
     "hold_send_now": "Enviar ahora",
     "hold_undo": "Deshacer"
+  },
+  "stay": {
+    "streak": "Has vuelto {days} días. {name} sigue aquí.",
+    "streak_start": "Vuelve mañana — {name} sigue esperando."
+  },
+  "ambient": {
+    "on": "Sonido suave activado",
+    "off": "Sonido suave desactivado"
+  },
+  "shares": {
+    "review_empty": "No hay compartidos pendientes. Diez verificados desbloquean una búsqueda gratis.",
+    "review_verify": "Verificar",
+    "review_reject": "Rechazar",
+    "review_error": "No se pudo actualizar."
+  },
+  "personalities": {
+    "Buddy": "A gentle, people-loving companion who brightens every room.",
+    "Max": "Loyal and attentive — bonds deeply once he knows he can trust you.",
+    "Bella": "A social butterfly who adores playtime and cuddles in equal measure.",
+    "Luna": "Curious and lively, always ready for the next walk together.",
+    "Charlie": "Easygoing and food-motivated — a cheerful sidekick for any home.",
+    "Daisy": "Friendly and eager to make you proud on every outing.",
+    "Rocky": "A calm, affectionate pal who thrives with a patient family.",
+    "Molly": "Sociable and sweet, happiest when she's close to her people.",
+    "Duke": "Steady and loyal, looking for an experienced, loving home.",
+    "Sadie": "A warm-hearted girl who loves slow mornings and kind voices.",
+    "Oscar": "A curious little explorer with a playful, fearless streak.",
+    "Lola": "A calm senior lady who loves slow walks and warm laps."
   }
 }

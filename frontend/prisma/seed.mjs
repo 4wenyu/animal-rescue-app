@@ -1,4 +1,7 @@
 import { randomBytes, scrypt as _scrypt } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { PrismaClient } from "@prisma/client";
 
@@ -91,6 +94,43 @@ async function main() {
     create: CUSTODIAN_ORG,
   });
   console.log("    ✓ custodian org");
+
+  const dogsPath = join(dirname(fileURLToPath(import.meta.url)), "../data/dogs.json");
+  const dogs = JSON.parse(readFileSync(dogsPath, "utf8"));
+  for (const dog of dogs) {
+    const animalId = `roster-${dog.id}`;
+    const hold = Boolean(dog.statutoryHoldCleared);
+    await prisma.animal.upsert({
+      where: { animalId },
+      update: {
+        name: dog.name,
+        breedDesignation: dog.breed,
+        imageUrl: dog.imageUrl ?? null,
+        personality: dog.personality ?? null,
+        sex: dog.sex ?? null,
+        ageYears: dog.age,
+        statutoryHoldCleared: hold,
+        listingStatus: dog.euthanasia_risk_status === "IMMEDIATE_BEHAVIORAL" ? "HOLD" : "AVAILABLE",
+      },
+      create: {
+        animalId,
+        custodianOrgId: CUSTODIAN_ORG.orgId,
+        name: dog.name,
+        breedDesignation: dog.breed,
+        species: "Dog",
+        ageYears: dog.age,
+        sex: dog.sex ?? null,
+        personality: dog.personality ?? null,
+        imageUrl: dog.imageUrl ?? null,
+        intakeTimestamp: new Date(dog.intakeTimestamp),
+        strayHoldExpiresAt: dog.strayHoldExpiresAt ? new Date(dog.strayHoldExpiresAt) : null,
+        statutoryHoldCleared: hold,
+        medicalStatus: dog.medicalStatus === "Needs Review" ? "ISOLATION" : "HEALTHY_HOLD",
+        listingStatus: dog.euthanasia_risk_status === "IMMEDIATE_BEHAVIORAL" ? "HOLD" : "AVAILABLE",
+      },
+    });
+  }
+  console.log(`    ✓ ${dogs.length} roster animals`);
 
   const users = await prisma.user.findMany({
     select: { email: true, role: true },
