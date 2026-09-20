@@ -1,6 +1,8 @@
 # Gaps and build plan
 
-Last updated: 2026-09-19. This supersedes the August review docs in `docs/archive/`.
+Last updated: 2026-09-19 (evening). This supersedes the August review docs in `docs/archive/`.
+
+**Board:** root `RescueHub Kanban.md` (Obsidian Kanban). **Roles:** `docs/AGENT_ROLES.md`.
 
 ## Closed in this pass
 
@@ -28,13 +30,23 @@ Last updated: 2026-09-19. This supersedes the August review docs in `docs/archiv
 6. Redis rate limits before more than one server instance.
 7. Sentry / error monitoring.
 
-## Next engineering (after the loop is true with one shelter)
+## Next engineering (6 highest-leverage moves)
 
-1. Persist lost-pet chat drafts server-side (highest remaining UX risk).
-2. Staff UI for share evidence that is more than a URL.
-3. SMS/Telegram **radius** alerts (Epic 3 backlog) using last-seen lat/lng — not cold DMs.
-4. Petfinder/Shelterluv as the roster source of truth; drop JSON fallback in live mode.
-5. Stripe webhooks instead of success-URL confirm.
-6. PWA, then Expo — website stays canonical.
+Ordered for a **one-shelter pilot**. Track on `RescueHub Kanban.md`.
+
+| # | Move | Epic | Notes |
+|---|---|---|---|
+| **N0** | **Live Petfinder roster** (NEXT) | 4 | Apply at [petfinder.com/developers](https://www.petfinder.com/developers/); set `PETFINDER_CLIENT_ID` / `SECRET` / `ORG_ID`; staff `POST /api/admin/petfinder-sync`; live mode drops JSON fallback. Shelterluv only if that shelter already uses it. |
+| N1 | Persist lost-pet chat drafts server-side | 3 | Highest remaining UX risk (drafts die on refresh). |
+| N2 | Richer staff share-evidence UI | 2/ops | More than a bare URL at `/shares/review`. |
+| N3 | SMS/Telegram **radius** alerts | 3 backlog | Last-seen lat/lng — not cold DMs. |
+| N4 | Stripe webhooks | ops | Replace success-URL confirm for fundraising. |
+| N5 | Operator hardening | ops | Real photos/hours; Telegram or record-only; key rotation; Sentry; Redis before multi-instance. |
+
+### How to get “real” roster data (N0)
+
+1. **Petfinder Partners API** — free developer keys; sync adoptable animals for one `PETFINDER_ORG_ID`. Stub already in repo.
+2. **Shelterluv** — only with shelter’s existing product + their API access (not built yet).
+3. **County offices** — not a bulk API; officers use `/intake/county` for one-off municipal transfers.
 
 Do **not** add arcade games, autoplay music, or social crawling next. Those fight the mission and the 513(i) / ToS constraints.

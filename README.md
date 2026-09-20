@@ -28,7 +28,9 @@ RescueHub is not another Petfinder clone. It closes a specific loop:
 - Intake (public + county), medical logs, fundraising pledges
 - Outreach opt-in → generate → review → deliver (Telegram or record-only)
 
-Sample animals live in `frontend/data/dogs.json` and are seeded into Postgres (`roster-{id}`). The public feed prefers database rows when they exist.
+Sample animals live in `frontend/data/dogs.json` and are seeded into Postgres (`roster-{id}`). The public feed prefers database rows when they exist. **Next:** live Petfinder roster for one pilot shelter — see `RescueHub Kanban.md` (N0) and `docs/GAPS_AND_PLAN.md`.
+
+**Planning:** Obsidian vault = this repo → open `RescueHub Kanban.md`. Agent roles: `docs/AGENT_ROLES.md`.
 
 ## Quick start
 

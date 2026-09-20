@@ -1,4 +1,23 @@
 # Changelog
+
+## v3.3.1 — Sprint board, agent roles, repo cleanup (2026-09-19)
+
+### Added
+- Obsidian Kanban at root `RescueHub Kanban.md` (vault = this repo).
+- Agent roles: Project Manager + Lead Engineer/Architect (`.cursor/rules/*.mdc`, `docs/AGENT_ROLES.md`).
+- Next-up sequence **N0–N5** with **N0 Petfinder live roster** as the immediate card (`docs/GAPS_AND_PLAN.md`).
+- Cleanup record: `docs/CLEANUP_2026-09-19.md`.
+
+### Removed / cleaned
+- Root `node_modules` (~318 MB), root `package.json` / lockfile (dual lockfile confused Next; install from `frontend/` only).
+- Leftover `generated/` Prisma dump, unused root `src/` calculator, `server-3200.txt`, `unzip.bat`, deploy-skill `Archive.zip`.
+- Duplicate archive review (identical to `PRODUCT_UX_MVP_TEAM_REVIEW.md`); screenshots moved to `docs/archive/screenshots/`.
+
+### Docs
+- `ROADMAP.md` — active phase = N0 Petfinder; Epic 4 marked stub-in / keys pending.
+- Epic status unchanged in substance: 1–2 done; 3 foundation + radius backlog; 4 ready pending keys.
+
+---
 ## v3.3.0 — MVP loop close (2026-09-19)
 
 ### Added

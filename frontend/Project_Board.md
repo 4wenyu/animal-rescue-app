@@ -83,7 +83,10 @@ kanban-plugin: basic
 
 ## 🚀 In Progress
 
-- [ ] **Build Premium 2D CSS Animal Mesh Gradient for Hero Section** — Replace archived 3D WebGL with a pure CSS animated gradient mesh
+> **Canonical board:** root [`RescueHub Kanban.md`](../RescueHub%20Kanban.md) (Obsidian). This file is the historical sprint log.
+
+- [ ] **N0 — Live Petfinder roster** — Partners API keys + `PETFINDER_ORG_ID`; sync; live mode (see `docs/GAPS_AND_PLAN.md`)
+- [ ] **Build Premium 2D CSS Animal Mesh Gradient for Hero Section** — Replace archived 3D WebGL with a pure CSS animated gradient mesh (lower priority than N0–N5)
 
 ### Stabilization Sprint — 2026-09-06 (step 1 of the CF-OS-informed roadmap)
 
