@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.3.3 — Richer staff share review (N2) (2026-09-20)
+
+### Added
+- `/shares/review` evidence panel: tracking link `/p/{shareId}`, safe posted URL, linked radar/animal, platform post ID, optional reject note → `reviewerNote`.
+
+### Docs
+- Kanban / GAPS — N2 done; N0 still awaiting pilot replies; N3 next engineering after N0 idle.
+
+---
 ## v3.3.2 — Lost-pet draft persistence + pilot N0 retarget (2026-09-20)
 
 ### Added

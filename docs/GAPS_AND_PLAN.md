@@ -10,7 +10,7 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 |---|---|
 | Find My Pet client `EARN` 403 | New `POST /api/tokens/sponsor-search` mints + spends **on the server** after a 5s 513(i) acknowledgment. Preview register still grants +100. |
 | LLM locked to Gemini | `lib/llm/provider.ts` routes TeamoRouter → FreeLLMAPI → Gemini. Keys stay in env, never git. |
-| No staff share review UI | `/shares/review` + `PATCH /api/shares/[id]`. Ten verified shares still grant a free search. |
+| No staff share review UI | `/shares/review` + `PATCH /api/shares/[id]`. Ten verified shares still grant a free search. **N2:** tracking `/p/{id}`, safe proof URL, radar/animal links, reject note. |
 | Oscar page mixed language / 4 equal CTAs | Photo hero, translated breed/personality/dates, one primary Adopt, quieter Foster/Share/Donate, sticky mobile bar, next-steps copy, share poster. |
 | Stay-loop too thin | Two-door hero, daily streak banner, opt-in ambient (never autoplay), kennel walk + today animal already existed. |
 | Dual roster | `getPublicRoster()` prefers Prisma `roster-*` rows; seed copies `dogs.json`. |
@@ -38,8 +38,8 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 |---|---|---|---|
 | **N0** | **Pilot roster data path** | 4 | In progress (outreach). Not Petfinder keys — public API is gone. |
 | **N1** | Persist lost-pet chat drafts server-side | 3 | **Done** 2026-09-20 |
-| N2 | Richer staff share-evidence UI | 2/ops | Next code card after N0 replies or in parallel |
-| N3 | SMS/Telegram **radius** alerts | 3 backlog | Last-seen lat/lng — not cold DMs |
+| **N2** | Richer staff share-evidence UI | 2/ops | **Done** 2026-09-20 |
+| N3 | SMS/Telegram **radius** alerts | 3 backlog | Next code card while N0 waits |
 | N4 | Stripe webhooks | ops | Replace success-URL confirm |
 | N5 | Operator hardening | ops | Photos/hours; Telegram; Sentry; Redis |
 

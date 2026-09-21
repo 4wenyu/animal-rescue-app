@@ -786,7 +786,15 @@
     "review_empty": "No pending shares. The 10-share free search unlocks when staff verify real posts.",
     "review_verify": "Verify",
     "review_reject": "Reject",
-    "review_error": "Could not update that share."
+    "review_error": "Could not update that share.",
+    "review_tracking": "Tracking link",
+    "review_proof": "Posted URL",
+    "review_no_proof": "No posted URL — open tracking link or ask the submitter",
+    "review_radar": "Linked search",
+    "review_animal": "Animal profile",
+    "review_platform_id": "Platform post ID",
+    "review_evidence": "Source",
+    "review_note_placeholder": "Reject reason (optional, saved with the review)"
   },
   "personalities": {
     "Buddy": "A gentle, people-loving companion who brightens every room.",

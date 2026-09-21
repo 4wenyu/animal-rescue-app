@@ -787,7 +787,15 @@
     "review_empty": "No hay compartidos pendientes. Diez verificados desbloquean una búsqueda gratis.",
     "review_verify": "Verificar",
     "review_reject": "Rechazar",
-    "review_error": "No se pudo actualizar."
+    "review_error": "No se pudo actualizar.",
+    "review_tracking": "Enlace de seguimiento",
+    "review_proof": "URL publicada",
+    "review_no_proof": "Sin URL publicada — abre el seguimiento o pide al remitente",
+    "review_radar": "Búsqueda vinculada",
+    "review_animal": "Perfil del animal",
+    "review_platform_id": "ID de publicación",
+    "review_evidence": "Origen",
+    "review_note_placeholder": "Motivo del rechazo (opcional)"
   },
   "personalities": {
     "Buddy": "A gentle, people-loving companion who brightens every room.",

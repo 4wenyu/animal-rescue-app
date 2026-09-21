@@ -787,7 +787,15 @@
     "review_empty": "暂无待审核分享。员工核实 10 次真实分享后可解锁免费搜寻。",
     "review_verify": "核实",
     "review_reject": "拒绝",
-    "review_error": "无法更新该分享。"
+    "review_error": "无法更新该分享。",
+    "review_tracking": "追踪链接",
+    "review_proof": "已发布链接",
+    "review_no_proof": "无已发布链接 — 打开追踪链接或联系提交者",
+    "review_radar": "关联搜寻",
+    "review_animal": "动物档案",
+    "review_platform_id": "平台帖子 ID",
+    "review_evidence": "来源",
+    "review_note_placeholder": "拒绝原因（可选）"
   },
   "personalities": {
     "Oscar": "好奇心强的小小探险家，带着玩心和勇敢。",

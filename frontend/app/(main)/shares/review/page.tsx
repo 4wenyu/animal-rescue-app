@@ -39,6 +39,7 @@ export default async function ShareReviewPage(): Promise<ReactNode> {
       platform: true,
       status: true,
       contentUrl: true,
+      platformPostId: true,
       createdAt: true,
       evidenceSnapshot: true,
       user: { select: { email: true, displayName: true } },
@@ -50,14 +51,14 @@ export default async function ShareReviewPage(): Promise<ReactNode> {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Share review</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Verify that a share actually went to a community. Ten verified shares unlock a free search.
+          Open the tracking link and any posted URL, then verify real community
+          posts. Ten verified shares unlock a free search for that owner.
         </p>
       </div>
       <ShareReviewQueue
         initialShares={shares.map((row) => ({
           ...row,
           createdAt: row.createdAt.toISOString(),
-          evidenceSnapshot: row.evidenceSnapshot as { relatedSearchId?: string } | null,
         }))}
       />
     </div>

@@ -787,7 +787,15 @@
     "review_empty": "대기 중인 공유가 없습니다. 직원 확인 10회면 무료 검색이 열립니다.",
     "review_verify": "확인",
     "review_reject": "거절",
-    "review_error": "업데이트하지 못했습니다."
+    "review_error": "업데이트하지 못했습니다.",
+    "review_tracking": "추적 링크",
+    "review_proof": "게시 URL",
+    "review_no_proof": "게시 URL 없음 — 추적 링크를 열거나 제출자에게 요청",
+    "review_radar": "연결된 검색",
+    "review_animal": "동물 프로필",
+    "review_platform_id": "게시물 ID",
+    "review_evidence": "출처",
+    "review_note_placeholder": "거절 사유 (선택)"
   },
   "personalities": {
     "Buddy": "A gentle, people-loving companion who brightens every room.",

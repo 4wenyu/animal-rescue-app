@@ -787,7 +787,15 @@
     "review_empty": "暫無待審核分享。員工核實 10 次真實分享後可解鎖免費搜尋。",
     "review_verify": "核實",
     "review_reject": "拒絕",
-    "review_error": "無法更新該分享。"
+    "review_error": "無法更新該分享。",
+    "review_tracking": "追蹤連結",
+    "review_proof": "已發佈連結",
+    "review_no_proof": "無已發佈連結 — 打開追蹤連結或聯繫提交者",
+    "review_radar": "關聯搜尋",
+    "review_animal": "動物檔案",
+    "review_platform_id": "平台貼文 ID",
+    "review_evidence": "來源",
+    "review_note_placeholder": "拒絕原因（選填）"
   },
   "personalities": {
     "Oscar": "好奇心強的小小探險家，帶著玩心和勇敢。",

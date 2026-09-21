@@ -19,7 +19,6 @@ kanban-plugin: basic
 ## 🎯 Next up (ordered)
 
 - [ ] **N0 — Pilot roster data path** — Petfinder **public API shut down Dec 2025** (no new keys). Waiting on SoCal pilot emails (Riverside DAS, SB City, Kitty Devore). Accept CSV / partner export / manual intake; keep `dogs.json` seed until then. Stub `petfinder-sync` stays for any future member feed.
-- [ ] **N2 — Richer staff share-evidence UI** — more than a bare URL for `/shares/review`
 - [ ] **N3 — Epic 3 backlog: SMS/Telegram radius alerts** — last-seen lat/lng, not cold DMs
 - [ ] **N4 — Stripe webhooks** — replace success-URL confirm for fundraising
 - [ ] **N5 — Operator hardening** — real shelter photos/hours; Telegram keys or accept record-only; rotate LLM keys; Sentry; Redis before multi-instance
@@ -30,6 +29,7 @@ kanban-plugin: basic
 
 ## ✅ Done (recent)
 
+- [x] **N2 — Richer staff share-evidence UI** (2026-09-20) — tracking + proof links, radar/animal, reject note on `/shares/review`
 - [x] **N1 — Persist lost-pet chat drafts server-side** (2026-09-20) — `LostPetIntakeDraft` + `/api/lost-pet-drafts`; localStorage fallback for anonymous; merge by `savedAt`
 - [x] MVP loop close — sponsor-search server path, LLM router, share review, adopt conversion (2026-09-19)
 - [x] Google OAuth citizen login + Vercel preview envs

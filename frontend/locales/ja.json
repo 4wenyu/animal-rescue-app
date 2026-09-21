@@ -787,7 +787,15 @@
     "review_empty": "未審査のシェアはありません。10件の確認で無料検索が開きます。",
     "review_verify": "確認",
     "review_reject": "却下",
-    "review_error": "更新できませんでした。"
+    "review_error": "更新できませんでした。",
+    "review_tracking": "追跡リンク",
+    "review_proof": "投稿URL",
+    "review_no_proof": "投稿URLなし — 追跡リンクを開くか提出者に確認",
+    "review_radar": "連携検索",
+    "review_animal": "動物プロフィール",
+    "review_platform_id": "投稿ID",
+    "review_evidence": "出典",
+    "review_note_placeholder": "却下理由（任意）"
   },
   "personalities": {
     "Buddy": "A gentle, people-loving companion who brightens every room.",

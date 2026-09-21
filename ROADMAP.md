@@ -4,15 +4,15 @@ kanban-plugin: basic
 
 # RescueHub — Roadmap & Epic Status Board
 
-> **Current Active Phase:** **N0 — Pilot roster path** (SoCal outreach) + **N1 done** · 2026-09-20
-> **Next Active Phase:** N2 share evidence → N3 Epic 3 radius → N4 Stripe webhooks → N5 operator hardening
+> **Current Active Phase:** **N0 — Pilot roster path** (SoCal outreach) · **N1–N2 done** · 2026-09-20
+> **Next Active Phase:** N3 Epic 3 radius → N4 Stripe webhooks → N5 operator hardening
 > **Board:** `RescueHub Kanban.md` · **Roles:** `docs/AGENT_ROLES.md` · **Gaps:** `docs/GAPS_AND_PLAN.md`
 > **Last Updated:** 2026-09-20
 
 | Epic | Status | Active Task |
 |---|---|---|
 | EPIC 1 — UI Polish & Global Localization | ✅ **COMPLETE** (2026-06-17) | All sub-tasks closed; 391 i18n keys at 100% parity across 7 locales |
-| EPIC 2 — Viral Token & Brand Sponsorship Gateway | ✅ **CLOSED** (2026-06-20) | Viral-share loop live, intake path mints +50, rate-limited landing rewards +5, sponsor-gateway modal wired into dashboard 2026-08-23 |
+| EPIC 2 — Viral Token & Brand Sponsorship Gateway | ✅ **CLOSED** (2026-06-20) | Viral-share loop live; **N2** richer staff evidence UI on `/shares/review`. |
 | EPIC 3 — Autonomous Outreach Engine | 🔵 **FOUNDATION MERGED** | Lost-pet **draft persistence (N1)** live. **Open:** geolocation & SMS/Telegram radius alerts (Kanban N3). |
 | EPIC 4 — Wide-Net Search Engine | 🟡 **Pilot path** | Public Petfinder API decommissioned Dec 2025. Awaiting shelter CSV/partner feed (Kanban **N0**). |
 
