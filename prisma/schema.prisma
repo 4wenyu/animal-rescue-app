@@ -289,6 +289,7 @@ model User {
   viralShares         ViralShareVerification[]
   contributionsAsUser SponsorshipContribution[]
   lostPetSearches     LostPetSearch[]
+  lostPetIntakeDraft  LostPetIntakeDraft?
 
   // ── EPIC 3 (Tier 1.7): staged autonomous outreach, opt-in only ──
   outreachProfile OutreachProfile?
@@ -482,6 +483,23 @@ model AdoptionInterest {
   @@index([animalId])
   @@index([status, createdAt])
   @@map("adoption_interests")
+}
+
+// 6b) LostPetIntakeDraft — in-progress chat before Activate Search.
+// One row per user. Survives reload / device switch for signed-in owners.
+// Photos are never stored (client strips them). Anonymous users keep
+// localStorage only.
+model LostPetIntakeDraft {
+  draftId     String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  messages    Json
+  accumulated Json
+  savedAt     DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("lost_pet_intake_drafts")
 }
 
 // 7) LostPetSearch — Epic 3 autonomous-outreach persistence.

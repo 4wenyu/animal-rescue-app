@@ -119,3 +119,13 @@ export function clearLostPetDraft(): void {
     /* noop */
   }
 }
+
+/** Prefer the draft with the newer savedAt; nulls lose. */
+export function preferNewerDraft(
+  a: LostPetDraft | null,
+  b: LostPetDraft | null,
+): LostPetDraft | null {
+  if (!a) return b;
+  if (!b) return a;
+  return a.savedAt >= b.savedAt ? a : b;
+}

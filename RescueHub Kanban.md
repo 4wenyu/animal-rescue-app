@@ -18,8 +18,7 @@ kanban-plugin: basic
 
 ## 🎯 Next up (ordered)
 
-- [ ] **N0 — Live Petfinder roster (NEXT)** — Get Petfinder Partners keys + `PETFINDER_ORG_ID` for one pilot shelter; set env on Vercel; staff `POST /api/admin/petfinder-sync`; drop JSON fallback when `NEXT_PUBLIC_SITE_MODE=live`. Optional later: Shelterluv if the shelter uses it.
-- [ ] **N1 — Persist lost-pet chat drafts server-side** — highest remaining UX risk (drafts die on refresh)
+- [ ] **N0 — Pilot roster data path** — Petfinder **public API shut down Dec 2025** (no new keys). Waiting on SoCal pilot emails (Riverside DAS, SB City, Kitty Devore). Accept CSV / partner export / manual intake; keep `dogs.json` seed until then. Stub `petfinder-sync` stays for any future member feed.
 - [ ] **N2 — Richer staff share-evidence UI** — more than a bare URL for `/shares/review`
 - [ ] **N3 — Epic 3 backlog: SMS/Telegram radius alerts** — last-seen lat/lng, not cold DMs
 - [ ] **N4 — Stripe webhooks** — replace success-URL confirm for fundraising
@@ -27,26 +26,28 @@ kanban-plugin: basic
 
 ## 🚀 In progress
 
-- [ ] Sprint kickoff: board + agent roles + Petfinder next-item (2026-09-19)
+- [ ] **N0** — pilot shelter outreach sent; awaiting replies
 
 ## ✅ Done (recent)
 
+- [x] **N1 — Persist lost-pet chat drafts server-side** (2026-09-20) — `LostPetIntakeDraft` + `/api/lost-pet-drafts`; localStorage fallback for anonymous; merge by `savedAt`
 - [x] MVP loop close — sponsor-search server path, LLM router, share review, adopt conversion (2026-09-19)
 - [x] Google OAuth citizen login + Vercel preview envs
-- [x] Merge to `main` (`c6c19b1`)
-- [x] Repo cleanup — dual lockfile/`node_modules`, dead root `src`, generated prisma dump, duplicate archive review, temp logs (~320MB)
+- [x] Merge to `main` + push helper script
+- [x] Repo cleanup — dual lockfile/`node_modules`, dead leftovers (~320MB)
 
 ## 🔵 Epics (status)
 
 - [x] **EPIC 1** — UI Polish & Global Localization · COMPLETE
 - [x] **EPIC 2** — Viral Token & Brand Sponsorship Gateway · CLOSED
-- [ ] **EPIC 3** — Autonomous Outreach Engine · FOUNDATION MERGED — open: geo + radius SMS/Telegram
-- [ ] **EPIC 4** — Wide-Net Search Engine · READY — Petfinder stub live; needs keys + crawler depth
+- [ ] **EPIC 3** — Autonomous Outreach Engine · FOUNDATION MERGED — open: geo + radius SMS/Telegram; draft persistence done (N1)
+- [ ] **EPIC 4** — Wide-Net Search Engine · public Petfinder API gone; pilot CSV/partner path instead
 
 ## 🔶 Blocked / archive
 
 - [ ] 3D WebGL hero — archived on `archive/3d-webgl`; replace with 2D CSS mesh if desired
 - [ ] Social-media scouring / cold outreach — do **not** schedule next (ToS + 513(i))
+- [ ] Petfinder Partners self-serve API keys — **retired by Petfinder** (Dec 2025)
 
 %% kanban:settings
 ```

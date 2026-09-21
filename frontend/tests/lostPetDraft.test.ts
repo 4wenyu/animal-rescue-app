@@ -4,6 +4,7 @@ import {
   OPENING_HOOK_SENTINEL,
   isMeaningfulDraft,
   parseLostPetDraft,
+  preferNewerDraft,
   serializeLostPetDraft,
 } from "@/src/components/chat/lostPetDraft";
 
@@ -48,5 +49,21 @@ describe("lost-pet draft persistence", () => {
   it("returns null for garbage rather than throwing", () => {
     expect(parseLostPetDraft("not-json")).toBeNull();
     expect(parseLostPetDraft(null)).toBeNull();
+  });
+
+  it("prefers the newer savedAt when merging local and server", () => {
+    const older = {
+      messages: [{ id: "u1", role: "user" as const, content: "old" }],
+      accumulated: { species: "cat" },
+      savedAt: 100,
+    };
+    const newer = {
+      messages: [{ id: "u2", role: "user" as const, content: "new" }],
+      accumulated: { species: "dog" },
+      savedAt: 200,
+    };
+    expect(preferNewerDraft(older, newer)?.accumulated.species).toBe("dog");
+    expect(preferNewerDraft(newer, older)?.messages[0]?.content).toBe("new");
+    expect(preferNewerDraft(null, older)?.savedAt).toBe(100);
   });
 });

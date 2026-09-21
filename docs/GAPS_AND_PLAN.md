@@ -1,6 +1,6 @@
 # Gaps and build plan
 
-Last updated: 2026-09-19 (evening). This supersedes the August review docs in `docs/archive/`.
+Last updated: 2026-09-20. This supersedes the August review docs in `docs/archive/`.
 
 **Board:** root `RescueHub Kanban.md` (Obsidian Kanban). **Roles:** `docs/AGENT_ROLES.md`.
 
@@ -16,9 +16,10 @@ Last updated: 2026-09-19 (evening). This supersedes the August review docs in `d
 | Dual roster | `getPublicRoster()` prefers Prisma `roster-*` rows; seed copies `dogs.json`. |
 | Fake live donations | Preview pledges labeled; live without Stripe returns 503; Stripe Checkout + `/api/fundraising/confirm` when `STRIPE_SECRET_KEY` is set. |
 | Outreach “region matching not implemented” | Token overlap on `city` / `regionLabel`; sourceNote stays honest. |
-| Epic 4 crawler | Staff `POST /api/admin/petfinder-sync` — no-op 503 until Petfinder keys exist. |
+| Epic 4 crawler stub | Staff `POST /api/admin/petfinder-sync` — no-op until a feed exists. **Petfinder public API decommissioned Dec 2025** — no new self-serve keys. |
 | No LICENSE / SaaS README | Apache-2.0 + mission README. |
 | Stale D+ reviews | Moved to `docs/archive/`. |
+| Lost-pet drafts die on refresh | **N1 done:** `LostPetIntakeDraft` + `GET/PUT/DELETE /api/lost-pet-drafts` for signed-in users; localStorage still backs anonymous / offline. |
 
 ## Still operator / legal (not code)
 
@@ -29,24 +30,25 @@ Last updated: 2026-09-19 (evening). This supersedes the August review docs in `d
 5. Real shelter photos and hours, not `placedog.net`.
 6. Redis rate limits before more than one server instance.
 7. Sentry / error monitoring.
+8. **Pilot shelter** — emails sent to Riverside DAS (`shelterinfo@rivco.org`), SB City (`sbcitypets@sbcity.org`), Kitty Devore (`admin@kittydevorerescue.org`). Await CSV / partner export / Rescue Track access.
 
-## Next engineering (6 highest-leverage moves)
+## Next engineering (highest leverage)
 
-Ordered for a **one-shelter pilot**. Track on `RescueHub Kanban.md`.
-
-| # | Move | Epic | Notes |
+| # | Move | Epic | Status |
 |---|---|---|---|
-| **N0** | **Live Petfinder roster** (NEXT) | 4 | Apply at [petfinder.com/developers](https://www.petfinder.com/developers/); set `PETFINDER_CLIENT_ID` / `SECRET` / `ORG_ID`; staff `POST /api/admin/petfinder-sync`; live mode drops JSON fallback. Shelterluv only if that shelter already uses it. |
-| N1 | Persist lost-pet chat drafts server-side | 3 | Highest remaining UX risk (drafts die on refresh). |
-| N2 | Richer staff share-evidence UI | 2/ops | More than a bare URL at `/shares/review`. |
-| N3 | SMS/Telegram **radius** alerts | 3 backlog | Last-seen lat/lng — not cold DMs. |
-| N4 | Stripe webhooks | ops | Replace success-URL confirm for fundraising. |
-| N5 | Operator hardening | ops | Real photos/hours; Telegram or record-only; key rotation; Sentry; Redis before multi-instance. |
+| **N0** | **Pilot roster data path** | 4 | In progress (outreach). Not Petfinder keys — public API is gone. |
+| **N1** | Persist lost-pet chat drafts server-side | 3 | **Done** 2026-09-20 |
+| N2 | Richer staff share-evidence UI | 2/ops | Next code card after N0 replies or in parallel |
+| N3 | SMS/Telegram **radius** alerts | 3 backlog | Last-seen lat/lng — not cold DMs |
+| N4 | Stripe webhooks | ops | Replace success-URL confirm |
+| N5 | Operator hardening | ops | Photos/hours; Telegram; Sentry; Redis |
 
-### How to get “real” roster data (N0)
+### How to get “real” roster data (N0) — updated
 
-1. **Petfinder Partners API** — free developer keys; sync adoptable animals for one `PETFINDER_ORG_ID`. Stub already in repo.
-2. **Shelterluv** — only with shelter’s existing product + their API access (not built yet).
-3. **County offices** — not a bulk API; officers use `/intake/county` for one-off municipal transfers.
+1. ~~Petfinder Partners self-serve API~~ — **decommissioned Dec 2025**.
+2. **Pilot partnership** — county Chameleon/PetPoint/24Pet or foster rescue CSV / weekly export.
+3. **Shelterluv** — only if a partner already uses it and grants access.
+4. **County transfer form** — `/intake/county` for one-off ACO handoffs (not a bulk feed).
+5. Keep **`dogs.json` seed** until a live feed lands.
 
 Do **not** add arcade games, autoplay music, or social crawling next. Those fight the mission and the 513(i) / ToS constraints.

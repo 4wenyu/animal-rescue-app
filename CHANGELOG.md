@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.3.2 — Lost-pet draft persistence + pilot N0 retarget (2026-09-20)
+
+### Added
+- Server-side lost-pet intake drafts: Prisma `LostPetIntakeDraft`, migration `20260920_lost_pet_intake_draft`, `GET/PUT/DELETE /api/lost-pet-drafts`.
+- Client merges localStorage + server by `savedAt`; anonymous users stay local-only; activate search clears both.
+
+### Docs
+- `RescueHub Kanban.md` / `GAPS_AND_PLAN.md` — N1 done; N0 retargeted (Petfinder public API gone; SoCal pilot emails in flight).
+
+---
 ## v3.3.1 — Sprint board, agent roles, repo cleanup (2026-09-19)
 
 ### Added
