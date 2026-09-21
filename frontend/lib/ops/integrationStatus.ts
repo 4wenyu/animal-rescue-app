@@ -12,6 +12,7 @@ export type IntegrationStatus = {
   llmConfigured: boolean;
   stripeConfigured: boolean;
   stripeWebhookConfigured: boolean;
+  googleAuthConfigured: boolean;
   rateLimitBackend: "redis" | "memory";
   sentryConfigured: boolean;
   shelterHoursConfigured: boolean;
@@ -29,6 +30,12 @@ export function getIntegrationStatus(): IntegrationStatus {
     stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY?.trim()),
     stripeWebhookConfigured: Boolean(
       process.env.STRIPE_WEBHOOK_SECRET?.trim(),
+    ),
+    googleAuthConfigured: Boolean(
+      process.env.AUTH_SECRET?.trim() &&
+        process.env.AUTH_GOOGLE_ID?.trim() &&
+        process.env.AUTH_GOOGLE_SECRET?.trim() &&
+        process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true",
     ),
     rateLimitBackend: rateLimitBackend(),
     sentryConfigured: hasSentryDsn(),

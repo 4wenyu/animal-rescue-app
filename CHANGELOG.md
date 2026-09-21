@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.3.7 — Pilot roster CSV import (N0 path) (2026-09-21)
+
+### Added
+- Staff `POST /api/admin/roster-csv` + `/staff/roster` — paste/upload shelter CSV into `roster-{id}` Animal rows (Petfinder public API still gone).
+- Dry-run preview (`?dryRun=1`) before import; CSV parser tolerates common column aliases (max 100 rows).
+- `/staff/ops` shows Google citizen-login readiness; operator checklist adds Google redirect + friend smoke-test steps.
+
+### Docs
+- Kanban / GAPS — N0 CSV ingest path ready; still awaiting pilot shelter files.
+
+---
 ## v3.3.6 — Operator hardening (N5) (2026-09-20)
 
 ### Added

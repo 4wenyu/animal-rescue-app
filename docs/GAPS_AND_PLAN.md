@@ -37,7 +37,7 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 
 | # | Move | Epic | Status |
 |---|---|---|---|
-| **N0** | **Pilot roster data path** | 4 | In progress (outreach). Not Petfinder keys — public API is gone. |
+| **N0** | **Pilot roster data path** | 4 | **CSV ingest ready** 2026-09-21 (`/staff/roster`). Awaiting pilot file / partner feed. |
 | **N1** | Persist lost-pet chat drafts server-side | 3 | **Done** 2026-09-20 |
 | **N2** | Richer staff share-evidence UI | 2/ops | **Done** 2026-09-20 |
 | **N3** | SMS/Telegram **radius** alerts | 3 | **Done** 2026-09-20 (Telegram + staff gate; SMS deferred) |

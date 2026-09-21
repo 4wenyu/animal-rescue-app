@@ -60,7 +60,8 @@
     },
     "find_my_pet": "반려동물 찾기",
     "share_review": "공유 검토",
-    "ops": "Ops status"
+    "ops": "Ops status",
+    "roster_csv": "Roster CSV"
   },
   "hero": {
     "badge": "법적 준수 플랫폼",

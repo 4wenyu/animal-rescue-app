@@ -18,11 +18,11 @@ kanban-plugin: basic
 
 ## 🎯 Next up (ordered)
 
-- [ ] **N0 — Pilot roster data path** — Petfinder **public API shut down Dec 2025** (no new keys). Waiting on SoCal pilot emails (Riverside DAS, SB City, Kitty Devore). Accept CSV / partner export / manual intake; keep `dogs.json` seed until then. Stub `petfinder-sync` stays for any future member feed.
+- [ ] **N0 — Pilot roster data path** — Petfinder **public API shut down Dec 2025**. **CSV ingest ready** (`/staff/roster`, `POST /api/admin/roster-csv`). Still waiting on SoCal pilot emails (Riverside DAS, SB City, Kitty Devore) for a real export. Keep `dogs.json` seed until then.
 
 ## 🚀 In progress
 
-- [ ] **N0** — pilot shelter outreach sent; awaiting replies
+- [ ] **N0** — CSV import path shipped; awaiting pilot CSV / partner feed
 
 ## ✅ Done (recent)
 

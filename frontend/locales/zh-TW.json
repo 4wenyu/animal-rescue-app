@@ -60,7 +60,8 @@
     },
     "find_my_pet": "尋找我的寵物",
     "share_review": "分享審核",
-    "ops": "Ops status"
+    "ops": "Ops status",
+    "roster_csv": "Roster CSV"
   },
   "hero": {
     "badge": "法律合規平台",

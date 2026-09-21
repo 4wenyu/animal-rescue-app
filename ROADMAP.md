@@ -4,8 +4,8 @@ kanban-plugin: basic
 
 # RescueHub — Roadmap & Epic Status Board
 
-> **Current Active Phase:** **N0 — Pilot roster path** (SoCal outreach) · **N1–N5 done** · 2026-09-20
-> **Next Active Phase:** Unblock N0 (CSV/partner feed) → Epic 4 ingest
+> **Current Active Phase:** **N0 — Pilot roster** · CSV import ready · awaiting shelter file · 2026-09-21
+> **Next Active Phase:** Land pilot CSV → Epic 4 live roster
 > **Board:** `RescueHub Kanban.md` · **Roles:** `docs/AGENT_ROLES.md` · **Gaps:** `docs/GAPS_AND_PLAN.md`
 > **Last Updated:** 2026-09-20
 

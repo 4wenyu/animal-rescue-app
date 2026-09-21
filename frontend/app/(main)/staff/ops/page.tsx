@@ -83,6 +83,11 @@ export default async function StaffOpsPage(): Promise<ReactNode> {
           detail="TEAMOROUTER / FREELLMAPI / Gemini key"
         />
         <Row
+          label="Google citizen login"
+          ok={s.googleAuthConfigured}
+          detail="AUTH_SECRET + AUTH_GOOGLE_* + NEXT_PUBLIC_AUTH_GOOGLE_ENABLED"
+        />
+        <Row
           label="Telegram ops channel"
           ok={s.telegramConfigured}
           detail={

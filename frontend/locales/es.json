@@ -60,7 +60,8 @@
     },
     "find_my_pet": "Buscar mi mascota",
     "share_review": "Revisar compartidos",
-    "ops": "Ops status"
+    "ops": "Ops status",
+    "roster_csv": "Roster CSV"
   },
   "hero": {
     "badge": "Plataforma Legalmente Conforme",

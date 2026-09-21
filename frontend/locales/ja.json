@@ -60,7 +60,8 @@
     },
     "find_my_pet": "ペットを探す",
     "share_review": "シェア審査",
-    "ops": "Ops status"
+    "ops": "Ops status",
+    "roster_csv": "Roster CSV"
   },
   "hero": {
     "badge": "法令準拠プラットフォーム",
