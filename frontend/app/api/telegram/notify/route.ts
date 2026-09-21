@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { notifyIntake } from "@/src/lib/telegram";
 
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 
 /**
  * POST /api/telegram/notify
@@ -44,7 +44,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   // intake record itself is persisted by /api/animals/intake, so a throttled
   // alert never loses animal data.
   const ip = getClientIp(request);
-  const { ok, retryAfterSeconds } = checkRateLimit(
+  const { ok, retryAfterSeconds } = await checkRateLimitAsync(
     `telegram-notify:${ip}`,
     10,
     60 * 60 * 1000,

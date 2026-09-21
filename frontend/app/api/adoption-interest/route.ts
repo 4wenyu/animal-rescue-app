@@ -18,7 +18,7 @@ import { z } from "zod";
 
 import { parseJsonBody } from "@/lib/api/helpers";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,7 +61,7 @@ const AdoptionInterestSchema = z.object({
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  const { ok: withinLimit, retryAfterSeconds } = checkRateLimit(
+  const { ok: withinLimit, retryAfterSeconds } = await checkRateLimitAsync(
     `adoption-interest:${ip}`,
     RATE_MAX,
     RATE_WINDOW_MS,

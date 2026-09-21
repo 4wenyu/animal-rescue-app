@@ -42,7 +42,7 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | **N2** | Richer staff share-evidence UI | 2/ops | **Done** 2026-09-20 |
 | **N3** | SMS/Telegram **radius** alerts | 3 | **Done** 2026-09-20 (Telegram + staff gate; SMS deferred) |
 | **N4** | Stripe webhooks | ops | **Done** 2026-09-20 |
-| N5 | Operator hardening | ops | Next code card while N0 waits |
+| **N5** | Operator hardening | ops | **Done** 2026-09-20 (Redis/Sentry hooks + ops page; photos still operator) |
 
 ### How to get “real” roster data (N0) — updated
 

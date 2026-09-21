@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api/helpers";
 import { DonateBodySchema } from "@/lib/fundraisingDonate";
 import { applyFundraisingPledge } from "@/lib/services/fundraisingPledge";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { isPreviewMode } from "@/lib/siteMode";
 
 export const runtime = "nodejs";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  const { ok: withinLimit, retryAfterSeconds } = checkRateLimit(
+  const { ok: withinLimit, retryAfterSeconds } = await checkRateLimitAsync(
     `fundraising-donate:${ip}`,
     10,
     10 * 60 * 1000,

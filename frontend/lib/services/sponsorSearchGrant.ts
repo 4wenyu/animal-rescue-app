@@ -2,7 +2,7 @@
  * Server-only sponsor-funded search: acknowledgment → +fee EARN → −fee SPEND.
  * Clients never mint. Idempotent via caller-supplied keys.
  */
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitAsync } from "@/lib/rate-limit";
 import {
   processTokenTransaction,
   SEARCH_FEE_AMOUNT,
@@ -25,7 +25,7 @@ export async function grantSponsorFundedSearch(input: {
   creditKey: string;
   spendKey: string;
 }): Promise<{ credit: ProcessTokenResult; spend: ProcessTokenResult }> {
-  const { ok, retryAfterSeconds } = checkRateLimit(
+  const { ok, retryAfterSeconds } = await checkRateLimitAsync(
     `sponsor-search:${input.userId}`,
     5,
     60 * 60 * 1000,

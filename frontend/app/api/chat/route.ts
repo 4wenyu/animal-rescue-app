@@ -2,7 +2,7 @@ import { streamText } from "ai";
 import { z } from "zod";
 
 import { missingLlmMessage, resolveChatModel } from "@/lib/llm/provider";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { chatSystemPrompt, type ChatSurface } from "@/lib/chatPrompts";
 
 export const runtime = "nodejs";
@@ -54,7 +54,7 @@ const ChatRequestSchema = z.object({
 export async function POST(req: Request) {
   // Public chatbot used by anonymous visitors — throttle per IP.
   const ip = getClientIp(req);
-  const { ok, retryAfterSeconds } = checkRateLimit(`chat:${ip}`, 10, 60 * 1000);
+  const { ok, retryAfterSeconds } = await checkRateLimitAsync(`chat:${ip}`, 10, 60 * 1000);
   if (!ok) {
     return Response.json(
       { error: "Too many requests. Please wait a moment and try again." },

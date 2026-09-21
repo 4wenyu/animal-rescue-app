@@ -5,6 +5,7 @@ import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { OutreachDraftReviewQueue } from "@/src/components/outreach/OutreachDraftReviewQueue";
 import { AgentRunButton } from "@/src/components/outreach/AgentRunButton";
+import { TelegramOpsBanner } from "@/src/components/outreach/TelegramOpsBanner";
 import { flushApprovedOutreach } from "@/lib/services/outreachService";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +87,12 @@ export default async function OutreachReviewPage(): Promise<ReactNode> {
         delivered until you approve it — this queue is the human-in-the-loop
         checkpoint.
       </p>
+      <TelegramOpsBanner
+        configured={Boolean(
+          process.env.TELEGRAM_BOT_TOKEN?.trim() &&
+            process.env.TELEGRAM_CHAT_ID?.trim(),
+        )}
+      />
       <OutreachDraftReviewQueue initialDrafts={serializedDrafts} />
     </div>
   );

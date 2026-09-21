@@ -19,7 +19,6 @@ kanban-plugin: basic
 ## 🎯 Next up (ordered)
 
 - [ ] **N0 — Pilot roster data path** — Petfinder **public API shut down Dec 2025** (no new keys). Waiting on SoCal pilot emails (Riverside DAS, SB City, Kitty Devore). Accept CSV / partner export / manual intake; keep `dogs.json` seed until then. Stub `petfinder-sync` stays for any future member feed.
-- [ ] **N5 — Operator hardening** — real shelter photos/hours; Telegram keys or accept record-only; rotate LLM keys; Sentry; Redis before multi-instance
 
 ## 🚀 In progress
 
@@ -27,6 +26,7 @@ kanban-plugin: basic
 
 ## ✅ Done (recent)
 
+- [x] **N5 — Operator hardening** (2026-09-20) — Upstash rate limits, Sentry hook, `/staff/ops`, Telegram honesty banner, operator checklist
 - [x] **N4 — Stripe webhooks** (2026-09-20) — `checkout.session.completed` → idempotent fulfill; confirm URL is fallback only
 - [x] **N3 — SMS/Telegram radius alerts** (2026-09-20) — geocode last-seen → queue drafts for opted-in helpers in radius; staff still gates send; Telegram helper chat optional; SMS deferred
 - [x] **N2 — Richer staff share-evidence UI** (2026-09-20) — tracking + proof links, radar/animal, reject note on `/shares/review`

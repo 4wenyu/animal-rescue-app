@@ -29,7 +29,7 @@ import { ZodError } from "zod";
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { PetIntakeBatchSchema, type PetIntake } from "@/lib/schemas/intake";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import {
   normalizeEsignHash,
   remainingIntakeBonusBudget,
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
   const rateLimitKey = submittedUserId
     ? `animals-intake:user:${submittedUserId}`
     : `animals-intake:ip:${ip}`;
-  const { ok: withinLimit, retryAfterSeconds } = checkRateLimit(
+  const { ok: withinLimit, retryAfterSeconds } = await checkRateLimitAsync(
     rateLimitKey,
     10,
     60 * 1000,

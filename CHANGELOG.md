@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.3.6 — Operator hardening (N5) (2026-09-20)
+
+### Added
+- Optional Upstash Redis rate limits (`checkRateLimitAsync`) for multi-instance.
+- Minimal Sentry capture via `SENTRY_DSN` + `instrumentation.ts`.
+- Staff `/staff/ops` integration status + `docs/OPERATOR_CHECKLIST.md`.
+- Telegram record-only banner on `/outreach/review`; preview honesty for placedog photos / optional `NEXT_PUBLIC_SHELTER_HOURS`.
+
+### Docs
+- Kanban / GAPS — N5 done; N0 remains the open pilot gate.
+
+---
 ## v3.3.5 — Stripe fundraising webhooks (N4) (2026-09-20)
 
 ### Added

@@ -3,7 +3,7 @@ import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { PetIntakeBatchSchema } from "@/lib/schemas/intake";
 
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { requireRole } from "@/lib/api/helpers";
 
 export const runtime = "nodejs";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   // AI/cost endpoint — throttle per authenticated user as well as per IP.
   const ip = getClientIp(req);
-  const { ok, retryAfterSeconds } = checkRateLimit(
+  const { ok, retryAfterSeconds } = await checkRateLimitAsync(
     `intake-map:${authResult.user.id}:${ip}`,
     10,
     60 * 1000,

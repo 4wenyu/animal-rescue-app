@@ -12,7 +12,7 @@ import {
   rosterAnimalId,
 } from "@/lib/medicalLog";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitAsync } from "@/lib/rate-limit";
 import type { Dog } from "@/src/components/home/types";
 
 import dogs from "../../../../data/dogs.json";
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const gate = await requireRole("STAFF", "ADMIN");
   if (!gate.ok) return gate.response;
 
-  const { ok: withinLimit, retryAfterSeconds } = checkRateLimit(
+  const { ok: withinLimit, retryAfterSeconds } = await checkRateLimitAsync(
     `medical-log:${gate.user.id}`,
     30,
     10 * 60 * 1000,

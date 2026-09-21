@@ -36,7 +36,7 @@ import { Output, streamText, type ModelMessage, type UserContent } from "ai";
 import { z } from "zod";
 
 import { missingLlmMessage, resolveChatModel } from "@/lib/llm/provider";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -459,7 +459,7 @@ function wirePartsToText(parts: WirePart[]): string {
 export async function POST(req: Request) {
   // AI/cost endpoint — throttle per IP (the intake widget is publicly reachable).
   const ip = getClientIp(req);
-  const { ok, retryAfterSeconds } = checkRateLimit(`chat-intake:${ip}`, 10, 60 * 1000);
+  const { ok, retryAfterSeconds } = await checkRateLimitAsync(`chat-intake:${ip}`, 10, 60 * 1000);
   if (!ok) {
     return new Response(
       JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),

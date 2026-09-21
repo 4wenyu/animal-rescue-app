@@ -15,6 +15,7 @@ import {
   Sparkles,
   Sun,
   Share2,
+  Shield,
 } from "lucide-react";
 import { useI18n } from "@/src/lib/useI18n";
 import { AboutNav } from "./AboutNav";
@@ -48,6 +49,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }): ReactNo
           { href: "/intake", label: tr("nav.intake"), icon: Heart },
           { href: "/medical", label: tr("nav.medical"), icon: Activity },
           { href: "/shares/review", label: tr("nav.share_review"), icon: Share2 },
+          { href: "/staff/ops", label: tr("nav.ops"), icon: Shield },
         ]
       : []),
     { href: "/fundraising", label: tr("nav.fundraising"), icon: DollarSign },

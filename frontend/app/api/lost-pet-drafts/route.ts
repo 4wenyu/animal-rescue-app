@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireRole, parseJsonBody } from "@/lib/api/helpers";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitAsync } from "@/lib/rate-limit";
 import {
   deleteLostPetIntakeDraft,
   getLostPetIntakeDraft,
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   const gate = await requireRole();
   if (!gate.ok) return gate.response;
 
-  const limited = checkRateLimit(clientKey(req, gate.user.id), 60, 60_000);
+  const limited = await checkRateLimitAsync(clientKey(req, gate.user.id), 60, 60_000);
   if (!limited.ok) {
     return NextResponse.json(
       { error: "Too Many Requests", message: "Slow down." },
@@ -56,7 +56,7 @@ export async function PUT(req: NextRequest) {
   const gate = await requireRole();
   if (!gate.ok) return gate.response;
 
-  const limited = checkRateLimit(clientKey(req, gate.user.id), 120, 60_000);
+  const limited = await checkRateLimitAsync(clientKey(req, gate.user.id), 120, 60_000);
   if (!limited.ok) {
     return NextResponse.json(
       { error: "Too Many Requests", message: "Slow down." },

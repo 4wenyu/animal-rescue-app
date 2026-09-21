@@ -1,19 +1,16 @@
 /**
- * Shared in-memory sliding-window rate limiter.
+ * Shared sliding-window rate limiter.
  * ==============================================
- * Small, dependency-free limiter for gating expensive or public API routes
- * (AI/cost endpoints, notification fan-out, public forms). Keyed by caller
- * identity — typically IP, optionally `ip + ":" + sessionId` for tighter
- * per-user limits when a session exists.
- *
- * PRODUCTION NOTE: this state lives in the Node process. A multi-instance
- * or multi-region deployment MUST back this with Redis (or a DB table with
- * TTL cleanup) or limits will be enforced per-instance instead of globally.
- *
- * Unlike hand-rolled per-route maps (see app/api/adoption-interest/route.ts),
- * stale buckets are pruned so the map cannot grow without bound — the leak
- * pattern flagged in api/adoption-interest.
+ * Default: in-memory (single Node process).
+ * N5: when Upstash REST env is set, `checkRateLimitAsync` uses Redis so
+ * multi-instance deploys share one counter. Sync `checkRateLimit` stays for
+ * tests and memory-only paths.
  */
+
+import {
+  hasRedisRateLimit,
+  redisFixedWindowHit,
+} from "@/lib/rate-limit-redis";
 
 /** One bucket = hit timestamps inside the current window. */
 const buckets = new Map<string, number[]>();
@@ -58,9 +55,10 @@ export function checkRateLimit(
 ): RateLimitResult {
   const now = Date.now();
 
-  // Throttled sweep: prune stale keys at most once a minute, or immediately
-  // when the map is near its hard cap (prevents unbounded memory growth).
-  if (now - lastSweepAt >= SWEEP_INTERVAL_MS || buckets.size >= MAX_TRACKED_KEYS) {
+  if (
+    now - lastSweepAt >= SWEEP_INTERVAL_MS ||
+    buckets.size >= MAX_TRACKED_KEYS
+  ) {
     sweep(now, windowMs);
   }
 
@@ -72,7 +70,10 @@ export function checkRateLimit(
     const oldest = hits[0] ?? now;
     return {
       ok: false,
-      retryAfterSeconds: Math.max(1, Math.ceil((oldest + windowMs - now) / 1000)),
+      retryAfterSeconds: Math.max(
+        1,
+        Math.ceil((oldest + windowMs - now) / 1000),
+      ),
     };
   }
 
@@ -81,10 +82,25 @@ export function checkRateLimit(
   return { ok: true, retryAfterSeconds: 0 };
 }
 
+/** Prefer Redis when configured; otherwise identical to `checkRateLimit`. */
+export async function checkRateLimitAsync(
+  key: string,
+  limit: number,
+  windowMs: number,
+): Promise<RateLimitResult> {
+  if (hasRedisRateLimit()) {
+    const remote = await redisFixedWindowHit(key, limit, windowMs);
+    if (remote) return remote;
+  }
+  return checkRateLimit(key, limit, windowMs);
+}
+
+export function rateLimitBackend(): "redis" | "memory" {
+  return hasRedisRateLimit() ? "redis" : "memory";
+}
+
 /**
- * Best-effort client IP from proxy headers (matches the convention already
- * used in app/api/adoption-interest/route.ts). Falls back to "unknown" so
- * callers behind no proxy still get a shared bucket instead of a crash.
+ * Best-effort client IP from proxy headers. Falls back to "unknown".
  */
 export function getClientIp(request: Request): string {
   return (
