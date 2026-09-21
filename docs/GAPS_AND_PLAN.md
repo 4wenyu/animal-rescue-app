@@ -14,7 +14,7 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | Oscar page mixed language / 4 equal CTAs | Photo hero, translated breed/personality/dates, one primary Adopt, quieter Foster/Share/Donate, sticky mobile bar, next-steps copy, share poster. |
 | Stay-loop too thin | Two-door hero, daily streak banner, opt-in ambient (never autoplay), kennel walk + today animal already existed. |
 | Dual roster | `getPublicRoster()` prefers Prisma `roster-*` rows; seed copies `dogs.json`. |
-| Fake live donations | Preview pledges labeled; live without Stripe returns 503; Stripe Checkout + `/api/fundraising/confirm` when `STRIPE_SECRET_KEY` is set. |
+| Fake live donations | Preview pledges labeled; live without Stripe returns 503; Stripe Checkout + webhook (`/api/fundraising/webhooks/stripe`) + idempotent confirm fallback when `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` are set. |
 | Outreach “region matching not implemented” | Token overlap on `city` / `regionLabel`; sourceNote stays honest. |
 | Epic 4 crawler stub | Staff `POST /api/admin/petfinder-sync` — no-op until a feed exists. **Petfinder public API decommissioned Dec 2025** — no new self-serve keys. |
 | No LICENSE / SaaS README | Apache-2.0 + mission README. |
@@ -41,8 +41,8 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | **N1** | Persist lost-pet chat drafts server-side | 3 | **Done** 2026-09-20 |
 | **N2** | Richer staff share-evidence UI | 2/ops | **Done** 2026-09-20 |
 | **N3** | SMS/Telegram **radius** alerts | 3 | **Done** 2026-09-20 (Telegram + staff gate; SMS deferred) |
-| N4 | Stripe webhooks | ops | Next code card while N0 waits |
-| N5 | Operator hardening | ops | Photos/hours; Telegram; Sentry; Redis |
+| **N4** | Stripe webhooks | ops | **Done** 2026-09-20 |
+| N5 | Operator hardening | ops | Next code card while N0 waits |
 
 ### How to get “real” roster data (N0) — updated
 

@@ -244,6 +244,20 @@ model FundraisingWallet {
   @@map("fundraising_wallets")
 }
 
+// N4 — one row per Stripe Checkout session (idempotent webhook / confirm fulfill).
+model FundraisingDonation {
+  donationId      String   @id @default(uuid())
+  stripeSessionId String   @unique
+  animalId        String
+  rosterId        Int
+  amount          Decimal
+  allocation      FundType
+  createdAt       DateTime @default(now())
+
+  @@index([animalId, createdAt])
+  @@map("fundraising_donations")
+}
+
 // UBIT compliant vendor perk distribution
 model SponsorshipPerk {
   perkId       String  @id @default(uuid())

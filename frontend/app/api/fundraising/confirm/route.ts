@@ -1,6 +1,13 @@
+/**
+ * GET /api/fundraising/confirm
+ * ============================
+ * Success-URL fallback after Stripe Checkout. Primary fulfill is the
+ * webhook (N4); this path re-checks the session and applies idempotently,
+ * then redirects to the fundraising page.
+ */
 import { NextResponse } from "next/server";
 
-import { applyFundraisingPledge } from "@/lib/services/fundraisingPledge";
+import { fulfillStripeCheckoutSession } from "@/lib/services/fundraisingPledge";
 import { isPreviewMode } from "@/lib/siteMode";
 
 export const runtime = "nodejs";
@@ -36,32 +43,38 @@ export async function GET(request: Request) {
     );
   }
   const session = (await stripeRes.json()) as {
+    id?: string;
     payment_status?: string;
     metadata?: { rosterId?: string; allocation?: string; amount?: string };
   };
-  if (session.payment_status !== "paid") {
+  if (session.payment_status !== "paid" || !session.id) {
     return NextResponse.json(
       { error: "Payment Required", message: "Checkout is not paid yet." },
       { status: 402 },
     );
   }
-  const rosterId = Number(session.metadata?.rosterId);
-  const amount = Number(session.metadata?.amount);
-  const allocation =
-    session.metadata?.allocation === "medical" ? "medical" : "general";
-  if (!Number.isInteger(rosterId) || !Number.isFinite(amount)) {
+
+  const result = await fulfillStripeCheckoutSession({
+    id: session.id,
+    payment_status: session.payment_status,
+    metadata: session.metadata,
+  });
+  if (!result.ok) {
+    const status = result.reason === "unknown-animal" ? 404 : 400;
     return NextResponse.json(
-      { error: "Bad Request", message: "Stripe metadata was incomplete." },
-      { status: 400 },
+      {
+        error: status === 404 ? "Not Found" : "Bad Request",
+        message:
+          result.reason === "unknown-animal"
+            ? "Unknown animal."
+            : "Stripe metadata was incomplete.",
+      },
+      { status },
     );
   }
-  const wallet = await applyFundraisingPledge({ rosterId, amount, allocation });
-  if (!wallet) {
-    return NextResponse.json(
-      { error: "Not Found", message: "Unknown animal." },
-      { status: 404 },
-    );
-  }
+
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return NextResponse.redirect(new URL(`/fundraising/${rosterId}?paid=1`, origin));
+  return NextResponse.redirect(
+    new URL(`/fundraising/${result.rosterId}?paid=1`, origin),
+  );
 }

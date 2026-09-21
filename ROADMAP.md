@@ -4,8 +4,8 @@ kanban-plugin: basic
 
 # RescueHub — Roadmap & Epic Status Board
 
-> **Current Active Phase:** **N0 — Pilot roster path** (SoCal outreach) · **N1–N3 done** · 2026-09-20
-> **Next Active Phase:** N4 Stripe webhooks → N5 operator hardening
+> **Current Active Phase:** **N0 — Pilot roster path** (SoCal outreach) · **N1–N4 done** · 2026-09-20
+> **Next Active Phase:** N5 operator hardening
 > **Board:** `RescueHub Kanban.md` · **Roles:** `docs/AGENT_ROLES.md` · **Gaps:** `docs/GAPS_AND_PLAN.md`
 > **Last Updated:** 2026-09-20
 

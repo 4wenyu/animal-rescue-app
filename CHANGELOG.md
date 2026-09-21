@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.3.5 — Stripe fundraising webhooks (N4) (2026-09-20)
+
+### Added
+- `POST /api/fundraising/webhooks/stripe` with signature verify + idempotent `FundraisingDonation` ledger.
+- Confirm success-URL still works but shares the same one-time fulfill (no double credit on refresh).
+
+### Docs
+- Kanban / GAPS — N4 done; N5 next; N0 still awaiting pilot replies.
+
+---
 ## v3.3.4 — Lost-pet radius alerts (N3) (2026-09-20)
 
 ### Added
