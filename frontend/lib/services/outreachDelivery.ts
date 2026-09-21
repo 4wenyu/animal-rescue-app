@@ -85,8 +85,9 @@ export async function deliverApprovedDraft(
       helpAsk: true,
       sourceNote: true,
       animalId: true,
+      lostPetSearchId: true,
       profile: {
-        select: { regionLabel: true },
+        select: { regionLabel: true, telegramChatId: true },
       },
     },
   });
@@ -101,8 +102,10 @@ export async function deliverApprovedDraft(
   }
 
   // ── 3. Deliver (Telegram when configured; else record-only) ─────────
+  const helperChat = draft.profile?.telegramChatId?.trim() || undefined;
   const telegramConfigured = Boolean(
-    process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID,
+    process.env.TELEGRAM_BOT_TOKEN &&
+      (helperChat || process.env.TELEGRAM_CHAT_ID),
   );
 
   if (telegramConfigured) {
@@ -117,11 +120,13 @@ export async function deliverApprovedDraft(
       `_Automated outreach approved by ${shelterName} staff._`,
     ].join("\n");
 
-    const ok = await sendTelegramMessage(text, "Markdown");
+    const ok = await sendTelegramMessage(text, "Markdown", helperChat);
     if (ok) {
       await prisma.outreachDraft.update({
         where: { draftId },
-        data: { sourceNote: `${draft.sourceNote} — delivered: telegram` },
+        data: {
+          sourceNote: `${draft.sourceNote} — delivered: telegram${helperChat ? " (helper chat)" : ""}`,
+        },
       });
       return { kind: "delivered", channel: "telegram" };
     }

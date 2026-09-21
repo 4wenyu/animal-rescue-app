@@ -27,6 +27,7 @@ export function OutreachOptInForm() {
   const { tr } = useI18n();
   const [selected, setSelected] = useState<string[]>([]);
   const [region, setRegion] = useState("");
+  const [telegramChatId, setTelegramChatId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
@@ -56,6 +57,7 @@ export function OutreachOptInForm() {
         body: JSON.stringify({
           helpAreas: selected,
           regionLabel: region.trim() || undefined,
+          telegramChatId: telegramChatId.trim() || undefined,
         }),
       });
       const json = (await res.json().catch(() => null)) as
@@ -71,7 +73,7 @@ export function OutreachOptInForm() {
     } finally {
       setSaving(false);
     }
-  }, [selected, region, tr]);
+  }, [selected, region, telegramChatId, tr]);
 
   const handleCopy = useCallback(async () => {
     if (!result?.unsubscribeToken) return;
@@ -133,6 +135,17 @@ export function OutreachOptInForm() {
         placeholder={tr("outreach.region_placeholder")}
         className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
       />
+
+      <label className="mt-4 block text-xs font-semibold uppercase tracking-widest text-slate-500">
+        {tr("outreach.telegram_label")}
+      </label>
+      <input
+        value={telegramChatId}
+        onChange={(e) => setTelegramChatId(e.target.value)}
+        placeholder={tr("outreach.telegram_placeholder")}
+        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+      />
+      <p className="mt-1 text-xs text-slate-500">{tr("outreach.telegram_hint")}</p>
 
       {error && (
         <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600">

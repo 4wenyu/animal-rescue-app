@@ -5,17 +5,15 @@
  * outreach agent. Creates (or updates) an OutreachProfile with their chosen
  * help areas + region, and returns their one-click unsubscribe token.
  *
- * Auth: session required — we must attach the profile to a real account so
- * unsubscribe and history are traceable.
- *
- * Honest framing: this is the consent gate for the Idea's autonomous agent.
- * Without this, the agent is never allowed to contact anyone.
+ * N3: geocodes regionLabel → lat/lng for radius matching; optional
+ * telegramChatId for staff-approved delivery to the helper.
  */
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
+import { geocodeLabel } from "@/lib/geo/geocode";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -29,6 +27,7 @@ const OptInSchema = z.object({
     .min(1, "Pick at least one way you can help.")
     .max(6),
   regionLabel: z.string().trim().max(120).optional(),
+  telegramChatId: z.string().trim().max(64).optional(),
 });
 
 export async function POST(request: Request) {
@@ -49,7 +48,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: "Validation Error",
-          details: err.issues.map((e) => ({ path: e.path.join("."), message: e.message })),
+          details: err.issues.map((e) => ({
+            path: e.path.join("."),
+            message: e.message,
+          })),
         },
         { status: 400 },
       );
@@ -61,14 +63,37 @@ export async function POST(request: Request) {
   }
 
   try {
-    const existing = await prisma.outreachProfile.findUnique({ where: { userId } });
+    const existing = await prisma.outreachProfile.findUnique({
+      where: { userId },
+    });
+    const regionLabel = parsed.regionLabel ?? existing?.regionLabel ?? null;
+    let lat = existing?.lat ?? null;
+    let lng = existing?.lng ?? null;
+    if (parsed.regionLabel && parsed.regionLabel !== existing?.regionLabel) {
+      const point = await geocodeLabel(parsed.regionLabel);
+      lat = point?.lat ?? null;
+      lng = point?.lng ?? null;
+    } else if (regionLabel && (lat == null || lng == null)) {
+      const point = await geocodeLabel(regionLabel);
+      lat = point?.lat ?? null;
+      lng = point?.lng ?? null;
+    }
+
+    const telegramChatId =
+      parsed.telegramChatId !== undefined
+        ? parsed.telegramChatId || null
+        : (existing?.telegramChatId ?? null);
+
     const profile = existing
       ? await prisma.outreachProfile.update({
           where: { userId },
           data: {
             status: "ACTIVE",
             helpAreas: parsed.helpAreas as never,
-            regionLabel: parsed.regionLabel ?? existing.regionLabel,
+            regionLabel,
+            lat,
+            lng,
+            telegramChatId,
             unsubscribedAt: null,
           },
         })
@@ -77,7 +102,10 @@ export async function POST(request: Request) {
             userId,
             status: "ACTIVE",
             helpAreas: parsed.helpAreas as never,
-            regionLabel: parsed.regionLabel ?? null,
+            regionLabel,
+            lat,
+            lng,
+            telegramChatId,
             consentGiven: new Date(),
           },
         });
@@ -90,7 +118,7 @@ export async function POST(request: Request) {
           status: profile.status,
           helpAreas: profile.helpAreas,
           regionLabel: profile.regionLabel,
-          // One-click unsubscribe link is scoped to the owner.
+          hasGeo: profile.lat != null && profile.lng != null,
           unsubscribeToken: profile.unsubscribeToken,
         },
       },
@@ -99,7 +127,10 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("[api/outreach/opt-in] failed:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", message: "Could not save your outreach preference." },
+      {
+        error: "Internal Server Error",
+        message: "Could not save your outreach preference.",
+      },
       { status: 500 },
     );
   }

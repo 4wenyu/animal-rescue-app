@@ -20,6 +20,7 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | No LICENSE / SaaS README | Apache-2.0 + mission README. |
 | Stale D+ reviews | Moved to `docs/archive/`. |
 | Lost-pet drafts die on refresh | **N1 done:** `LostPetIntakeDraft` + `GET/PUT/DELETE /api/lost-pet-drafts` for signed-in users; localStorage still backs anonymous / offline. |
+| No radius lost-pet alerts | **N3 done:** geocode last-seen → queue staff-review drafts for ACTIVE helpers within radius; optional helper Telegram on approve. SMS deferred. |
 
 ## Still operator / legal (not code)
 
@@ -39,8 +40,8 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | **N0** | **Pilot roster data path** | 4 | In progress (outreach). Not Petfinder keys — public API is gone. |
 | **N1** | Persist lost-pet chat drafts server-side | 3 | **Done** 2026-09-20 |
 | **N2** | Richer staff share-evidence UI | 2/ops | **Done** 2026-09-20 |
-| N3 | SMS/Telegram **radius** alerts | 3 backlog | Next code card while N0 waits |
-| N4 | Stripe webhooks | ops | Replace success-URL confirm |
+| **N3** | SMS/Telegram **radius** alerts | 3 | **Done** 2026-09-20 (Telegram + staff gate; SMS deferred) |
+| N4 | Stripe webhooks | ops | Next code card while N0 waits |
 | N5 | Operator hardening | ops | Photos/hours; Telegram; Sentry; Redis |
 
 ### How to get “real” roster data (N0) — updated

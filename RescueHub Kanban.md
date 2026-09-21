@@ -19,7 +19,6 @@ kanban-plugin: basic
 ## 🎯 Next up (ordered)
 
 - [ ] **N0 — Pilot roster data path** — Petfinder **public API shut down Dec 2025** (no new keys). Waiting on SoCal pilot emails (Riverside DAS, SB City, Kitty Devore). Accept CSV / partner export / manual intake; keep `dogs.json` seed until then. Stub `petfinder-sync` stays for any future member feed.
-- [ ] **N3 — Epic 3 backlog: SMS/Telegram radius alerts** — last-seen lat/lng, not cold DMs
 - [ ] **N4 — Stripe webhooks** — replace success-URL confirm for fundraising
 - [ ] **N5 — Operator hardening** — real shelter photos/hours; Telegram keys or accept record-only; rotate LLM keys; Sentry; Redis before multi-instance
 
@@ -29,6 +28,7 @@ kanban-plugin: basic
 
 ## ✅ Done (recent)
 
+- [x] **N3 — SMS/Telegram radius alerts** (2026-09-20) — geocode last-seen → queue drafts for opted-in helpers in radius; staff still gates send; Telegram helper chat optional; SMS deferred
 - [x] **N2 — Richer staff share-evidence UI** (2026-09-20) — tracking + proof links, radar/animal, reject note on `/shares/review`
 - [x] **N1 — Persist lost-pet chat drafts server-side** (2026-09-20) — `LostPetIntakeDraft` + `/api/lost-pet-drafts`; localStorage fallback for anonymous; merge by `savedAt`
 - [x] MVP loop close — sponsor-search server path, LLM router, share review, adopt conversion (2026-09-19)
@@ -40,7 +40,7 @@ kanban-plugin: basic
 
 - [x] **EPIC 1** — UI Polish & Global Localization · COMPLETE
 - [x] **EPIC 2** — Viral Token & Brand Sponsorship Gateway · CLOSED
-- [ ] **EPIC 3** — Autonomous Outreach Engine · FOUNDATION MERGED — open: geo + radius SMS/Telegram; draft persistence done (N1)
+- [ ] **EPIC 3** — Autonomous Outreach Engine · FOUNDATION + N3 radius — open: SMS/Twilio; draft persistence + radius Telegram drafts done
 - [ ] **EPIC 4** — Wide-Net Search Engine · public Petfinder API gone; pilot CSV/partner path instead
 
 ## 🔶 Blocked / archive

@@ -518,9 +518,14 @@ model LostPetSearch {
   colorMarkings String?
   collarId      String?
   lastSeen      String?
+  // N3 — geocoded last-seen for radius alerts (nullable if geocode fails).
+  lastSeenLat Float?
+  lastSeenLng Float?
 
   // Lifecycle — default SEARCHING means "the network just got pinged".
   status LostPetSearchStatus @default(SEARCHING)
+
+  radiusDrafts OutreachDraft[]
 
   // Optional FK back to the originating LOST_PET_SEARCH_SPEND ledger
   // row, so radar views can trace the search back to its token
@@ -582,8 +587,12 @@ model OutreachProfile {
   status       OutreachStatus @default(ACTIVE)
   helpAreas    OutreachHelpArea[]
   // The citizen's neighborhood/region, used by the agent to match nearby
-  // at-risk animals. Stored as free text (city/zip) — no geocoding yet.
+  // at-risk animals. Free text + optional geocode (N3 radius).
   regionLabel  String?
+  lat          Float?
+  lng          Float?
+  // Optional personal Telegram chat for staff-approved delivery (opt-in only).
+  telegramChatId String?
   consentGiven DateTime @default(now()) // explicit opt-in timestamp
   unsubscribeToken String  @unique @default(uuid())
   unsubscribedAt   DateTime?
@@ -593,6 +602,7 @@ model OutreachProfile {
   drafts OutreachDraft[]
 
   @@index([status, updatedAt])
+  @@index([status, lat, lng])
   @@map("outreach_profiles")
 }
 
@@ -609,6 +619,10 @@ model OutreachDraft {
   // surface a shelter-wide urgent call, not a single animal).
   animalId String?
 
+  // N3 — optional link to an activated lost-pet search (radius match).
+  lostPetSearchId String?
+  lostPetSearch   LostPetSearch? @relation(fields: [lostPetSearchId], references: [searchId], onDelete: SetNull)
+
   // Honest, generated copy — never written by a human pretending otherwise.
   subject    String
   body       String
@@ -621,5 +635,7 @@ model OutreachDraft {
   createdAt        DateTime @default(now())
 
   @@index([status, createdAt])
+  @@index([lostPetSearchId])
+  @@unique([profileId, lostPetSearchId])
   @@map("outreach_drafts")
 }

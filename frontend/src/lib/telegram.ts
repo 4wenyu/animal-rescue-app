@@ -12,40 +12,35 @@
 
 const TELEGRAM_API_BASE = "https://api.telegram.org/bot";
 
-function getConfig(): { token: string; chatId: string } {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-
-  if (!token || !chatId) {
-    throw new Error(
-      "Telegram notification is not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in your environment.",
-    );
-  }
-
-  return { token, chatId };
-}
-
 /**
  * Supported parse modes for the message text.
  */
 export type ParseMode = "HTML" | "MarkdownV2" | "Markdown";
 
 /**
- * Send a plain-text message to the configured Telegram channel.
+ * Send a plain-text message to Telegram.
  *
  * @param text   — The message body (up to 4096 characters).
  * @param parse  — Optional parse mode (HTML, MarkdownV2, Markdown).
+ * @param chatIdOverride — Optional helper chat (N3). Falls back to TELEGRAM_CHAT_ID.
  *
- * This function wraps the network call in a try/catch and will
- * never throw — failures are logged to console.error so they never
- * block the caller (e.g. a database write or user-facing response).
+ * Never throws — failures are logged so they never block the caller.
  */
 export async function sendTelegramMessage(
   text: string,
   parse?: ParseMode,
+  chatIdOverride?: string,
 ): Promise<boolean> {
   try {
-    const { token, chatId } = getConfig();
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId =
+      chatIdOverride?.trim() || process.env.TELEGRAM_CHAT_ID || "";
+    if (!token || !chatId) {
+      console.error(
+        "[telegram] missing TELEGRAM_BOT_TOKEN or chat id (override / TELEGRAM_CHAT_ID)",
+      );
+      return false;
+    }
 
     const body: Record<string, string> = {
       chat_id: chatId,

@@ -34,6 +34,7 @@ import { Prisma } from "@prisma/client";
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { SEARCH_FEE_AMOUNT } from "@/lib/services/tokenService";
+import { scheduleRadiusAlertsForSearch } from "@/lib/services/radiusAlertService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -246,6 +247,9 @@ export async function POST(request: Request) {
         activatedAt: true,
       },
     });
+
+    // N3 — geocode + queue radius drafts after the response (staff still gates send).
+    scheduleRadiusAlertsForSearch(created.searchId);
 
     return NextResponse.json(
       {

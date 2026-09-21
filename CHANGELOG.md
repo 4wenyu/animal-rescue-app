@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.3.4 — Lost-pet radius alerts (N3) (2026-09-20)
+
+### Added
+- Geocoded `lastSeenLat/Lng` on activate search; `OutreachProfile` lat/lng + optional `telegramChatId`.
+- `radiusAlertService` queues staff-review drafts for opted-in helpers within `OUTREACH_RADIUS_MILES` (default 25).
+- Delivery can target a helper Telegram chat after approval; ops channel still gets a queue summary.
+
+### Docs
+- Kanban / GAPS — N3 done; SMS/Twilio still deferred; N0 waiting on pilot replies.
+
+---
 ## v3.3.3 — Richer staff share review (N2) (2026-09-20)
 
 ### Added
