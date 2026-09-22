@@ -9,25 +9,21 @@
  * OutreachProfile and shows the one-click unsubscribe token.
  */
 
-import { Loader2, ShieldCheck, Copy, Check } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
 import { useI18n } from "@/src/lib/useI18n";
 
-const HELP_AREAS = [
-  { value: "DONATE", icon: "💝" },
-  { value: "FOSTER", icon: "🏠" },
-  { value: "ADOPT", icon: "🐾" },
-  { value: "VOLUNTEER", icon: "🙋" },
-  { value: "SHARE", icon: "📣" },
-  { value: "TRANSPORT", icon: "🚗" },
-] as const;
+import { OutreachContactFields } from "./OutreachContactFields";
+import { OutreachHelpAreas } from "./OutreachHelpAreas";
+import { OutreachOptInSuccess } from "./OutreachOptInSuccess";
 
 export function OutreachOptInForm() {
   const { tr } = useI18n();
   const [selected, setSelected] = useState<string[]>([]);
   const [region, setRegion] = useState("");
   const [telegramChatId, setTelegramChatId] = useState("");
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
@@ -58,6 +54,7 @@ export function OutreachOptInForm() {
           helpAreas: selected,
           regionLabel: region.trim() || undefined,
           telegramChatId: telegramChatId.trim() || undefined,
+          phone: phone.trim() || undefined,
         }),
       });
       const json = (await res.json().catch(() => null)) as
@@ -73,7 +70,7 @@ export function OutreachOptInForm() {
     } finally {
       setSaving(false);
     }
-  }, [selected, region, telegramChatId, tr]);
+  }, [selected, region, telegramChatId, phone, tr]);
 
   const handleCopy = useCallback(async () => {
     if (!result?.unsubscribeToken) return;
@@ -101,30 +98,7 @@ export function OutreachOptInForm() {
         </div>
       </div>
 
-      <p className="mt-5 text-xs font-semibold uppercase tracking-widest text-slate-500">
-        {tr("outreach.help_areas_label")}
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {HELP_AREAS.map((area) => {
-          const active = selected.includes(area.value);
-          return (
-            <button
-              key={area.value}
-              type="button"
-              onClick={() => toggle(area.value)}
-              aria-pressed={active}
-              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-semibold transition ${
-                active
-                  ? "border-emerald-400 bg-emerald-50 text-emerald-800"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <span className="text-base">{area.icon}</span>
-              <span>{tr(`outreach.area_${area.value.toLowerCase()}`)}</span>
-            </button>
-          );
-        })}
-      </div>
+      <OutreachHelpAreas selected={selected} onToggle={toggle} tr={tr} />
 
       <label className="mt-5 block text-xs font-semibold uppercase tracking-widest text-slate-500">
         {tr("outreach.region_label")}
@@ -136,16 +110,13 @@ export function OutreachOptInForm() {
         className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
       />
 
-      <label className="mt-4 block text-xs font-semibold uppercase tracking-widest text-slate-500">
-        {tr("outreach.telegram_label")}
-      </label>
-      <input
-        value={telegramChatId}
-        onChange={(e) => setTelegramChatId(e.target.value)}
-        placeholder={tr("outreach.telegram_placeholder")}
-        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+      <OutreachContactFields
+        telegramChatId={telegramChatId}
+        phone={phone}
+        onTelegram={setTelegramChatId}
+        onPhone={setPhone}
+        tr={tr}
       />
-      <p className="mt-1 text-xs text-slate-500">{tr("outreach.telegram_hint")}</p>
 
       {error && (
         <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600">
@@ -164,25 +135,12 @@ export function OutreachOptInForm() {
           {saving ? tr("outreach.saving") : tr("outreach.cta")}
         </button>
       ) : (
-        <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-sm font-semibold text-emerald-800">
-            {tr("outreach.success")}
-          </p>
-          <p className="mt-1 text-xs text-emerald-700">{tr("outreach.token_hint")}</p>
-          <div className="mt-2 flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded-lg border border-emerald-200 bg-white px-3 py-2 font-mono text-xs text-slate-700">
-              {result.unsubscribeToken}
-            </code>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
-            >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? tr("outreach.copied") : tr("outreach.copy")}
-            </button>
-          </div>
-        </div>
+        <OutreachOptInSuccess
+          token={result.unsubscribeToken}
+          copied={copied}
+          onCopy={handleCopy}
+          tr={tr}
+        />
       )}
     </div>
   );

@@ -607,6 +607,8 @@ model OutreachProfile {
   lng          Float?
   // Optional personal Telegram chat for staff-approved delivery (opt-in only).
   telegramChatId String?
+  // Optional mobile number (E.164) for staff-approved SMS. Never used without opt-in.
+  phoneE164 String?
   consentGiven DateTime @default(now()) // explicit opt-in timestamp
   unsubscribeToken String  @unique @default(uuid())
   unsubscribedAt   DateTime?

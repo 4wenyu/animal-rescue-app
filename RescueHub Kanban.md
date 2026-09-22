@@ -28,7 +28,7 @@ kanban-plugin: basic
 
 - [x] **N5 — Operator hardening** (2026-09-20) — Upstash rate limits, Sentry hook, `/staff/ops`, Telegram honesty banner, operator checklist
 - [x] **N4 — Stripe webhooks** (2026-09-20) — `checkout.session.completed` → idempotent fulfill; confirm URL is fallback only
-- [x] **N3 — SMS/Telegram radius alerts** (2026-09-20) — geocode last-seen → queue drafts for opted-in helpers in radius; staff still gates send; Telegram helper chat optional; SMS deferred
+- [x] **N3 — SMS/Telegram radius alerts** (2026-09-21) — geocode last-seen → queue drafts for opted-in helpers in radius; staff still gates send; Telegram and Twilio SMS on approve when configured
 - [x] **N2 — Richer staff share-evidence UI** (2026-09-20) — tracking + proof links, radar/animal, reject note on `/shares/review`
 - [x] **N1 — Persist lost-pet chat drafts server-side** (2026-09-20) — `LostPetIntakeDraft` + `/api/lost-pet-drafts`; localStorage fallback for anonymous; merge by `savedAt`
 - [x] MVP loop close — sponsor-search server path, LLM router, share review, adopt conversion (2026-09-19)
@@ -40,7 +40,7 @@ kanban-plugin: basic
 
 - [x] **EPIC 1** — UI Polish & Global Localization · COMPLETE
 - [x] **EPIC 2** — Viral Token & Brand Sponsorship Gateway · CLOSED
-- [ ] **EPIC 3** — Autonomous Outreach Engine · FOUNDATION + N3 radius — open: SMS/Twilio; draft persistence + radius Telegram drafts done
+- [ ] **EPIC 3** — Autonomous Outreach Engine · FOUNDATION + N3 radius — SMS + Telegram delivery in code (env-gated); draft persistence done
 - [ ] **EPIC 4** — Wide-Net Search Engine · public Petfinder API gone; pilot CSV/partner path instead
 
 ## 🔶 Blocked / archive

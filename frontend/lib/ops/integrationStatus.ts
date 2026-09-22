@@ -4,11 +4,13 @@
 import { hasAnyLlmKey } from "@/lib/llm/provider";
 import { rateLimitBackend } from "@/lib/rate-limit";
 import { hasSentryDsn } from "@/lib/ops/sentry";
+import { twilioConfigured } from "@/lib/sms/twilio";
 import { isPreviewMode } from "@/lib/siteMode";
 
 export type IntegrationStatus = {
   siteMode: "preview" | "live";
   telegramConfigured: boolean;
+  smsConfigured: boolean;
   llmConfigured: boolean;
   stripeConfigured: boolean;
   stripeWebhookConfigured: boolean;
@@ -26,6 +28,7 @@ export function getIntegrationStatus(): IntegrationStatus {
       process.env.TELEGRAM_BOT_TOKEN?.trim() &&
         process.env.TELEGRAM_CHAT_ID?.trim(),
     ),
+    smsConfigured: twilioConfigured(),
     llmConfigured: hasAnyLlmKey(),
     stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY?.trim()),
     stripeWebhookConfigured: Boolean(

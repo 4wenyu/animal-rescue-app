@@ -6,7 +6,7 @@
  * help areas + region, and returns their one-click unsubscribe token.
  *
  * N3: geocodes regionLabel → lat/lng for radius matching; optional
- * telegramChatId for staff-approved delivery to the helper.
+ * telegramChatId or phone for staff-approved delivery to the helper.
  */
 
 import { NextResponse } from "next/server";
@@ -15,6 +15,7 @@ import { z } from "zod";
 import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { geocodeLabel } from "@/lib/geo/geocode";
 import { prisma } from "@/lib/prisma";
+import { normalizePhoneE164 } from "@/lib/sms/phone";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ const OptInSchema = z.object({
     .max(6),
   regionLabel: z.string().trim().max(120).optional(),
   telegramChatId: z.string().trim().max(64).optional(),
+  phone: z.string().trim().max(20).optional(),
 });
 
 export async function POST(request: Request) {
@@ -84,6 +86,25 @@ export async function POST(request: Request) {
         ? parsed.telegramChatId || null
         : (existing?.telegramChatId ?? null);
 
+    let phoneE164 = existing?.phoneE164 ?? null;
+    if (parsed.phone !== undefined) {
+      if (!parsed.phone) {
+        phoneE164 = null;
+      } else {
+        const normalized = normalizePhoneE164(parsed.phone);
+        if (!normalized) {
+          return NextResponse.json(
+            {
+              error: "Validation Error",
+              message: "Enter a valid mobile number (10 digits or +country code).",
+            },
+            { status: 400 },
+          );
+        }
+        phoneE164 = normalized;
+      }
+    }
+
     const profile = existing
       ? await prisma.outreachProfile.update({
           where: { userId },
@@ -94,6 +115,7 @@ export async function POST(request: Request) {
             lat,
             lng,
             telegramChatId,
+            phoneE164,
             unsubscribedAt: null,
           },
         })
@@ -106,6 +128,7 @@ export async function POST(request: Request) {
             lat,
             lng,
             telegramChatId,
+            phoneE164,
             consentGiven: new Date(),
           },
         });

@@ -88,6 +88,15 @@ export default async function StaffOpsPage(): Promise<ReactNode> {
           detail="AUTH_SECRET + AUTH_GOOGLE_* + NEXT_PUBLIC_AUTH_GOOGLE_ENABLED"
         />
         <Row
+          label="Helper SMS (Twilio)"
+          ok={s.smsConfigured}
+          detail={
+            s.smsConfigured
+              ? "Staff-approved texts to opted-in phones"
+              : "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER"
+          }
+        />
+        <Row
           label="Telegram ops channel"
           ok={s.telegramConfigured}
           detail={

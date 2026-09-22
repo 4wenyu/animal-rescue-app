@@ -5,6 +5,7 @@ import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { OutreachDraftReviewQueue } from "@/src/components/outreach/OutreachDraftReviewQueue";
 import { AgentRunButton } from "@/src/components/outreach/AgentRunButton";
+import { twilioConfigured } from "@/lib/sms/twilio";
 import { TelegramOpsBanner } from "@/src/components/outreach/TelegramOpsBanner";
 import { flushApprovedOutreach } from "@/lib/services/outreachService";
 
@@ -92,6 +93,7 @@ export default async function OutreachReviewPage(): Promise<ReactNode> {
           process.env.TELEGRAM_BOT_TOKEN?.trim() &&
             process.env.TELEGRAM_CHAT_ID?.trim(),
         )}
+        smsConfigured={twilioConfigured()}
       />
       <OutreachDraftReviewQueue initialDrafts={serializedDrafts} />
     </div>

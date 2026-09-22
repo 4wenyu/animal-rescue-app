@@ -13,7 +13,7 @@ kanban-plugin: basic
 |---|---|---|
 | EPIC 1 — UI Polish & Global Localization | ✅ **COMPLETE** (2026-06-17) | All sub-tasks closed; 391 i18n keys at 100% parity across 7 locales |
 | EPIC 2 — Viral Token & Brand Sponsorship Gateway | ✅ **CLOSED** (2026-06-20) | Viral-share loop live; **N2** richer staff evidence UI on `/shares/review`. |
-| EPIC 3 — Autonomous Outreach Engine | 🔵 **FOUNDATION + N3** | Draft persistence (N1) + **radius alerts** (geocode last-seen → staff-gated drafts). SMS/Twilio still open. |
+| EPIC 3 — Autonomous Outreach Engine | 🔵 **FOUNDATION + N3** | Radius drafts are staff-gated. **SMS (Twilio) and Telegram** both deliver on approve when configured. |
 | EPIC 4 — Wide-Net Search Engine | 🟡 **Pilot path** | Public Petfinder API decommissioned Dec 2025. Awaiting shelter CSV/partner feed (Kanban **N0**). |
 
 ## ✅ Done — EPIC 1: UI Polish & Global Localization (2026-06-17, complete)
@@ -38,7 +38,7 @@ Mock timer band (`dogs.json`) refreshed: 2 overdue (~1h past), 2 active (60-70h 
 
 - [x] **EPIC 2**: Viral Growth & Token Gateway · closed 2026-06-20 — viral-share loop live, intake award live; sponsor-gateway modal wired into `/dashboard` 2026-08-23
 - [x] **EPIC 3 foundation**: Autonomous Outreach Engine · merged 2026-08-16 — see "EPIC 3 — Autonomous Outreach Engine (foundation merged)" below
-- [ ] **EPIC 3 backlog**: Geolocation & SMS/Telegram radius alerts
+- [x] **EPIC 3 backlog**: Geolocation & SMS/Telegram radius alerts — SMS path shipped 2026-09-21 (Twilio env still operator)
 - [ ] **EPIC 4**: Wide-Net Search Engine
 - [ ] **Milestone M1**: Brand Sponsorship & Rewarded Ad Network — strategy framed in roadmap, build behind EPIC 3 start
 - [x] **TODO**: Reset intake countdown timers (`LiveTimer` per-second timer needs to be cleared on component unmount to avoid orphaned intervals) — **resolved**: `LiveTimer.tsx` `useEffect` already returns `() => clearInterval(interval)` since 2026-06-17; no orphaned intervals observed. Marked complete as part of the 2026-07-03 Tech-Debt Sprint.

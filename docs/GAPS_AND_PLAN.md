@@ -20,13 +20,13 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | No LICENSE / SaaS README | Apache-2.0 + mission README. |
 | Stale D+ reviews | Moved to `docs/archive/`. |
 | Lost-pet drafts die on refresh | **N1 done:** `LostPetIntakeDraft` + `GET/PUT/DELETE /api/lost-pet-drafts` for signed-in users; localStorage still backs anonymous / offline. |
-| No radius lost-pet alerts | **N3 done:** geocode last-seen → queue staff-review drafts for ACTIVE helpers within radius; optional helper Telegram on approve. SMS deferred. |
+| No radius lost-pet alerts | **N3 done:** geocode last-seen → queue staff-review drafts for ACTIVE helpers within radius; optional helper Telegram **and SMS** on approve. |
 
 ## Still operator / legal (not code)
 
 1. Put TeamoRouter / FreeLLMAPI / Gemini keys in `frontend/.env.local` (see `CURSOR_AND_LLM_SETUP.md`). Cursor Desktop API Keys are optional and do **not** power the site. Rotate any key that ever sat in chat.
 2. `npm run db:seed` with strong `SEED_*_PASSWORD` values; change them before a shared preview URL.
-3. Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` or accept record-only outreach.
+3. Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` or accept record-only outreach. For helper SMS, set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`.
 4. File nonprofit articles, EIN, Form 1023-EZ — see `NONPROFIT_SETUP.md`.
 5. Real shelter photos and hours, not `placedog.net`.
 6. Redis rate limits before more than one server instance.
@@ -40,7 +40,7 @@ Last updated: 2026-09-20. This supersedes the August review docs in `docs/archiv
 | **N0** | **Pilot roster data path** | 4 | **CSV ingest ready** 2026-09-21 (`/staff/roster`). Awaiting pilot file / partner feed. |
 | **N1** | Persist lost-pet chat drafts server-side | 3 | **Done** 2026-09-20 |
 | **N2** | Richer staff share-evidence UI | 2/ops | **Done** 2026-09-20 |
-| **N3** | SMS/Telegram **radius** alerts | 3 | **Done** 2026-09-20 (Telegram + staff gate; SMS deferred) |
+| **N3** | SMS/Telegram **radius** alerts | 3 | **Done** 2026-09-21 (Telegram + Twilio SMS; both staff-gated; SMS needs Twilio env) |
 | **N4** | Stripe webhooks | ops | **Done** 2026-09-20 |
 | **N5** | Operator hardening | ops | **Done** 2026-09-20 (Redis/Sentry hooks + ops page; photos still operator) |
 

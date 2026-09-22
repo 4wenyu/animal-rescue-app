@@ -99,7 +99,7 @@ export async function enqueueRadiusAlertsForSearch(
     `Last seen: ${search.lastSeen}.`,
     `Open the radar: /radar/${search.searchId}`,
     "",
-    "You opted in to help nearby pets. Staff will review before any message is sent to your Telegram.",
+    "You opted in to help nearby pets. Staff will review before any SMS or Telegram is sent.",
   ].join("\n");
 
   for (const profile of nearby) {

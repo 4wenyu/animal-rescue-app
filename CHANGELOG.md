@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.3.8 — Staff-gated helper SMS (2026-09-21)
+
+### Added
+- Opt-in mobile number (`phoneE164`) on outreach profiles; invalid numbers rejected.
+- Twilio SMS on staff approve (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`). Telegram still sends when configured. Missing both stays record-only.
+- `/staff/ops` shows SMS readiness. Radius draft copy names SMS as well as Telegram.
+
+### Docs
+- Kanban / GAPS — Epic 3 SMS path is in code; live texts need Twilio env. N0 still awaits a pilot CSV.
+
+---
 ## v3.3.7 — Pilot roster CSV import (N0 path) (2026-09-21)
 
 ### Added

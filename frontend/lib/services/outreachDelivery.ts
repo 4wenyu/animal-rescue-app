@@ -6,9 +6,10 @@
  * `status=SENT, sentAt` in the database — nothing was ever actually
  * delivered. This module closes that gap.
  *
- * Delivery channels, in priority order:
- *   1. TELEGRAM (only if TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID are set).
- *   2. NONE — graceful degradation: the draft is still marked SENT (the
+ * Delivery channels (both fire when the helper opted in and env is set):
+ *   1. SMS — helper phoneE164 + TWILIO_ACCOUNT_SID / AUTH_TOKEN / FROM_NUMBER.
+ *   2. TELEGRAM — helper chat or TELEGRAM_CHAT_ID, plus TELEGRAM_BOT_TOKEN.
+ *   3. NONE — graceful degradation: the draft is still marked SENT (the
  *      human decision is real and must not be lost), but the sourceNote
  *      records that no channel was configured. Logged server-side.
  *
@@ -23,14 +24,26 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { buildOutreachSms, sendSms, twilioConfigured } from "@/lib/sms/twilio";
 import { sendTelegramMessage } from "@/src/lib/telegram";
+
+export type DeliveryChannel = "telegram" | "sms" | "sms+telegram" | "none";
 
 /** Result of an approve-and-deliver transition. */
 export type DeliveryOutcome =
-  | { kind: "delivered"; channel: "telegram" }
-  | { kind: "recorded-only"; channel: "telegram" | "none"; reason: "channel-not-configured" | "send-failed" }
+  | { kind: "delivered"; channel: Exclude<DeliveryChannel, "none"> }
+  | { kind: "recorded-only"; channel: DeliveryChannel; reason: "channel-not-configured" | "send-failed" }
   | { kind: "already-processed"; channel: "none" }
   | { kind: "not-found"; channel: "none" };
+
+function successChannel(
+  sms: boolean,
+  telegram: boolean,
+): Exclude<DeliveryChannel, "none"> {
+  if (sms && telegram) return "sms+telegram";
+  if (sms) return "sms";
+  return "telegram";
+}
 
 /**
  * Claim the draft for delivery and deliver it.
@@ -87,7 +100,7 @@ export async function deliverApprovedDraft(
       animalId: true,
       lostPetSearchId: true,
       profile: {
-        select: { regionLabel: true, telegramChatId: true },
+        select: { regionLabel: true, telegramChatId: true, phoneE164: true },
       },
     },
   });
@@ -101,14 +114,33 @@ export async function deliverApprovedDraft(
     return { kind: "already-processed", channel: "none" };
   }
 
-  // ── 3. Deliver (Telegram when configured; else record-only) ─────────
+  // ── 3. Deliver opted-in SMS and/or Telegram; else record-only ──────
   const helperChat = draft.profile?.telegramChatId?.trim() || undefined;
-  const telegramConfigured = Boolean(
+  const helperPhone = draft.profile?.phoneE164?.trim() || undefined;
+  const smsReady = Boolean(helperPhone && twilioConfigured());
+  const telegramReady = Boolean(
     process.env.TELEGRAM_BOT_TOKEN &&
       (helperChat || process.env.TELEGRAM_CHAT_ID),
   );
 
-  if (telegramConfigured) {
+  const notes: string[] = [];
+  let smsOk = false;
+  let telegramOk = false;
+
+  if (smsReady && helperPhone) {
+    const ok = await sendSms(
+      helperPhone,
+      buildOutreachSms({
+        subject: draft.subject,
+        body: draft.body,
+        shelterName,
+      }),
+    );
+    smsOk = ok;
+    notes.push(ok ? "sms" : "sms-attempt-failed");
+  }
+
+  if (telegramReady) {
     const region = draft.profile?.regionLabel
       ? ` — ${draft.profile.regionLabel}`
       : "";
@@ -119,30 +151,30 @@ export async function deliverApprovedDraft(
       "",
       `_Automated outreach approved by ${shelterName} staff._`,
     ].join("\n");
-
     const ok = await sendTelegramMessage(text, "Markdown", helperChat);
-    if (ok) {
-      await prisma.outreachDraft.update({
-        where: { draftId },
-        data: {
-          sourceNote: `${draft.sourceNote} — delivered: telegram${helperChat ? " (helper chat)" : ""}`,
-        },
-      });
-      return { kind: "delivered", channel: "telegram" };
-    }
-    // Send failed (API error or network failure) — the human decision
-    // stands; annotate honestly so reviewers can see the delivery failed.
-    await prisma.outreachDraft.update({
-      where: { draftId },
-      data: {
-        sourceNote: `${draft.sourceNote} — delivered: telegram-attempt-failed`,
-      },
-    });
-    return { kind: "recorded-only", channel: "telegram", reason: "send-failed" };
+    telegramOk = ok;
+    notes.push(
+      ok
+        ? `telegram${helperChat ? " (helper chat)" : ""}`
+        : "telegram-attempt-failed",
+    );
   }
 
-  // No channel configured: the approval is real, the delivery is honestly
-  // absent. Annotate so reviewers can see why nothing went out.
+  if (notes.length > 0) {
+    await prisma.outreachDraft.update({
+      where: { draftId },
+      data: { sourceNote: `${draft.sourceNote} — delivered: ${notes.join(", ")}` },
+    });
+    if (smsOk || telegramOk) {
+      return { kind: "delivered", channel: successChannel(smsOk, telegramOk) };
+    }
+    return {
+      kind: "recorded-only",
+      channel: successChannel(smsReady, telegramReady),
+      reason: "send-failed",
+    };
+  }
+
   await prisma.outreachDraft.update({
     where: { draftId },
     data: { sourceNote: `${draft.sourceNote} — delivered: none (channel not configured)` },
