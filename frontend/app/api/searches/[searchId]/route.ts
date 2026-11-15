@@ -27,6 +27,7 @@ import { z } from "zod";
 
 import { parseJsonBody, requireRole } from "@/lib/api/helpers";
 import { prisma } from "@/lib/prisma";
+import { attachRosterMatches } from "@/lib/services/rosterMatch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -144,5 +145,8 @@ export async function PATCH(
     );
   }
 
-  return NextResponse.json({ ok: true, search: updated }, { status: 200 });
+  return NextResponse.json(
+    { ok: true, search: await attachRosterMatches(updated) },
+    { status: 200 },
+  );
 }

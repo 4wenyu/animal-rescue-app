@@ -34,6 +34,7 @@ import {
   normalizeEsignHash,
   remainingIntakeBonusBudget,
 } from "@/lib/intakeGuards";
+import { intakeListingData } from "@/lib/intakeListing";
 import {
   computeStrayHoldExpiry,
   isStatutoryHoldCleared,
@@ -269,10 +270,18 @@ export async function POST(request: Request) {
           holdCleared = isStatutoryHoldCleared(intakeTime);
         }
 
+        const listing = intakeListingData(record);
         const animal = await tx.animal.create({
           data: {
             custodianOrgId: CUSTODIAN_ORG_ID,
-            breedDesignation: record.breed ?? "Mixed Breed",
+            breedDesignation: listing.breedDesignation,
+            name: listing.name,
+            species: listing.species,
+            ageYears: listing.ageYears,
+            sex: listing.sex,
+            personality: listing.personality,
+            imageUrl: listing.imageUrl,
+            city: listing.city,
             intakeTimestamp: intakeTime,
             strayHoldExpiresAt: holdExpiry,
             statutoryHoldCleared: holdCleared,

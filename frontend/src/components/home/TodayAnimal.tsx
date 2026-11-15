@@ -4,6 +4,8 @@ import Link from "next/link";
 import { AnimalPhoto } from "@/src/components/ui/AnimalPhoto";
 import { ShareToday } from "@/src/components/home/ShareToday";
 import { useHomeLocale } from "./locale-store";
+import { dogProfileId } from "@/lib/publicRoster";
+import { getBreedLabel } from "./adopt-labels";
 import type { Dog } from "./types";
 
 export function TodayAnimal({
@@ -27,7 +29,7 @@ export function TodayAnimal({
       </p>
       <div className="mt-3 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm sm:flex">
         <Link
-          href={`/adopt/${dog.id}`}
+          href={`/adopt/${dogProfileId(dog)}`}
           className="relative block h-56 w-full shrink-0 sm:h-auto sm:w-56"
         >
           <AnimalPhoto src={dog.imageUrl} alt={dog.name} sizes="224px" />
@@ -36,7 +38,10 @@ export function TodayAnimal({
           <h2 id="today-animal-title" className="text-xl font-bold text-slate-900">
             {tr("today.title", { name: dog.name })}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">{tr(`breeds.${dog.breed}`)}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {getBreedLabel(dog.breed, tr)}
+            {dog.city ? ` · ${dog.city}` : ""}
+          </p>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">
             {tr("today.body")}
           </p>

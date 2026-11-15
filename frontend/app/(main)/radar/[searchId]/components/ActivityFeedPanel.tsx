@@ -1,5 +1,6 @@
 /**
- * ActivityFeedPanel — the dark simulated-alert ticker for /radar/[searchId].
+ * ActivityFeedPanel — status lines for /radar/[searchId].
+ * Not a partner-shelter broadcast. Roster matches render separately.
  *
  * Accessibility: the scrolling feed itself is NOT an aria-live region (a
  * new line every ~3s would spam screen readers). Instead a visually-hidden
@@ -48,7 +49,7 @@ export function ActivityFeedPanel({
   }, [feed]);
 
   return (
-    <div className="flex h-[36rem] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 text-slate-100 shadow-md">
+    <div className="flex max-h-80 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 text-slate-100 shadow-md">
       <div className="flex items-center justify-between border-b border-slate-700 px-5 py-4">
         <div className="flex items-center gap-2">
           {search.status === "SEARCHING" ? (

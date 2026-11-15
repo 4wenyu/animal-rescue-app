@@ -7,6 +7,17 @@
 
 export type SearchStatus = "SEARCHING" | "FOUND" | "CANCELLED";
 
+/** One animal already on this shelter's public list. */
+export interface RosterHitDto {
+  animalId: string;
+  profileId: string;
+  name: string;
+  species: string;
+  breed: string;
+  city: string | null;
+  imageUrl: string | null;
+}
+
 export interface SearchDto {
   searchId: string;
   userId: string;
@@ -20,6 +31,7 @@ export interface SearchDto {
   activatedAt: string;
   closedAt: string | null;
   notes: string | null;
+  rosterMatches?: RosterHitDto[];
 }
 
 /** Shape of the translator returned by `useI18n()`. */

@@ -63,6 +63,24 @@ export const PetIntakeSchema = z
         "Name printed on the cage card. May be blank/null for unnamed intakes."
       ),
 
+    city: z
+      .string()
+      .trim()
+      .max(80)
+      .nullable()
+      .optional()
+      .describe("City where the animal is held. Shown on the public listing."),
+
+    imageUrl: z
+      .string()
+      .trim()
+      .max(500)
+      .nullable()
+      .optional()
+      .describe(
+        "http(s) photo URL. The link is stored; the file is not uploaded."
+      ),
+
     species: Species.nullable()
       .optional()
       .describe(

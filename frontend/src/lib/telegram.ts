@@ -12,6 +12,14 @@
 
 const TELEGRAM_API_BASE = "https://api.telegram.org/bot";
 
+/** True only when the ops bot token and default chat are both set. */
+export function telegramOpsConfigured(): boolean {
+  return Boolean(
+    process.env.TELEGRAM_BOT_TOKEN?.trim() &&
+      process.env.TELEGRAM_CHAT_ID?.trim(),
+  );
+}
+
 /**
  * Supported parse modes for the message text.
  */

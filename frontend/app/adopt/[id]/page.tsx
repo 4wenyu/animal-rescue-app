@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import AdoptProfileView from "./AdoptProfileView";
 import { SiteFooter } from "@/src/components/home/SiteFooter";
 import { SiteNav } from "@/src/components/home/SiteNav";
+import { dogProfileId } from "@/lib/publicRoster";
 import { catalogDogs, getPublicRoster } from "@/lib/roster";
 
 export function generateStaticParams() {
@@ -18,7 +19,7 @@ export default async function AdoptProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const animal = (await getPublicRoster()).find((d) => d.id === Number(id));
+  const animal = (await getPublicRoster()).find((d) => dogProfileId(d) === id);
   if (!animal) notFound();
 
   return (

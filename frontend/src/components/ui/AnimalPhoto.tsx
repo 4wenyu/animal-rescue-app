@@ -11,6 +11,14 @@ const BLUR_PLACEHOLDER =
     '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" fill="#d1fae5"/></svg>'
   );
 
+function isPlacedogPhoto(src: string): boolean {
+  try {
+    return new URL(src).hostname === "placedog.net";
+  } catch {
+    return false;
+  }
+}
+
 type AnimalPhotoProps = {
   src?: string | null;
   alt: string;
@@ -48,6 +56,20 @@ export function AnimalPhoto({
       </div>
     );
   }
+  if (!isPlacedogPhoto(src)) {
+    return (
+      // Shelter photo hosts are not known ahead of time. next/image only
+      // allows placedog.net, so other https links render as a plain image.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setImageError(true)}
+        className={`h-full w-full object-cover ${roundedClassName} ${className}`}
+      />
+    );
+  }
+
   return (
     <Image
       src={src}

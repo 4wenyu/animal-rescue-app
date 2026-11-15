@@ -10,6 +10,10 @@ import {
   SpeciesBreedSelect,
   type SpeciesBreedValue,
 } from "@/src/components/ui/SpeciesBreedSelect";
+import {
+  PublicIntakeListingFields,
+  type ListingDraft,
+} from "@/src/components/intake/PublicIntakeListingFields";
 import { breedLabel } from "@/src/lib/animalTaxonomy";
 import { ArrowLeft, PawPrint, Shield, Heart, Loader2, AlertCircle } from "lucide-react";
 
@@ -94,6 +98,11 @@ export default function PublicIntakePage(): ReactNode {
     species: null,
     breed: null,
   });
+  const [listing, setListing] = useState<ListingDraft>({
+    name: "",
+    city: "",
+    photoUrl: "",
+  });
 
   const handleTypeSelected = (type: SurrenderType): void => {
     setSurrenderType(type);
@@ -129,6 +138,9 @@ export default function PublicIntakePage(): ReactNode {
               : "PUBLIC_STRAY",
           animals: [
             {
+              name: listing.name.trim() || null,
+              city: listing.city.trim() || null,
+              imageUrl: listing.photoUrl.trim() || null,
               species: animalKind.species,
               breed:
                 (animalKind.breed &&
@@ -275,6 +287,8 @@ export default function PublicIntakePage(): ReactNode {
                 onChange={setAnimalKind}
               />
             </div>
+
+            <PublicIntakeListingFields value={listing} onChange={setListing} />
 
             {/* Back button */}
             <div className="pt-4">

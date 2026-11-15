@@ -10,6 +10,7 @@ import { FeaturedAnimalCard } from "./FeaturedAnimalCard";
 import { AmbientToggle } from "./AmbientToggle";
 import { StayLoopBanner } from "./StayLoopBanner";
 import { useHomeLocale } from "./locale-store";
+import { getBreedLabel } from "./adopt-labels";
 import type { Dog } from "./types";
 
 const PawEmblem = dynamic(
@@ -36,7 +37,7 @@ export function Hero({ featured }: { featured: Dog | null }) {
             <div className="mx-auto w-full max-w-[220px] lg:mx-0 lg:max-w-none">
               <FeaturedAnimalCard
                 featured={featured}
-                breedLabel={tr(`breeds.${featured.breed}`)}
+                breedLabel={getBreedLabel(featured.breed, tr)}
               />
             </div>
           )}

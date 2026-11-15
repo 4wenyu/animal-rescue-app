@@ -17,6 +17,7 @@ import {
   Share2,
   Shield,
   Upload,
+  ClipboardList,
 } from "lucide-react";
 import { useI18n } from "@/src/lib/useI18n";
 import { AboutNav } from "./AboutNav";
@@ -51,6 +52,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }): ReactNo
           { href: "/medical", label: tr("nav.medical"), icon: Activity },
           { href: "/shares/review", label: tr("nav.share_review"), icon: Share2 },
           { href: "/staff/roster", label: tr("nav.roster_csv"), icon: Upload },
+          { href: "/staff/adoptions", label: tr("nav.adoption_queue"), icon: ClipboardList },
           { href: "/staff/ops", label: tr("nav.ops"), icon: Shield },
         ]
       : []),

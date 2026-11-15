@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, CalendarClock, Heart } from "lucide-react";
 import { AnimalPhoto } from "@/src/components/ui/AnimalPhoto";
-import { getAgeLabel, getDeadlineLabel, getRiskLabel } from "./adopt-labels";
+import { getAgeLabel, getBreedLabel, getDeadlineLabel, getRiskLabel } from "./adopt-labels";
+import { dogProfileId } from "@/lib/publicRoster";
 import type { TranslateFn } from "./home-strings";
 import type { Dog } from "./types";
 
@@ -52,7 +53,8 @@ export function AdoptCard({ animal, index, tr }: AdoptCardProps) {
                 {animal.name}
               </h3>
               <p className="text-sm text-slate-500 truncate">
-                {tr(`breeds.${animal.breed}`)}
+                {getBreedLabel(animal.breed, tr)}
+                {animal.city ? ` · ${animal.city}` : ""}
               </p>
             </div>
             <span
@@ -128,7 +130,7 @@ export function AdoptCard({ animal, index, tr }: AdoptCardProps) {
 
       {/* Sprint B — always-visible CTA to adopter profile */}
       <Link
-        href={`/adopt/${animal.id}`}
+        href={`/adopt/${dogProfileId(animal)}`}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:bg-emerald-500 active:scale-[0.98]"
       >
         <Heart className="h-4 w-4" />

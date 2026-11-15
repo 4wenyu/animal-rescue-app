@@ -35,6 +35,7 @@ import { auth } from "@/app/api/auth/[...nextauth]/auth";
 import { prisma } from "@/lib/prisma";
 import { SEARCH_FEE_AMOUNT } from "@/lib/services/tokenService";
 import { scheduleRadiusAlertsForSearch } from "@/lib/services/radiusAlertService";
+import { attachRosterMatches } from "@/lib/services/rosterMatch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -215,7 +216,7 @@ export async function POST(request: Request) {
       {
         ok: true,
         idempotentReplay: true,
-        search: existing,
+        search: await attachRosterMatches(existing),
       },
       { status: 200 },
     );
@@ -255,7 +256,7 @@ export async function POST(request: Request) {
       {
         ok: true,
         idempotentReplay: false,
-        search: created,
+        search: await attachRosterMatches(created),
       },
       { status: 201 },
     );
@@ -289,7 +290,11 @@ export async function POST(request: Request) {
       });
       if (committed && committed.userId === authenticatedUserId) {
         return NextResponse.json(
-          { ok: true, idempotentReplay: true, search: committed },
+          {
+            ok: true,
+            idempotentReplay: true,
+            search: await attachRosterMatches(committed),
+          },
           { status: 200 },
         );
       }
@@ -381,5 +386,8 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, search }, { status: 200 });
+  return NextResponse.json(
+    { ok: true, search: await attachRosterMatches(search) },
+    { status: 200 },
+  );
 }
