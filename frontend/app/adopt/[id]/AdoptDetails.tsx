@@ -41,6 +41,11 @@ export function AdoptDetails({
           <PawPrint className="h-3.5 w-3.5 text-slate-400" />
           {animal.age} {animal.age === 1 ? tr("common.year") : tr("common.years")}
         </span>
+        {animal.city ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">
+            {animal.city}
+          </span>
+        ) : null}
         {animal.sex && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700">
             {animal.sex === "Female" ? tr("adopt.sex_female") : tr("adopt.sex_male")}

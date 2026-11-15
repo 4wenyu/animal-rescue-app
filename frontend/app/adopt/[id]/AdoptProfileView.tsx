@@ -8,6 +8,7 @@ import { AdoptHero } from "./AdoptHero";
 import { AdoptStickyBar } from "./AdoptStickyBar";
 import { AdoptionForm } from "./AdoptionForm";
 import { SharePosterButton } from "./SharePosterButton";
+import { dogProfileId } from "@/lib/publicRoster";
 import { formatDate, type Dog, type FormStatus, type InterestType } from "./adoptTypes";
 
 export default function AdoptProfileView({ animal }: { animal: Dog }) {
@@ -36,7 +37,7 @@ export default function AdoptProfileView({ animal }: { animal: Dog }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          animalId: String(animal.id),
+          animalId: dogProfileId(animal),
           animalName: animal.name,
           interestType,
           fullName: String(data.get("fullName") ?? "").trim(),

@@ -3,6 +3,8 @@ export type EuthanasiaRisk = "SAFE" | "AT_RISK" | "IMMEDIATE_BEHAVIORAL";
 
 export type Dog = {
   id: number;
+  /** Adopt URL key. Intake animals use their animal id; catalog rows omit it. */
+  publicId?: string;
   name: string;
   breed: string;
   age: number;

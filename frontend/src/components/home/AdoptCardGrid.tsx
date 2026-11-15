@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { AdoptCard } from "./AdoptCard";
 import { useHomeLocale } from "./locale-store";
+import { dogProfileId } from "@/lib/publicRoster";
 import type { Dog } from "./types";
 
 type AdoptCardGridProps = {
@@ -47,7 +48,7 @@ export function AdoptCardGrid({ dogs, excludedCount }: AdoptCardGridProps) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {dogs.map((animal, i) => (
-          <AdoptCard key={animal.id} animal={animal} index={i} tr={tr} />
+          <AdoptCard key={dogProfileId(animal)} animal={animal} index={i} tr={tr} />
         ))}
       </div>
 

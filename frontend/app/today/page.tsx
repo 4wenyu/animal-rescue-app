@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
-import dogs from "../../data/dogs.json";
 import { SiteFooter } from "@/src/components/home/SiteFooter";
 import { SiteNav } from "@/src/components/home/SiteNav";
 import { TodayAnimal } from "@/src/components/home/TodayAnimal";
-import type { Dog } from "@/src/components/home/types";
 import {
   animalOfTheDay,
   animalOfTomorrow,
 } from "@/lib/animalOfTheDay";
+import { getPublicRoster } from "@/lib/roster";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dog = animalOfTheDay(dogs as Dog[]);
+  const dog = animalOfTheDay(await getPublicRoster());
   const name = dog?.name ?? "today's animal";
   return {
     title: `Meet ${name} — today's kennel introduction`,
@@ -18,8 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function TodayPage() {
-  const roster = dogs as Dog[];
+export default async function TodayPage() {
+  const roster = await getPublicRoster();
   const today = animalOfTheDay(roster);
   const tomorrow = animalOfTomorrow(roster);
 

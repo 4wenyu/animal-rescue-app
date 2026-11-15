@@ -19,6 +19,13 @@ export function getAgeLabel(age: number, tr: TranslateFn): string {
   return age === 1 ? `1 ${tr("common.year")}` : `${age} ${tr("common.years")}`;
 }
 
+/** Use the roster breed string when the dictionary has no entry for it. */
+export function getBreedLabel(breed: string, tr: TranslateFn): string {
+  const key = `breeds.${breed}`;
+  const label = tr(key);
+  return label === key ? breed : label;
+}
+
 /**
  * Sprint B — dignified deadline copy. Formats the animal's real
  * `strayHoldExpiresAt` date into "Needs a home by {date}" without a

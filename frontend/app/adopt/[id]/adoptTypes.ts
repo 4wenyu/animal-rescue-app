@@ -15,6 +15,7 @@ export type TrFn = (
 
 export type Dog = {
   id: number;
+  publicId?: string;
   name: string;
   breed: string;
   age: number;
@@ -26,6 +27,7 @@ export type Dog = {
   imageUrl?: string;
   sex?: "Male" | "Female";
   personality?: string;
+  city?: string;
 };
 
 export function formatDate(iso: string): string {

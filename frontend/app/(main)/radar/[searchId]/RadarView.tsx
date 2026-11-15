@@ -5,7 +5,7 @@
  * Lost Pet Search network. Presentation is split across ./components
  * (hero, stepper, summary card, activity feed, load states); this file
  * owns state and composition: the search row via useRadarSearch, the
- * simulated activity-feed ticker (frozen once terminal), and a
+ * one-line status log (not a partner network), roster matches, and a
  * visually-hidden aria-live status message that only changes when the
  * search status meaningfully changes.
  *
@@ -16,7 +16,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useI18n } from "@/src/lib/useI18n";
 
@@ -24,9 +24,9 @@ import { ActivityFeedPanel } from "./components/ActivityFeedPanel";
 import {
   buildClosedFeedEntry,
   buildInitialFeed,
-  buildNextFeed,
   type FeedEntry,
 } from "./components/feed";
+import { RosterMatchPanel } from "./components/RosterMatchPanel";
 import { HeroHeader } from "./components/HeroHeader";
 import { RadarLoadErrorCard, RadarLoadingCard } from "./components/RadarErrorStates";
 import { SearchStatusStepper } from "./components/SearchStatusStepper";
@@ -49,31 +49,6 @@ export default function RadarView() {
     return `feed-${feedCounterRef.current}-${Date.now()}`;
   }, []);
   const [feed, setFeed] = useState<FeedEntry[]>(() => buildInitialFeed(tr, "feed-initial"));
-
-  /* ── Activity Feed ticker — append a line every 2.6–3.4s; stop once the
-     search is terminal so a closed search stops manufacturing alerts. ── */
-  const streamTimerRef = useRef<number | null>(null);
-  const isSearching = search?.status === "SEARCHING";
-  useEffect(() => {
-    if (!isSearching) return; // terminal — frozen
-    const schedule = () => {
-      streamTimerRef.current = window.setTimeout(() => {
-        setFeed((prev) => [
-          ...prev.slice(-12),
-          buildNextFeed(tr, nextFeedId()),
-        ]);
-        schedule();
-      }, 2600 + Math.random() * 800);
-    };
-    schedule();
-    return () => {
-      if (streamTimerRef.current !== null) {
-        window.clearTimeout(streamTimerRef.current);
-        streamTimerRef.current = null;
-      }
-    };
-    // `tr` restarts the ticker on locale change so new lines are localized.
-  }, [isSearching, tr, nextFeedId]);
 
   const handleCloseSearch = useCallback(() => router.push("/dashboard"), [router]);
 
@@ -136,7 +111,8 @@ export default function RadarView() {
         <section className="lg:col-span-2">
           <SearchSummaryCard search={search} />
         </section>
-        <section className="lg:col-span-3">
+        <section className="space-y-6 lg:col-span-3">
+          <RosterMatchPanel hits={search.rosterMatches ?? []} />
           <ActivityFeedPanel
             search={search}
             feed={feed}

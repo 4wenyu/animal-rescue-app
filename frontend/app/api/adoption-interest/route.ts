@@ -18,6 +18,7 @@ import { z } from "zod";
 
 import { parseJsonBody } from "@/lib/api/helpers";
 import { prisma } from "@/lib/prisma";
+import { notifyAdoptionRequest } from "@/lib/services/adoptionInterestNotify";
 import { checkRateLimitAsync, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -99,6 +100,19 @@ export async function POST(request: Request) {
         createdAt: true,
       },
     });
+
+    try {
+      await notifyAdoptionRequest({
+        animalId: lead.animalId,
+        animalName: lead.animalName,
+        interestType: lead.interestType,
+        fullName,
+        email,
+        phone: phone || null,
+      });
+    } catch (err) {
+      console.error("[api/adoption-interest] telegram failed:", err);
+    }
 
     return NextResponse.json({ ok: true, lead }, { status: 201 });
   } catch (err) {

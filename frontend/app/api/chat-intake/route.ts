@@ -224,7 +224,7 @@ const INTAKE_SYSTEM_PROMPT = [
   "have enough to start the search and ask them to confirm. You may still ask",
   "about the optional details if the user seems willing, but never pressure",
   "them. Set assistantText to a warm summary of what you've recorded and let",
-  "them confirm before you broadcast the search across the partner network.",
+  "them confirm before you compare the report with this shelter's public animals.",
   "",
   "Style rules:",
   "  - Never make promises about finding the pet.",
@@ -296,8 +296,8 @@ function readMockTurn(text: string): Partial<LostPetIntakeObject> {
         freeText: text.slice(0, 240),
       },
       assistantText:
-        "I have everything I need. Could you confirm before I broadcast to " +
-        "the partner network? (MOCK reply.)",
+        "I have everything I need. Could you confirm before I compare this " +
+        "with animals listed at this shelter? (MOCK reply.)",
     };
   }
   return {

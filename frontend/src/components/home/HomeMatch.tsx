@@ -17,6 +17,8 @@ import { AnimalPhoto } from "@/src/components/ui/AnimalPhoto";
 import { PlayChoice, PlayProgress, PlayStep } from "./HomeMatchPlay";
 import { useHomeLocale } from "./locale-store";
 import { matchHome, type Household, type Pace, type Space } from "./matchHome";
+import { dogProfileId } from "@/lib/publicRoster";
+import { getBreedLabel } from "./adopt-labels";
 import type { Dog } from "./types";
 
 const PACE: { id: Pace; key: string; icon: typeof Moon }[] = [
@@ -91,8 +93,8 @@ export function HomeMatch({
             <div className="grid gap-4 sm:grid-cols-2">
               {matches.map((dog) => (
                 <Link
-                  key={dog.id}
-                  href={`/adopt/${dog.id}`}
+                  key={dogProfileId(dog)}
+                  href={`/adopt/${dogProfileId(dog)}`}
                   className="group overflow-hidden rounded-2xl border-2 border-emerald-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md"
                 >
                   <div className="relative h-36 w-full overflow-hidden">
@@ -100,10 +102,10 @@ export function HomeMatch({
                   </div>
                   <div className="p-4">
                     <p className="font-bold text-slate-900">{dog.name}</p>
-                    <p className="text-xs text-slate-500">{tr(`breeds.${dog.breed}`)}</p>
-                    <p className="mt-2 text-sm font-semibold text-emerald-700">
-                      {tr("play.meet", { name: dog.name })}
+                    <p className="text-xs text-slate-500">
+                      {`${getBreedLabel(dog.breed, tr)}${dog.city ? ` · ${dog.city}` : ""}`}
                     </p>
+                    <p className="mt-2 text-sm font-semibold text-emerald-700">{tr("play.meet", { name: dog.name })}</p>
                   </div>
                 </Link>
               ))}

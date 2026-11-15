@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { useI18n } from "@/src/lib/useI18n";
 
+import { dogProfileId } from "@/lib/publicRoster";
 import { trWithFallback } from "./adoptI18nFallback";
 import type { Dog, InterestType } from "./adoptTypes";
 
@@ -20,6 +21,7 @@ export function AdoptCtaRow({
   onShare?: () => void;
 }) {
   const { tr } = useI18n();
+  const donateId = /^\d+$/.test(dogProfileId(animal)) ? dogProfileId(animal) : null;
   return (
     <div className="mt-6 space-y-3">
       <button
@@ -31,7 +33,7 @@ export function AdoptCtaRow({
         <Home className="h-4 w-4" />
         {tr("adoption_feed.adopt")} {animal.name}
       </button>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className={`grid gap-3 ${donateId ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         <button
           type="button"
           disabled={!available}
@@ -49,13 +51,15 @@ export function AdoptCtaRow({
           <Share2 className="h-4 w-4" />
           {tr("adopt.share", { name: animal.name })}
         </button>
-        <Link
-          href={`/fundraising/${animal.id}`}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          <Heart className="h-4 w-4" />
-          {tr("adoption_feed.donate")}
-        </Link>
+        {donateId ? (
+          <Link
+            href={`/fundraising/${donateId}`}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            <Heart className="h-4 w-4" />
+            {tr("adoption_feed.donate")}
+          </Link>
+        ) : null}
       </div>
       <button
         type="button"
